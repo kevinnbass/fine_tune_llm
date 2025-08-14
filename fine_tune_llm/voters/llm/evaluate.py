@@ -24,6 +24,19 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 
+# Import advanced metrics if available
+try:
+    from .metrics import (
+        compute_ece, compute_mce, compute_brier_score,
+        compute_abstention_metrics, compute_risk_aware_metrics,
+        compute_confidence_metrics, MetricsAggregator,
+        compute_reliability_diagram_data
+    )
+    from .conformal import ConformalPredictor, RiskControlledPredictor
+    ADVANCED_METRICS_AVAILABLE = True
+except ImportError:
+    ADVANCED_METRICS_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,6 +83,33 @@ class LLMEvaluator:
             }
         except:
             self.metrics = {}
+        
+        # Initialize advanced metrics components
+        self.metrics_aggregator = None
+        self.conformal_predictor = None
+        self.risk_controlled_predictor = None
+        
+        if ADVANCED_METRICS_AVAILABLE:
+            # Initialize metrics tracking
+            if model_path:
+                metrics_path = Path(model_path).parent / "evaluation_metrics.json"
+            else:
+                metrics_path = Path("artifacts/evaluation_metrics.json")
+            self.metrics_aggregator = MetricsAggregator(save_path=metrics_path)
+            
+            # Initialize conformal prediction components
+            advanced_config = self.config.get('advanced_metrics', {})
+            if advanced_config.get('conformal_prediction', {}).get('enabled', False):
+                alpha = advanced_config['conformal_prediction'].get('alpha', 0.1)
+                method = advanced_config['conformal_prediction'].get('method', 'lac')
+                self.conformal_predictor = ConformalPredictor(alpha=alpha, method=method)
+                logger.info(f"Initialized conformal predictor with alpha={alpha}, method={method}")
+                
+            if advanced_config.get('risk_control', {}).get('enabled', False):
+                self.risk_controlled_predictor = RiskControlledPredictor(alpha=alpha)
+                logger.info("Initialized risk-controlled predictor")
+            
+            logger.info("Advanced metrics components initialized")
 
     def load_config(self):
         """Load configuration."""
@@ -265,13 +305,13 @@ class LLMEvaluator:
     def compute_metrics(
         self, predictions: List[str], ground_truth: List[str], detailed_results: List[Dict]
     ) -> Dict:
-        """Compute comprehensive evaluation metrics."""
+        """Compute comprehensive evaluation metrics including advanced metrics."""
 
         # Filter out abstentions for core metrics
         non_abstain_indices = [
             i
             for i, result in enumerate(detailed_results)
-            if not result["abstain"] and result["predicted_label"] != "parse_error"
+            if not result["abstain"] and result.get("prediction", result.get("predicted_label")) != "parse_error"
         ]
 
         if len(non_abstain_indices) == 0:
@@ -318,7 +358,7 @@ class LLMEvaluator:
 
         # Error analysis
         parse_errors = sum(
-            1 for result in detailed_results if result["predicted_label"] == "parse_error"
+            1 for result in detailed_results if result.get("prediction", result.get("predicted_label")) == "parse_error"
         )
         parse_error_rate = parse_errors / len(detailed_results)
 
@@ -344,8 +384,101 @@ class LLMEvaluator:
             "prediction_distribution": self.get_label_distribution(filtered_preds),
         }
 
+        # Add advanced metrics if available
+        if ADVANCED_METRICS_AVAILABLE and len(confidences) > 0 and len(filtered_preds) > 0:
+            try:
+                # Convert predictions to binary for ECE/MCE
+                y_true_binary = np.array([pred == truth for pred, truth in zip(filtered_preds, filtered_truth)], dtype=float)
+                y_confidences = np.array([detailed_results[i]["confidence"] for i in non_abstain_indices])
+                
+                # Calibration metrics
+                if len(y_true_binary) > 0 and len(y_confidences) > 0:
+                    metrics["ece"] = compute_ece(y_true_binary, y_confidences)
+                    metrics["mce"] = compute_mce(y_true_binary, y_confidences)
+                    metrics["brier_score"] = compute_brier_score(y_true_binary, y_confidences)
+                    
+                    # Reliability diagram data
+                    reliability_data = compute_reliability_diagram_data(y_true_binary, y_confidences)
+                    metrics["reliability_data"] = reliability_data
+
+                # Confidence metrics
+                confidence_metrics = compute_confidence_metrics(
+                    y_confidences, 
+                    np.array([self._label_to_index(truth) for truth in filtered_truth]), 
+                    np.array([self._label_to_index(pred) for pred in filtered_preds])
+                )
+                metrics.update({f"confidence_{k}": v for k, v in confidence_metrics.items()})
+                
+                # Abstention metrics
+                if abstention_rate > 0:
+                    abstentions = np.array([result["abstain"] for result in detailed_results])
+                    all_preds = np.array([self._label_to_index(result.get("prediction", "unknown")) for result in detailed_results])
+                    all_truth = np.array([self._label_to_index(ground_truth[i]) for i in range(len(detailed_results))])
+                    
+                    abstention_metrics = compute_abstention_metrics(all_truth, all_preds, abstentions)
+                    metrics.update({f"abstention_{k}": v for k, v in abstention_metrics.items()})
+                
+                # Risk-aware metrics
+                risk_metrics = compute_risk_aware_metrics(
+                    np.array([self._label_to_index(truth) for truth in filtered_truth]),
+                    np.array([self._label_to_index(pred) for pred in filtered_preds])
+                )
+                metrics.update({f"risk_{k}": v for k, v in risk_metrics.items()})
+                
+                # Conformal prediction metrics if enabled
+                if self.conformal_predictor is not None:
+                    # For conformal prediction, we need probability distributions
+                    # For now, we'll create mock probabilities based on confidence
+                    n_samples = len(y_confidences)
+                    n_classes = len(set(filtered_truth + filtered_preds))
+                    
+                    # Create simple probability distributions
+                    probs = np.zeros((n_samples, max(4, n_classes)))  # Ensure at least 4 classes
+                    for i, conf in enumerate(y_confidences):
+                        pred_idx = self._label_to_index(filtered_preds[i])
+                        probs[i, pred_idx] = conf
+                        # Distribute remaining probability
+                        remaining_prob = 1.0 - conf
+                        other_prob = remaining_prob / (probs.shape[1] - 1)
+                        for j in range(probs.shape[1]):
+                            if j != pred_idx:
+                                probs[i, j] = other_prob
+                    
+                    # Calibrate conformal predictor
+                    try:
+                        labels_idx = np.array([self._label_to_index(truth) for truth in filtered_truth])
+                        self.conformal_predictor.calibrate(probs, labels_idx)
+                        
+                        # Evaluate coverage
+                        coverage_metrics = self.conformal_predictor.evaluate_coverage(probs, labels_idx)
+                        metrics.update({f"conformal_{k}": v for k, v in coverage_metrics.items()})
+                        
+                    except Exception as e:
+                        logger.warning(f"Conformal prediction evaluation failed: {e}")
+                
+                logger.info("Advanced metrics computed successfully")
+                
+            except Exception as e:
+                logger.warning(f"Advanced metrics computation failed: {e}")
+        
+        # Add to metrics aggregator if available
+        if self.metrics_aggregator is not None:
+            self.metrics_aggregator.add_metrics(metrics)
+
         return metrics
 
+    def _label_to_index(self, label: str) -> int:
+        """Convert label string to index for advanced metrics."""
+        label_map = {
+            "HIGH_RISK": 0,
+            "MEDIUM_RISK": 1, 
+            "LOW_RISK": 2,
+            "NO_RISK": 3,
+            "unknown": 3,
+            "parse_error": 3
+        }
+        return label_map.get(label, 3)
+    
     def get_label_distribution(self, labels: List[str]) -> Dict[str, float]:
         """Get label distribution."""
         from collections import Counter
@@ -415,10 +548,118 @@ class LLMEvaluator:
         plt.savefig(output_dir / "metrics_summary.png", dpi=300, bbox_inches="tight")
         plt.close()
 
-        # 3. Results summary report
+        # 3. Advanced metrics visualizations
+        if ADVANCED_METRICS_AVAILABLE:
+            self.create_advanced_visualizations(metrics, output_dir)
+        
+        # 4. Results summary report
         self.create_text_report(metrics, output_dir)
 
         logger.info("Visualizations created successfully")
+    
+    def create_advanced_visualizations(self, metrics: Dict, output_dir: Path):
+        """Create advanced metrics visualizations."""
+        try:
+            # Reliability diagram
+            if "reliability_data" in metrics:
+                reliability_data = metrics["reliability_data"]
+                if reliability_data and "bin_accuracies" in reliability_data:
+                    plt.figure(figsize=(10, 8))
+                    
+                    bin_centers = reliability_data["bin_centers"]
+                    bin_accuracies = reliability_data["bin_accuracies"] 
+                    bin_confidences = reliability_data["bin_confidences"]
+                    bin_counts = reliability_data["bin_counts"]
+                    
+                    # Plot reliability diagram
+                    plt.subplot(2, 2, 1)
+                    plt.plot([0, 1], [0, 1], 'k--', label='Perfect Calibration')
+                    plt.scatter(bin_confidences, bin_accuracies, s=bin_counts*10, alpha=0.7, label='Model')
+                    plt.xlabel('Confidence')
+                    plt.ylabel('Accuracy')
+                    plt.title('Reliability Diagram')
+                    plt.legend()
+                    plt.grid(True, alpha=0.3)
+                    
+                    # ECE and MCE bars
+                    plt.subplot(2, 2, 2)
+                    calibration_metrics = []
+                    calibration_values = []
+                    if "ece" in metrics:
+                        calibration_metrics.append("ECE")
+                        calibration_values.append(metrics["ece"])
+                    if "mce" in metrics:
+                        calibration_metrics.append("MCE")
+                        calibration_values.append(metrics["mce"])
+                    if "brier_score" in metrics:
+                        calibration_metrics.append("Brier")
+                        calibration_values.append(metrics["brier_score"])
+                    
+                    if calibration_metrics:
+                        plt.bar(calibration_metrics, calibration_values)
+                        plt.title('Calibration Metrics')
+                        plt.ylabel('Score')
+                    
+                    # Confidence distribution by correctness
+                    plt.subplot(2, 2, 3)
+                    if "confidence_mean_confidence_correct" in metrics and "confidence_mean_confidence_incorrect" in metrics:
+                        conf_correct = metrics["confidence_mean_confidence_correct"]
+                        conf_incorrect = metrics["confidence_mean_confidence_incorrect"]
+                        plt.bar(['Correct', 'Incorrect'], [conf_correct, conf_incorrect], alpha=0.7)
+                        plt.title('Confidence by Correctness')
+                        plt.ylabel('Mean Confidence')
+                    
+                    # Risk metrics
+                    plt.subplot(2, 2, 4)
+                    risk_metrics = {}
+                    for key, value in metrics.items():
+                        if key.startswith("risk_") and isinstance(value, (int, float)):
+                            risk_metrics[key.replace("risk_", "")] = value
+                    
+                    if risk_metrics:
+                        plt.bar(risk_metrics.keys(), risk_metrics.values())
+                        plt.title('Risk-Aware Metrics')
+                        plt.xticks(rotation=45)
+                        plt.ylabel('Score')
+                    
+                    plt.tight_layout()
+                    plt.savefig(output_dir / "advanced_metrics.png", dpi=300, bbox_inches="tight")
+                    plt.close()
+            
+            # Conformal prediction visualization
+            conformal_metrics = {k.replace("conformal_", ""): v for k, v in metrics.items() if k.startswith("conformal_")}
+            if conformal_metrics:
+                plt.figure(figsize=(12, 6))
+                
+                plt.subplot(1, 2, 1)
+                # Coverage vs target
+                if "coverage" in conformal_metrics and "target_coverage" in conformal_metrics:
+                    coverage = conformal_metrics["coverage"]
+                    target = conformal_metrics["target_coverage"] 
+                    plt.bar(['Actual', 'Target'], [coverage, target], alpha=0.7)
+                    plt.title('Conformal Prediction Coverage')
+                    plt.ylabel('Coverage')
+                    plt.ylim(0, 1)
+                
+                plt.subplot(1, 2, 2)
+                # Set size distribution
+                size_metrics = {k: v for k, v in conformal_metrics.items() if k.startswith("size_")}
+                if size_metrics:
+                    sizes = [int(k.split("_")[1]) for k in size_metrics.keys()]
+                    counts = list(size_metrics.values())
+                    plt.bar(sizes, counts, alpha=0.7)
+                    plt.title('Prediction Set Size Distribution')
+                    plt.xlabel('Set Size')
+                    plt.ylabel('Count')
+                
+                plt.tight_layout()
+                plt.savefig(output_dir / "conformal_metrics.png", dpi=300, bbox_inches="tight")
+                plt.close()
+                
+            logger.info("Advanced visualizations created successfully")
+            
+        except Exception as e:
+            logger.warning(f"Failed to create advanced visualizations: {e}")
 
     def create_text_report(self, metrics: Dict, output_dir: Path):
         """Create a text summary report."""
@@ -458,6 +699,47 @@ class LLMEvaluator:
         report += "\n## Prediction Distribution\n"
         for label, proportion in metrics["prediction_distribution"].items():
             report += f"- {label}: {proportion:.3f}\n"
+
+        # Add advanced metrics to report
+        if ADVANCED_METRICS_AVAILABLE:
+            # Calibration metrics
+            calibration_section = "\n## Advanced Calibration Metrics\n"
+            if "ece" in metrics:
+                calibration_section += f"- Expected Calibration Error (ECE): {metrics['ece']:.4f}\n"
+            if "mce" in metrics:
+                calibration_section += f"- Maximum Calibration Error (MCE): {metrics['mce']:.4f}\n"
+            if "brier_score" in metrics:
+                calibration_section += f"- Brier Score: {metrics['brier_score']:.4f}\n"
+            
+            # Advanced confidence metrics
+            confidence_section = "\n## Advanced Confidence Analysis\n"
+            for key, value in metrics.items():
+                if key.startswith("confidence_") and isinstance(value, (int, float)):
+                    clean_name = key.replace("confidence_", "").replace("_", " ").title()
+                    confidence_section += f"- {clean_name}: {value:.4f}\n"
+            
+            # Abstention metrics
+            abstention_section = "\n## Abstention Analysis\n"
+            for key, value in metrics.items():
+                if key.startswith("abstention_") and isinstance(value, (int, float)):
+                    clean_name = key.replace("abstention_", "").replace("_", " ").title()
+                    abstention_section += f"- {clean_name}: {value:.4f}\n"
+            
+            # Risk metrics
+            risk_section = "\n## Risk-Aware Analysis\n"
+            for key, value in metrics.items():
+                if key.startswith("risk_") and isinstance(value, (int, float)):
+                    clean_name = key.replace("risk_", "").replace("_", " ").title()
+                    risk_section += f"- {clean_name}: {value:.4f}\n"
+            
+            # Conformal prediction metrics
+            conformal_section = "\n## Conformal Prediction Analysis\n"
+            for key, value in metrics.items():
+                if key.startswith("conformal_") and isinstance(value, (int, float)):
+                    clean_name = key.replace("conformal_", "").replace("_", " ").title()
+                    conformal_section += f"- {clean_name}: {value:.4f}\n"
+            
+            report += calibration_section + confidence_section + abstention_section + risk_section + conformal_section
 
         with open(output_dir / "evaluation_report.txt", "w") as f:
             f.write(report)
