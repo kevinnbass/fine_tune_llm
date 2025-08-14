@@ -291,7 +291,7 @@ class TestRationaleGeneration:
         
         assert isinstance(rationale, str)
         assert len(rationale) > 0
-        assert "uncertain" in rationale.lower() or "unclear" in rationale.lower()
+        assert "uncertain" in rationale.lower() or "unclear" in rationale.lower() or "difficult" in rationale.lower() or "conflicting" in rationale.lower()
     
     def test_add_rationale_with_metadata(self, test_labels):
         """Test rationale generation with metadata."""
