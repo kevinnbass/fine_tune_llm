@@ -1,0 +1,112 @@
+{
+  "class_name": "high_stakes_audit",
+  "original_path": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\voters\\llm\\high_stakes_audit.py",
+  "backup_path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+  "timestamp": "20250814_121039",
+  "checksum": "788bb38d009391a6c2bd7939eeb194bf642cf4becc06e80452be3016a06a115f",
+  "file_analysis": {
+    "file_path": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\voters\\llm\\high_stakes_audit.py",
+    "file_size_bytes": 51075,
+    "file_size_mb": 0.04870891571044922,
+    "line_count": 1233,
+    "classes": [
+      {
+        "name": "BiasAuditor",
+        "line_start": 29,
+        "methods": [
+          "__init__",
+          "detect_bias",
+          "_detect_gender_bias",
+          "_detect_race_bias",
+          "_detect_age_bias",
+          "_detect_nationality_bias",
+          "compute_bias_mitigation_loss",
+          "generate_audit_report"
+        ]
+      },
+      {
+        "name": "ExplainableReasoning",
+        "line_start": 221,
+        "methods": [
+          "__init__",
+          "generate_reasoning_chain",
+          "_extract_reasoning_steps",
+          "_extract_final_answer",
+          "verify_faithfulness"
+        ]
+      },
+      {
+        "name": "ProceduralAlignment",
+        "line_start": 380,
+        "methods": [
+          "__init__",
+          "_load_procedures",
+          "check_compliance",
+          "_extract_key_terms",
+          "enhance_with_procedures"
+        ]
+      },
+      {
+        "name": "VerifiableTraining",
+        "line_start": 515,
+        "methods": [
+          "__init__",
+          "hash_artifact",
+          "log_training_event",
+          "create_training_proof",
+          "verify_training"
+        ]
+      },
+      {
+        "name": "AdvancedHighStakesAuditor",
+        "line_start": 659,
+        "methods": [
+          "__init__",
+          "conduct_comprehensive_audit",
+          "_conduct_bias_audit",
+          "_conduct_procedural_audit",
+          "_conduct_explainability_audit",
+          "_conduct_advanced_metrics_audit",
+          "_conduct_risk_assessment_audit",
+          "_conduct_coverage_calibration_audit",
+          "_calculate_misclassification_risk",
+          "_label_to_index",
+          "_generate_overall_assessment",
+          "_generate_recommendations"
+        ]
+      }
+    ],
+    "functions": [],
+    "imports": [
+      "torch",
+      "torch.nn.functional",
+      "typing.Dict",
+      "typing.List",
+      "typing.Optional",
+      "typing.Tuple",
+      "typing.Any",
+      "logging",
+      "json",
+      "hashlib",
+      "pathlib.Path",
+      "datetime.datetime",
+      "numpy",
+      "re",
+      "metrics.compute_ece",
+      "metrics.compute_mce",
+      "metrics.compute_brier_score",
+      "metrics.compute_abstention_metrics",
+      "metrics.compute_risk_aware_metrics",
+      "metrics.compute_confidence_metrics",
+      "metrics.MetricsAggregator",
+      "conformal.ConformalPredictor",
+      "conformal.RiskControlledPredictor",
+      "yaml"
+    ],
+    "global_variables": [],
+    "has_main": false
+  },
+  "description": "High-stakes audit system",
+  "expected_lines": 51000,
+  "actual_lines": 1233
+}
