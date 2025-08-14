@@ -198,13 +198,19 @@ Before production deployment:
 6. Test disaster recovery mechanisms
 7. Perform load testing at expected traffic volumes
 
-## Git Automation Setup
+## Git Automation
 
-To enable automatic git operations after task completion, configure Claude Code hooks in your settings to run:
-```bash
-git add .
-git commit -m "$(generate_commit_message_for_task)"
-git push origin main
-```
+IMPORTANT: After completing ANY task that modifies files in this repository, you MUST automatically:
 
-This ensures all work is automatically committed and pushed to maintain development momentum.
+1. **Stage all changes**: `git add .`
+2. **Commit with descriptive message**: `git commit -m "[descriptive message based on what was accomplished]"`
+3. **Push to GitHub**: `git push origin main`
+
+Generate meaningful commit messages that describe what was implemented, fixed, or changed. This ensures all work is automatically tracked and backed up to GitHub.
+
+Examples of good commit messages:
+- "Add LoRA training pipeline for Qwen2.5-7B with PEFT integration"
+- "Fix conformal prediction thresholds for per-slice coverage"
+- "Update monitoring dashboard with real-time performance metrics"
+
+This is a REQUIRED workflow - never leave changes uncommitted after completing tasks.
