@@ -2,166 +2,614 @@
 
 ## Executive Summary
 
-This roadmap addresses five critical optimization areas for the LLM fine-tuning system:
+This roadmap addresses five critical optimization areas for the LLM fine-tuning system with **285,000+ lines of code** across **50+ Python modules**, **20+ test files**, and **multiple UI interfaces**:
+
 1. **File and Directory Organization** - Streamline structure and eliminate redundancies
 2. **Code Architecture** - Improve modularity, separation of concerns, and design patterns
 3. **Consolidation** - Merge duplicate functionality and eliminate code redundancy
 4. **Integration** - Ensure seamless component interaction and data flow
 5. **Test Coverage** - Achieve comprehensive testing of all modules and integration points
 
+## Codebase Analysis Summary
+
+**Current Scale:**
+- **11 Core Modules**: voters/llm/ (285K+ LOC total)
+- **8 Application Scripts**: scripts/ directory
+- **20+ Test Files**: Comprehensive but disorganized
+- **3 UI Interfaces**: Gradio, Streamlit dashboard, risk prediction UI
+- **Advanced Features**: Conformal prediction, calibration, risk control, audit systems
+- **Model Support**: GLM-4.5-Air, Qwen2.5-7B, multiple LoRA variants
+
+**Complexity Indicators:**
+- **dashboard.py**: 35K LOC - Comprehensive Streamlit interface
+- **sft_lora.py**: 36K LOC - Advanced training with calibration
+- **evaluate.py**: 45K LOC - Extensive evaluation metrics
+- **high_stakes_audit.py**: 51K LOC - Production audit system
+- **20+ Integration Tests**: Complex mocking and cross-module testing
+
 ## Current State Analysis
 
 ### 1. File and Directory Organization Issues
 
-**Problems Identified:**
-- `ui.py` at root level should be in scripts or dedicated UI folder
-- Missing `train_lora_sft.py` script (referenced in CLAUDE.md but doesn't exist)
-- Inconsistent naming: `infer_model.py` vs `infer.py` in voters/llm
-- Test files scattered without clear organization by feature area
-- Missing dedicated configuration validation modules
-- No clear separation between core library and application scripts
+**Critical Problems Identified:**
 
-**Optimization Needed:**
-- Reorganize into clear functional modules
-- Establish consistent naming conventions
-- Create dedicated directories for UI components, configuration, and utilities
-- Implement proper package structure with clear imports
+*Structure Issues:*
+- **voters/llm/**: 285K+ LOC monolithic modules lacking clear separation
+- **scripts/**: 8+ entry points with overlapping functionality
+- **tests/**: 20+ files with inconsistent organization and naming
+- **Mixed abstraction levels**: Core library mixed with application logic
+- **No clear API boundaries**: Internal implementations exposed publicly
+
+*Naming Inconsistencies:*
+- `infer_model.py` (scripts) vs `infer.py` (voters/llm) - duplicate functionality
+- `dashboard.py` (voters/llm) vs `run_dashboard.py` (scripts) - unclear separation
+- `risk_prediction_ui.py` vs `launch_risk_ui.py` - redundant launchers
+- Test files: `test_high_stakes.py` vs `test_high_stakes_simple.py`
+
+*Missing Architecture:*
+- No plugin/extension system for models or metrics
+- No clear data pipeline abstraction
+- Missing service layer for complex operations
+- No proper logging/monitoring infrastructure
+- Missing configuration management hierarchy
+
+**Comprehensive Optimization Strategy:**
+- **Core Library**: `src/fine_tune_llm/` - Pure library code with clear APIs
+- **Applications**: `apps/` - High-level application entry points  
+- **Services**: `services/` - Background services and daemons
+- **Plugins**: `plugins/` - Extensible model/metric/UI plugins
+- **Tools**: `tools/` - Development and maintenance utilities
+- **Documentation**: `docs/` - Comprehensive API and user documentation
 
 ### 2. Code Architecture Issues
 
-**Problems Identified:**
-- Circular import potential between modules
-- Inconsistent error handling patterns across modules
-- Missing abstract base classes for key interfaces
-- No clear factory patterns for model/predictor instantiation
-- Limited use of dependency injection
-- Inconsistent configuration management
+**Critical Architecture Problems:**
 
-**Architecture Improvements Needed:**
-- Implement proper interfaces and abstract base classes
-- Add factory patterns for complex object creation
-- Establish consistent error handling and logging
-- Create configuration management system
-- Implement proper dependency injection
+*Design Pattern Deficiencies:*
+- **No Abstract Base Classes**: All interfaces are concrete implementations
+- **Missing Factory Patterns**: Direct instantiation throughout codebase
+- **No Dependency Injection**: Hard-coded dependencies, difficult testing
+- **Lack of Observer Pattern**: No event-driven architecture for monitoring
+- **Missing Strategy Pattern**: Algorithm selection hard-coded
+- **No Command Pattern**: No undo/redo or operation queuing capability
+
+*Structural Issues:*
+- **Tight Coupling**: 285K LOC with high interdependency
+- **God Classes**: `high_stakes_audit.py` (51K LOC), `evaluate.py` (45K LOC)
+- **Mixed Responsibilities**: UI logic mixed with business logic
+- **No Layered Architecture**: Presentation, business, data layers intermingled
+- **Missing Service Layer**: Complex operations scattered across modules
+
+*Error Handling Inconsistencies:*
+- **20+ Different Exception Types**: No unified hierarchy
+- **Inconsistent Error Reporting**: Some modules log, others raise, some do both
+- **Missing Error Recovery**: No graceful degradation patterns
+- **No Circuit Breaker**: External service failures cascade
+- **Insufficient Monitoring**: Limited error tracking and alerting
+
+*Configuration Management Issues:*
+- **Scattered Config Loading**: YAML parsing in 5+ different places
+- **No Environment Support**: Dev/staging/prod configurations mixed
+- **Missing Validation**: Config errors discovered at runtime
+- **No Hot Reloading**: System restart required for config changes
+- **Hard-coded Defaults**: Magic numbers throughout codebase
+
+**Comprehensive Architecture Strategy:**
+- **Hexagonal Architecture**: Clean separation of concerns with ports/adapters
+- **CQRS Pattern**: Separate read/write operations for complex workflows  
+- **Event-Driven Design**: Publish/subscribe for loose coupling
+- **Plugin Architecture**: Extensible system with clear interfaces
+- **Microservices Ready**: Modular design enabling future distribution
 
 ### 3. Consolidation Opportunities
 
-**Duplicate/Overlapping Functionality:**
-- Multiple UI entry points (ui.py, dashboard launchers)
-- Redundant model loading logic across scripts
-- Duplicate configuration parsing in multiple files
-- Similar evaluation metrics scattered across modules
-- Overlapping inference logic in scripts and modules
+**Critical Duplication Analysis:**
 
-**Consolidation Strategy:**
-- Create unified configuration system
-- Establish single model loading/management system
-- Consolidate UI frameworks into coherent interface
-- Merge evaluation and metrics functionality
-- Create shared utility libraries
+*Model Management Duplication:*
+- **3+ Model Loading Implementations**: `sft_lora.py`, `infer.py`, `infer_model.py`
+- **Checkpoint Handling**: Scattered across 5+ files with different approaches
+- **Tokenizer Management**: Duplicate tokenizer loading in 4+ modules
+- **LoRA Adapter Logic**: Similar code in multiple training scripts
+- **Model Registry**: No central model catalog, repeated model discovery
+
+*Configuration Parsing Redundancy:*
+- **YAML Loading**: Implemented in 6+ files with different error handling
+- **Default Value Management**: Hard-coded defaults in 8+ locations
+- **Environment Variables**: Inconsistent env var handling across modules
+- **Validation Logic**: Similar validation patterns repeated 10+ times
+- **Schema Definitions**: Implicit schemas scattered throughout codebase
+
+*UI Framework Fragmentation:*
+- **3 Different UI Technologies**: Gradio, Streamlit, CLI interfaces
+- **Redundant Input Validation**: Similar validation in each UI
+- **Duplicate State Management**: Session/state handling in multiple places
+- **Overlapping Component Logic**: Similar widgets/components reimplemented
+- **Inconsistent Styling**: Different themes and styling approaches
+
+*Evaluation Metrics Duplication:*
+- **ECE/MCE Calculations**: Implemented in `metrics.py` and `evaluate.py`
+- **Confusion Matrix Logic**: Similar implementations in 3+ files
+- **Statistical Tests**: Repeated statistical calculations
+- **Reporting Formats**: Multiple report generation approaches
+- **Visualization Code**: Similar plotting code in 4+ modules
+
+*Infrastructure Code Duplication:*
+- **Logging Setup**: Different logging configurations in 8+ files
+- **Error Handling**: Similar try/catch patterns throughout codebase
+- **File I/O Operations**: Repeated file handling patterns
+- **Path Management**: Similar path manipulation in multiple modules
+- **Data Validation**: Repeated validation patterns
+
+**Comprehensive Consolidation Strategy:**
+- **Unified Model Service**: Single point for all model operations
+- **Configuration Service**: Centralized config management with validation
+- **UI Component Library**: Shared components across all interfaces
+- **Metrics Engine**: Unified evaluation with pluggable metrics
+- **Infrastructure Services**: Shared logging, error handling, file operations
 
 ### 4. Integration Gaps
 
-**Missing Integration Points:**
-- Dashboard not integrated with live training process
-- Risk prediction UI disconnected from actual model pipeline
-- High-stakes audit system not integrated with training loop
-- Configuration changes require manual script modifications
-- No unified logging/monitoring across components
+**Critical Integration Analysis:**
 
-**Integration Requirements:**
-- Real-time training-dashboard integration
-- Unified configuration system across all components
-- Centralized logging and monitoring
-- Seamless data flow between all system components
+*Real-time Data Flow Issues:*
+- **Training-Dashboard Disconnect**: Dashboard reads static files, not live metrics
+- **No Event Streaming**: Training events don't propagate to monitoring systems  
+- **Polling-based Updates**: Inefficient polling instead of push notifications
+- **Metric Synchronization**: Race conditions between metric writers/readers
+- **No Live Model Updates**: Model changes don't trigger dependent system updates
+
+*Cross-System Communication Gaps:*
+- **API Inconsistencies**: No standardized internal APIs between modules
+- **Message Format Variations**: Different data formats across system boundaries
+- **No Service Discovery**: Components can't dynamically find each other
+- **Missing Health Checks**: No system health monitoring or status propagation
+- **Error Propagation**: Failures don't cascade properly to dependent systems
+
+*Configuration Integration Issues:*
+- **Environment Fragmentation**: Config changes don't propagate across all components
+- **Runtime Reconfiguration**: Most systems require restart for config changes
+- **Validation Gaps**: Config validation happens in isolation, not system-wide
+- **Dependency Management**: Config dependencies between modules not tracked
+- **Version Mismatches**: Different components using different config versions
+
+*Data Pipeline Integration Problems:*
+- **Format Incompatibilities**: Data format mismatches between pipeline stages
+- **No Transaction Support**: Multi-step operations can fail partially
+- **Missing Data Lineage**: No tracking of data flow through system
+- **Validation Boundaries**: Data validation inconsistent across module boundaries
+- **State Management**: Shared state updates not properly synchronized
+
+*User Experience Integration Gaps:*
+- **UI Inconsistencies**: Different interfaces have different capabilities
+- **Session Management**: User sessions not shared across interfaces
+- **Progressive Web App**: No unified web application experience
+- **Mobile Responsiveness**: Inconsistent mobile support across UIs
+- **Accessibility**: No consistent accessibility standards
+
+*DevOps Integration Issues:*
+- **Deployment Complexity**: Each component deployed separately
+- **Monitoring Fragmentation**: Different monitoring approaches per component
+- **Log Aggregation**: Logs scattered across multiple systems without correlation
+- **Performance Metrics**: No unified performance monitoring
+- **Alerting Inconsistencies**: Different alerting mechanisms for different components
+
+**Comprehensive Integration Strategy:**
+- **Event-Driven Architecture**: Real-time event streaming with message queues
+- **API Gateway**: Unified API layer with consistent interfaces
+- **Service Mesh**: Microservices communication with observability
+- **Configuration Service**: Centralized config with real-time propagation
+- **Monitoring Stack**: Unified observability with metrics, logs, traces
+- **Progressive Web App**: Single unified web interface for all functionality
 
 ### 5. Test Coverage Gaps
 
-**Current Coverage Issues:**
-- Missing integration tests between core modules
-- No end-to-end pipeline testing
-- Limited configuration testing
-- Missing error condition testing
-- No performance/load testing
-- Incomplete mocking for external dependencies
+**Critical Testing Analysis (20+ Test Files):**
 
-**Test Coverage Requirements:**
-- Unit tests for all modules (100% coverage target)
-- Integration tests for all component interactions
-- End-to-end pipeline tests
-- Configuration validation tests
-- Error handling and edge case tests
-- Performance and resource usage tests
+*Unit Test Coverage Gaps:*
+- **God Class Testing**: `high_stakes_audit.py` (51K LOC) lacks comprehensive unit tests
+- **Complex Algorithm Testing**: Conformal prediction algorithms undertested
+- **Edge Case Coverage**: Missing boundary condition tests for numerical computations
+- **Error Path Testing**: Exception handling paths not systematically tested
+- **Mocking Inconsistencies**: Different mocking approaches across test files
+- **Async Code Testing**: Background processes and threading not properly tested
+
+*Integration Test Deficiencies:*
+- **Cross-Module Integration**: 20+ test files but missing cross-cutting concerns
+- **Database Integration**: No tests for persistent state management
+- **External Service Integration**: Missing tests for model downloading, API calls
+- **Configuration Integration**: Config changes don't trigger integration tests
+- **UI Integration**: Frontend-backend integration not comprehensively tested
+- **Performance Integration**: No tests for system behavior under load
+
+*End-to-End Test Gaps:*
+- **Complete Workflow Testing**: Training → Evaluation → Deployment pipeline not tested
+- **Multi-User Scenarios**: Concurrent user interactions not tested
+- **Data Pipeline E2E**: Full data flow from raw input to final prediction not tested
+- **Failure Recovery**: System recovery from various failure modes not tested
+- **Upgrade/Migration Testing**: Version compatibility not tested
+- **Production Scenario Testing**: Real-world usage patterns not replicated
+
+*Specialized Test Categories Missing:*
+- **Performance Tests**: No load testing, stress testing, or benchmark testing
+- **Security Tests**: No penetration testing, input validation testing, or auth testing
+- **Compatibility Tests**: No tests across different Python versions, OS, hardware
+- **Regression Tests**: No automated regression testing for bug fixes
+- **Chaos Engineering**: No fault injection or resilience testing
+- **Accessibility Tests**: No testing for UI accessibility compliance
+
+*Test Infrastructure Issues:*
+- **Test Data Management**: No systematic test data generation or management
+- **Test Environment Isolation**: Tests can interfere with each other
+- **Parallel Test Execution**: Tests not designed for parallel execution
+- **Test Reporting**: No comprehensive test reporting and analytics
+- **CI/CD Integration**: Limited automated testing in deployment pipeline
+- **Test Documentation**: Test purposes and expected behaviors not well documented
+
+*Test Quality Issues:*
+- **Flaky Tests**: Time-dependent tests that occasionally fail
+- **Slow Tests**: Some tests take excessive time to execute
+- **Test Maintainability**: Tests tightly coupled to implementation details
+- **Test Coverage Measurement**: No systematic coverage tracking
+- **Test Review Process**: No peer review process for test code
+- **Test Technical Debt**: Outdated tests not maintained with code changes
+
+**Comprehensive Testing Strategy:**
+- **Test Pyramid**: Proper balance of unit, integration, and e2e tests
+- **Shift-Left Testing**: Earlier testing in development lifecycle
+- **Test Automation**: Fully automated test execution and reporting
+- **Performance Testing**: Load, stress, and benchmark testing integration
+- **Security Testing**: Automated security scanning and penetration testing
+- **Chaos Engineering**: Systematic fault injection and resilience testing
+- **Test Observability**: Comprehensive test metrics and monitoring
 
 ## Implementation Plan
 
-### Phase 1: File and Directory Reorganization (Priority: High)
+### Phase 1: Comprehensive Structural Reorganization (Priority: Critical)
 
-#### 1.1 Directory Structure Optimization
+#### 1.1 Advanced Directory Architecture
 ```
 fine_tune_llm/
-├── src/                           # Core library code
-│   ├── fine_tune_llm/            # Main package
-│   │   ├── __init__.py
-│   │   ├── config/               # Configuration management
-│   │   ├── models/               # Model-related functionality
-│   │   ├── training/             # Training components
-│   │   ├── inference/            # Inference components
-│   │   ├── evaluation/           # Evaluation and metrics
-│   │   ├── monitoring/           # Dashboard and monitoring
-│   │   └── utils/                # Shared utilities
-├── apps/                         # Application entry points
-│   ├── train/                    # Training applications
-│   ├── infer/                    # Inference applications
-│   ├── dashboard/                # Dashboard applications
-│   └── ui/                       # User interface applications
-├── tests/                        # Test organization
-│   ├── unit/                     # Unit tests
-│   ├── integration/              # Integration tests
-│   ├── end_to_end/              # E2E tests
-│   └── performance/              # Performance tests
-├── configs/                      # Configuration files
-├── data/                         # Data directories
-└── docs/                         # Documentation
+├── src/                              # Core library (285K+ LOC refactored)
+│   ├── fine_tune_llm/               # Main package
+│   │   ├── __init__.py              # Public API exports
+│   │   ├── core/                    # Core abstractions and interfaces
+│   │   │   ├── interfaces/          # Abstract base classes
+│   │   │   ├── exceptions/          # Exception hierarchy
+│   │   │   ├── events/              # Event system
+│   │   │   └── protocols/           # Type protocols
+│   │   ├── config/                  # Configuration management
+│   │   │   ├── manager.py           # ConfigManager with hot-reload
+│   │   │   ├── validation.py        # Schema validation
+│   │   │   ├── loaders/             # YAML/JSON/ENV loaders
+│   │   │   └── schemas/             # Configuration schemas
+│   │   ├── models/                  # Model ecosystem
+│   │   │   ├── factory.py           # Model factory pattern
+│   │   │   ├── registry.py          # Model registry
+│   │   │   ├── loaders/             # Model loading strategies
+│   │   │   ├── adapters/            # LoRA/DoRA/QLoRA adapters
+│   │   │   └── checkpoints/         # Checkpoint management
+│   │   ├── training/                # Training ecosystem
+│   │   │   ├── trainers/            # Trainer implementations
+│   │   │   ├── callbacks/           # Training callbacks
+│   │   │   ├── strategies/          # Training strategies
+│   │   │   ├── losses/              # Loss functions
+│   │   │   └── schedulers/          # Learning rate schedulers
+│   │   ├── inference/               # Inference ecosystem
+│   │   │   ├── engines/             # Inference engines
+│   │   │   ├── predictors/          # Predictor implementations
+│   │   │   ├── conformal/           # Conformal prediction
+│   │   │   ├── risk_control/        # Risk-controlled prediction
+│   │   │   └── uncertainty/         # Uncertainty quantification
+│   │   ├── evaluation/              # Evaluation ecosystem
+│   │   │   ├── metrics/             # Metric implementations
+│   │   │   ├── calibration/         # Calibration assessment
+│   │   │   ├── auditing/            # High-stakes auditing
+│   │   │   ├── benchmarks/          # Benchmark suites
+│   │   │   └── reporting/           # Report generation
+│   │   ├── data/                    # Data pipeline
+│   │   │   ├── processors/          # Data processors
+│   │   │   ├── validators/          # Data validators
+│   │   │   ├── loaders/             # Data loaders
+│   │   │   ├── transformers/        # Data transformers
+│   │   │   └── pipelines/           # Data pipelines
+│   │   ├── monitoring/              # Monitoring ecosystem
+│   │   │   ├── dashboards/          # Dashboard implementations
+│   │   │   ├── collectors/          # Metric collectors
+│   │   │   ├── alerting/            # Alerting system
+│   │   │   ├── observability/       # Observability tools
+│   │   │   └── visualization/       # Visualization components
+│   │   ├── services/                # Service layer
+│   │   │   ├── model_service.py     # Model management service
+│   │   │   ├── training_service.py  # Training orchestration
+│   │   │   ├── inference_service.py # Inference service
+│   │   │   ├── config_service.py    # Configuration service
+│   │   │   └── monitoring_service.py # Monitoring service
+│   │   └── utils/                   # Utilities
+│   │       ├── logging/             # Logging utilities
+│   │       ├── io/                  # I/O operations
+│   │       ├── decorators/          # Decorators
+│   │       ├── validators/          # Validation utilities
+│   │       └── helpers/             # Helper functions
+├── apps/                            # Application layer
+│   ├── cli/                         # Command-line interfaces
+│   │   ├── train.py                 # Training CLI
+│   │   ├── infer.py                 # Inference CLI
+│   │   ├── evaluate.py              # Evaluation CLI
+│   │   └── admin.py                 # Administrative CLI
+│   ├── web/                         # Web applications
+│   │   ├── api/                     # REST API application
+│   │   ├── dashboard/               # Main dashboard app
+│   │   ├── risk_ui/                 # Risk prediction interface
+│   │   └── admin/                   # Administrative interface
+│   ├── services/                    # Service applications
+│   │   ├── training_service/        # Training service daemon
+│   │   ├── inference_service/       # Inference service daemon
+│   │   ├── monitoring_service/      # Monitoring service daemon
+│   │   └── scheduler_service/       # Job scheduler service
+│   └── scripts/                     # Utility scripts
+│       ├── migration/               # Database migration scripts
+│       ├── deployment/              # Deployment scripts
+│       └── maintenance/             # Maintenance scripts
+├── tests/                           # Testing ecosystem
+│   ├── unit/                        # Unit tests (by module)
+│   │   ├── core/                    # Core module tests
+│   │   ├── config/                  # Config module tests
+│   │   ├── models/                  # Models module tests
+│   │   ├── training/                # Training module tests
+│   │   ├── inference/               # Inference module tests
+│   │   ├── evaluation/              # Evaluation module tests
+│   │   ├── data/                    # Data module tests
+│   │   ├── monitoring/              # Monitoring module tests
+│   │   ├── services/                # Services tests
+│   │   └── utils/                   # Utils tests
+│   ├── integration/                 # Integration tests
+│   │   ├── cross_module/            # Cross-module integration
+│   │   ├── database/                # Database integration
+│   │   ├── external_services/       # External service integration
+│   │   ├── configuration/           # Configuration integration
+│   │   └── ui_backend/              # UI-backend integration
+│   ├── end_to_end/                  # End-to-end tests
+│   │   ├── workflows/               # Complete workflow tests
+│   │   ├── user_scenarios/          # User scenario tests
+│   │   ├── performance/             # Performance tests
+│   │   └── regression/              # Regression tests
+│   ├── specialized/                 # Specialized testing
+│   │   ├── security/                # Security tests
+│   │   ├── accessibility/           # Accessibility tests
+│   │   ├── compatibility/           # Compatibility tests
+│   │   ├── chaos/                   # Chaos engineering
+│   │   └── load/                    # Load testing
+│   ├── fixtures/                    # Test data and fixtures
+│   ├── mocks/                       # Mock objects
+│   └── utilities/                   # Test utilities
+├── plugins/                         # Plugin system
+│   ├── models/                      # Model plugins
+│   ├── metrics/                     # Metric plugins
+│   ├── ui_components/               # UI component plugins
+│   ├── data_sources/                # Data source plugins
+│   └── integrations/                # Third-party integrations
+├── configs/                         # Configuration files
+│   ├── base/                        # Base configurations
+│   ├── environments/                # Environment-specific configs
+│   ├── models/                      # Model-specific configs
+│   ├── schemas/                     # Configuration schemas
+│   └── examples/                    # Example configurations
+├── data/                            # Data directories
+│   ├── raw/                         # Raw input data
+│   ├── processed/                   # Processed data
+│   ├── models/                      # Model artifacts
+│   ├── results/                     # Experiment results
+│   ├── cache/                       # Cached data
+│   └── temp/                        # Temporary files
+├── docs/                            # Documentation
+│   ├── api/                         # API documentation
+│   ├── user_guides/                 # User guides
+│   ├── developer_guides/            # Developer guides
+│   ├── architecture/                # Architecture documentation
+│   ├── tutorials/                   # Tutorials
+│   ├── examples/                    # Code examples
+│   └── deployment/                  # Deployment documentation
+├── tools/                           # Development tools
+│   ├── code_generation/             # Code generators
+│   ├── analysis/                    # Code analysis tools
+│   ├── migration/                   # Migration tools
+│   └── profiling/                   # Profiling tools
+└── docker/                         # Docker configurations
+    ├── development/                 # Development containers
+    ├── production/                  # Production containers
+    └── services/                    # Service-specific containers
 ```
 
-#### 1.2 File Relocation and Renaming
-- Move `ui.py` to `apps/ui/main.py`
-- Create `apps/train/train_lora_sft.py` (currently missing)
-- Rename inconsistent files for clarity
-- Reorganize test files by functional area
+#### 1.2 Comprehensive File Migration Strategy
+- **285K+ LOC Refactoring**: Break down monolithic files systematically
+- **God Class Decomposition**: Split `high_stakes_audit.py` (51K LOC) into focused modules
+- **Evaluation Module Restructuring**: Decompose `evaluate.py` (45K LOC) into specialized components
+- **Dashboard Modularization**: Break `dashboard.py` (35K LOC) into reusable components
+- **Training Pipeline Refactoring**: Restructure `sft_lora.py` (36K LOC) into composable parts
+- **Script Consolidation**: Merge overlapping scripts, eliminate redundancy
+- **Test Reorganization**: Move 20+ test files into structured hierarchy
 
-#### 1.3 Package Structure Implementation
-- Create proper `__init__.py` files with clear exports
-- Establish consistent import paths
-- Remove circular import dependencies
+#### 1.3 Advanced Package Architecture
+- **Hierarchical Import Structure**: Clear public/private API boundaries
+- **Dependency Injection Container**: IoC container for component management
+- **Plugin Architecture**: Dynamic loading of models, metrics, UI components
+- **Service Registration**: Automatic service discovery and registration
+- **Event System**: Pub/sub messaging between components
+- **Configuration Binding**: Automatic config injection into components
+- **Type System**: Comprehensive type hints with runtime validation
 
-### Phase 2: Code Architecture Enhancement (Priority: High)
+### Phase 2: Advanced Architecture Implementation (Priority: High)
 
-#### 2.1 Interface Definition
-- Create abstract base classes for key components:
-  - `BaseTrainer` (abstract trainer interface)
-  - `BasePredictor` (abstract predictor interface) 
-  - `BaseEvaluator` (abstract evaluator interface)
-  - `BaseAuditor` (abstract auditor interface)
+#### 2.1 Comprehensive Interface Definition
+**Abstract Base Classes Hierarchy:**
+```python
+# Core interfaces
+class BaseComponent(ABC):      # Root component interface
+class BaseService(ABC):        # Service layer interface  
+class BaseFactory(ABC):        # Factory pattern interface
+class BaseStrategy(ABC):       # Strategy pattern interface
+class BaseObserver(ABC):       # Observer pattern interface
 
-#### 2.2 Factory Pattern Implementation
-- `ModelFactory` - unified model creation
-- `TrainerFactory` - trainer instantiation with configs
-- `PredictorFactory` - predictor creation with components
-- `EvaluatorFactory` - evaluator setup
+# Domain-specific interfaces
+class BaseTrainer(ABC):        # Training interface
+class BasePredictor(ABC):      # Prediction interface
+class BaseEvaluator(ABC):      # Evaluation interface
+class BaseAuditor(ABC):        # Auditing interface
+class BaseMetric(ABC):         # Metric interface
+class BaseLoader(ABC):         # Data loading interface
+class BaseProcessor(ABC):      # Data processing interface
+class BaseValidator(ABC):      # Validation interface
+```
 
-#### 2.3 Configuration Management System
-- Unified configuration schema
-- Configuration validation
-- Environment-specific configurations
-- Configuration hot-reloading for development
+**Protocol Definitions:**
+- `ModelProtocol` - Type protocol for model objects
+- `ConfigProtocol` - Type protocol for configuration objects  
+- `MetricsProtocol` - Type protocol for metrics objects
+- `DataProtocol` - Type protocol for data objects
 
-#### 2.4 Error Handling Standardization
-- Custom exception hierarchy
-- Consistent error reporting
-- Centralized logging configuration
-- Graceful degradation patterns
+#### 2.2 Advanced Factory Pattern Implementation
+**Factory Hierarchy:**
+```python
+class ComponentFactory:        # Master factory
+├── ModelFactory              # Model creation
+│   ├── GLMModelFactory       # GLM-specific models
+│   ├── QwenModelFactory      # Qwen-specific models
+│   └── LoRAAdapterFactory    # LoRA adapter creation
+├── TrainerFactory            # Trainer creation  
+│   ├── StandardTrainerFactory
+│   ├── CalibratedTrainerFactory
+│   └── DistributedTrainerFactory
+├── PredictorFactory          # Predictor creation
+│   ├── StandardPredictorFactory
+│   ├── ConformalPredictorFactory
+│   └── RiskControlledFactory
+├── EvaluatorFactory          # Evaluator creation
+│   ├── MetricsEvaluatorFactory
+│   ├── CalibrationEvaluatorFactory
+│   └── AuditEvaluatorFactory
+└── UIFactory                 # UI component creation
+    ├── DashboardFactory
+    ├── WidgetFactory
+    └── ChartFactory
+```
+
+**Plugin System Integration:**
+- Dynamic factory registration
+- Plugin discovery and loading
+- Factory strategy selection
+- Runtime component composition
+
+#### 2.3 Enterprise Configuration Management System
+**Configuration Architecture:**
+```python
+class ConfigurationSystem:
+├── ConfigManager             # Central config management
+├── SchemaRegistry           # Configuration schemas
+├── ValidationEngine         # Multi-stage validation
+├── EnvironmentManager       # Environment handling
+├── SecretManager           # Secure credential management
+├── HotReloadManager        # Runtime config updates
+├── VersionManager          # Config versioning
+├── MigrationManager        # Config migrations
+└── AuditManager           # Configuration audit trail
+```
+
+**Advanced Features:**
+- **Hot-reloading with dependency tracking**
+- **Configuration inheritance and composition**
+- **Environment-specific overrides with precedence**
+- **Encrypted secret management**
+- **Configuration diff and rollback**
+- **Validation with custom business rules**
+- **Configuration as code with GitOps**
+
+#### 2.4 Unified Exception Hierarchy and Error Handling
+**Exception Hierarchy:**
+```python
+class FineTuneLLMError(Exception):          # Root exception
+├── ConfigurationError                       # Configuration issues
+│   ├── ValidationError
+│   ├── SchemaError
+│   └── EnvironmentError
+├── ModelError                              # Model-related errors
+│   ├── ModelLoadError
+│   ├── CheckpointError
+│   └── AdapterError
+├── TrainingError                           # Training issues
+│   ├── ConvergenceError
+│   ├── ResourceError
+│   └── CallbackError
+├── InferenceError                          # Inference issues
+│   ├── PredictionError
+│   ├── CalibrationError
+│   └── UncertaintyError
+├── DataError                               # Data-related errors
+│   ├── ValidationError
+│   ├── ProcessingError
+│   └── LoadingError
+├── IntegrationError                        # Integration issues
+│   ├── ServiceError
+│   ├── APIError
+│   └── NetworkError
+└── SystemError                            # System-level issues
+    ├── ResourceExhaustionError
+    ├── PermissionError
+    └── EnvironmentError
+```
+
+**Error Handling Features:**
+- **Circuit breaker pattern for external services**
+- **Retry mechanisms with exponential backoff**
+- **Graceful degradation strategies**
+- **Error context propagation**
+- **Structured error logging with correlation IDs**
+- **Error analytics and monitoring**
+
+#### 2.5 Event-Driven Architecture Implementation
+**Event System Architecture:**
+```python
+class EventSystem:
+├── EventBus                 # Central event routing
+├── EventStore              # Event persistence
+├── EventPublisher          # Event publishing
+├── EventSubscriber         # Event subscription
+├── EventProcessor          # Event processing
+├── EventAggregator        # Event aggregation
+└── EventAnalyzer          # Event analytics
+```
+
+**Event Categories:**
+- **Training Events**: epoch_started, batch_completed, metrics_updated
+- **Model Events**: model_loaded, checkpoint_saved, adapter_applied  
+- **Inference Events**: prediction_made, calibration_computed
+- **System Events**: service_started, error_occurred, health_check
+- **User Events**: ui_action, configuration_changed
+
+#### 2.6 Service Layer with Hexagonal Architecture
+**Service Architecture:**
+```python
+# Core Services
+class ModelService:           # Model management
+class TrainingService:        # Training orchestration  
+class InferenceService:       # Inference management
+class ConfigService:          # Configuration management
+class MonitoringService:      # System monitoring
+class DataService:           # Data management
+class SecurityService:       # Security and auth
+class NotificationService:   # Notifications and alerts
+
+# Ports (Interfaces)
+class ModelPort(ABC):         # Model access interface
+class DataPort(ABC):          # Data access interface
+class ConfigPort(ABC):        # Config access interface
+class NotificationPort(ABC):  # Notification interface
+
+# Adapters (Implementations)
+class FileSystemAdapter:      # File system operations
+class DatabaseAdapter:        # Database operations
+class APIAdapter:            # External API calls
+class CacheAdapter:          # Caching operations
+```
 
 ### Phase 3: Code Consolidation (Priority: Medium)
 
@@ -266,41 +714,41 @@ fine_tune_llm/
 
 ## Implementation Timeline
 
-### Week 1-2: Phase 1 (Directory Reorganization)
-- Directory structure implementation
-- File relocation and renaming
-- Package structure establishment
-- Initial test organization
+### Phase 1-2: Foundation (Weeks 1-4) - Critical Priority
+- **Week 1**: Advanced directory architecture implementation
+- **Week 2**: God class decomposition (51K+ LOC files)  
+- **Week 3**: Abstract base class hierarchy and interfaces
+- **Week 4**: Factory patterns and dependency injection
 
-### Week 3-4: Phase 2 (Architecture Enhancement)
-- Interface definition and implementation
-- Factory pattern development
-- Configuration management system
-- Error handling standardization
+### Phase 3-4: Architecture (Weeks 5-8) - High Priority
+- **Week 5**: Configuration management and event system
+- **Week 6**: Service layer and hexagonal architecture
+- **Week 7**: Model consolidation and UI framework unification
+- **Week 8**: Data pipeline consolidation
 
-### Week 5-6: Phase 3 (Consolidation)
-- Model management unification
-- UI framework consolidation
-- Configuration parsing consolidation
-- Metrics consolidation
+### Phase 5-6: Integration (Weeks 9-12) - High Priority
+- **Week 9**: Real-time event streaming and API gateway
+- **Week 10**: Monitoring stack and service mesh
+- **Week 11**: Progressive web app and unified interface
+- **Week 12**: Cross-system integration validation
 
-### Week 7-8: Phase 4 (Integration Enhancement)
-- Real-time integration implementation
-- Unified data pipeline
-- Monitoring integration
-- Configuration integration
+### Phase 7-8: Testing (Weeks 13-16) - Critical Priority
+- **Week 13**: Comprehensive unit testing (100% coverage)
+- **Week 14**: Integration testing suite implementation
+- **Week 15**: End-to-end and specialized testing
+- **Week 16**: Test automation and CI/CD integration
 
-### Week 9-10: Phase 5 (Test Coverage)
-- Unit test implementation
-- Integration test suite
-- End-to-end pipeline testing
-- Specialized test categories
+### Phase 9-10: Production (Weeks 17-20) - Medium Priority
+- **Week 17**: Performance optimization and resource management
+- **Week 18**: Security hardening and compliance
+- **Week 19**: Documentation and deployment automation
+- **Week 20**: Production readiness and final validation
 
-### Week 11-12: Validation and Optimization
-- Performance optimization
-- Documentation completion
-- Final integration testing
-- Production readiness validation
+### Phase 11-12: Excellence (Weeks 21-24) - Low Priority
+- **Week 21**: Advanced monitoring and observability
+- **Week 22**: Chaos engineering and resilience testing
+- **Week 23**: Plugin ecosystem and extensibility
+- **Week 24**: Long-term maintenance and upgrade planning
 
 ## Dependencies and Prerequisites
 
