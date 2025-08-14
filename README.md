@@ -1,30 +1,31 @@
-# Bird Flu Classification Ensemble System
+# Bird Flu Classification Fine-Tuning Pipeline
 
-A production-ready defense-in-depth ML system for bird flu content classification with cascaded arbitration, conformal abstention, and active learning.
+A comprehensive fine-tuning pipeline for bird flu content classification using ensemble methods and LoRA adapters.
 
-## 🏗️ Architecture
+## 🎯 Overview
+
+This repository implements a multi-model fine-tuning approach for bird flu classification:
+
+- **Classical Models**: TF-IDF + Logistic Regression/SVM with calibration
+- **Weak Supervision**: Snorkel-like label model training
+- **LLM Fine-tuning**: LoRA adapters on Qwen2.5-7B
+- **Ensemble Training**: Stacker model combining all voter outputs
+
+## 📁 Project Structure
 
 ```
-Input Text → [Regex DSL] → [Classical ML] → [Weak Supervision] → [LLM LoRA] 
-                ↓              ↓               ↓                ↓
-            [Arbiter Cascade: Consensus → Stacking → Conformal Abstention]
-                ↓
-            [Prediction / ABSTAIN]
-                ↓
-            [Disagreement Mining → Active Learning Loop]
+birdflu-ensemble/
+├── configs/           # Training configurations
+├── data/             # Training and evaluation data
+├── voters/           # Model implementations
+│   ├── classical/    # TF-IDF + LR/SVM models
+│   ├── llm/         # LoRA fine-tuning pipeline
+│   └── ws_label_model/ # Weak supervision training
+├── arbiter/         # Ensemble stacking logic
+├── eval/            # Evaluation metrics
+├── scripts/         # Training scripts
+└── tests/           # Unit tests
 ```
-
-## 📊 Performance Targets
-
-| Metric | Target | Status |
-|--------|--------|---------|
-| Overall F1 | ≥0.92 | 🎯 |
-| Worst-slice F1 | ≥0.85 | 🎯 |
-| Calibration (ECE) | ≤0.03 | 🎯 |
-| P95 Latency | ≤200ms | ⚡ |
-| Cost per prediction | <$0.01 | 💰 |
-| LLM call rate | ≤10% | 🔄 |
-| Coverage | ≥85% @ ≤1% error | 🛡️ |
 
 ## 🚀 Quick Start
 
@@ -45,170 +46,150 @@ make test
 ### Training Pipeline
 
 ```bash
-# Complete training workflow
+# Prepare training data
+make prepare-data
+
+# Train all models
 make train-all
 
-# Or run individual steps:
-make prepare-data
-make train-weak-supervision
-make train-classical  
-make train-lora
-make train-stacker
-make set-thresholds
+# Or train individual components:
+make train-classical     # TF-IDF models
+make train-lora         # LoRA fine-tuning
+make train-weak-supervision  # Label model
+make train-stacker      # Ensemble training
+
+# Evaluate trained models
+make eval
 ```
 
-### Evaluation
+## 🧠 Model Components
 
+### Classical Models (`voters/classical/`)
+
+**TF-IDF + Logistic Regression**
+- Feature extraction with TF-IDF vectorization
+- Logistic regression with regularization
+- Platt scaling for probability calibration
+
+**TF-IDF + SVM**
+- Same feature extraction pipeline
+- Support Vector Machine classifier
+- Isotonic regression for calibration
+
+Both models target Expected Calibration Error (ECE) ≤ 0.03.
+
+### LLM Fine-tuning (`voters/llm/`)
+
+**LoRA Fine-tuning on Qwen2.5-7B**
+- Parameter-Efficient Fine-Tuning (PEFT) with LoRA
+- Structured JSON output with schema validation
+- Explicit abstention support for uncertain cases
+- Configurable LoRA parameters (rank, alpha, learning rates)
+
+**Key Features:**
+- Rank 16, Alpha 32 LoRA configuration
+- JSON schema enforcement for consistent outputs
+- Logprob extraction for uncertainty quantification
+- Graceful fallback to abstention on invalid JSON
+
+### Weak Supervision (`voters/ws_label_model/`)
+
+**Snorkel-like Label Model**
+- Combines multiple labeling function outputs
+- Probabilistic consensus via generative model
+- Handles conflicting labeling function votes
+- Minimum evidence thresholds for quality control
+
+### Ensemble Training (`arbiter/`)
+
+**Stacker Model**
+- Logistic regression or XGBoost stacker
+- Out-of-fold training to prevent overfitting
+- Feature engineering from voter outputs
+- Entropy, margin, and disagreement signals
+
+**Conformal Prediction**
+- Split conformal prediction for coverage guarantees
+- Per-slice threshold adjustments
+- Risk-controlled abstention
+
+## ⚙️ Configuration
+
+### Training Parameters (`configs/llm_lora.yaml`)
+
+```yaml
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.1
+  target_modules: ["q_proj", "v_proj", "k_proj", "o_proj"]
+
+training:
+  learning_rate: 5e-5
+  batch_size: 8
+  gradient_accumulation_steps: 4
+  num_epochs: 3
+  warmup_ratio: 0.1
+```
+
+### Model Selection (`configs/voters.yaml`)
+
+```yaml
+voters:
+  classical_lr:
+    enabled: true
+    cost: 0.001
+  classical_svm:
+    enabled: true
+    cost: 0.001
+  llm_lora:
+    enabled: true
+    cost: 0.05
+    model_name: "Qwen/Qwen2.5-7B"
+```
+
+## 📊 Evaluation Metrics
+
+The pipeline tracks multiple evaluation metrics:
+
+- **F1 Score**: Overall and per-class performance
+- **Calibration**: Expected Calibration Error (ECE), Brier Score
+- **Coverage**: Abstention rates and coverage guarantees
+- **Efficiency**: Training time, inference speed, model size
+
+## 🔬 Training Scripts
+
+### Data Preparation
 ```bash
-# System evaluation
-make eval-all
-
-# Safety regression testing
-make test-safety
-
-# Generate samples for human review
-make generate-disagreements
+python scripts/prepare_data.py
+# - Splits data into train/dev/test sets
+# - Creates weak supervision training data
+# - Preprocesses text for different model types
 ```
 
-### Production Deployment
-
+### Model Training
 ```bash
-# Start full production stack
-docker-compose up -d
+python scripts/train_lora_sft.py
+# - Fine-tunes Qwen2.5-7B with LoRA adapters
+# - Saves checkpoints and training metrics
+# - Validates on development set
 
-# Access services:
-# - API: http://localhost:8000
-# - Grafana: http://localhost:3000
-# - MLflow: http://localhost:5000
-# - Dashboard: streamlit run dashboard/app.py
+python scripts/train_classical.py
+# - Trains TF-IDF + LR/SVM models
+# - Applies calibration methods
+# - Saves trained models and vectorizers
 ```
 
-## 🧠 System Components
+### Ensemble Training
+```bash
+python scripts/predict_all_voters.py
+# - Generates out-of-fold predictions from all voters
+# - Ensures no data leakage for stacker training
 
-### Tier 0: Regex DSL Engine
-- **Location**: `dsl/engine.py`
-- **Cost**: $0.0001/prediction
-- **Purpose**: Fast deterministic rules with safety triggers
-- **Features**: YAML configuration, priority-based evaluation
-
-### Tier 1: Classical Models
-- **Location**: `voters/classical/`
-- **Cost**: $0.001/prediction  
-- **Models**: TF-IDF + Logistic Regression, TF-IDF + SVM
-- **Features**: Platt/Isotonic calibration, target ECE ≤ 0.03
-
-### Tier 2: Weak Supervision
-- **Location**: `voters/ws_label_model/`
-- **Cost**: $0.002/prediction
-- **Purpose**: Inference-time probabilistic label model
-- **Features**: Conflict resolution, minimum evidence thresholds
-
-### Tier 3: LLM LoRA
-- **Location**: `voters/llm/`
-- **Cost**: $0.05/prediction
-- **Model**: Qwen2.5-7B with LoRA adapters
-- **Features**: JSON schema validation, explicit abstention
-
-### Arbiter Cascade
-- **Location**: `arbiter/`
-- **Tier 0**: Fast consensus detection and safety rules
-- **Tier 1**: Learned stacking with out-of-fold training
-- **Tier 2**: Conformal prediction for risk-controlled abstention
-
-## 🔧 Configuration
-
-All configurations in `configs/` directory:
-
-| File | Purpose |
-|------|---------|
-| `labels.yaml` | Class definitions and harm weights |
-| `voters.yaml` | Voter enable/disable flags and parameters |
-| `conformal.yaml` | Risk targets and coverage goals |
-| `llm_lora.yaml` | LoRA training hyperparameters |
-| `slices.yaml` | Performance monitoring segments |
-
-## 🏭 Production Infrastructure
-
-### Core Services
-- **FastAPI Server**: Authentication, rate limiting, async handling
-- **PostgreSQL**: Prediction storage, feedback tracking, performance metrics
-- **Redis**: Multi-level caching with LRU and TTL management
-- **MLflow**: Experiment tracking and model registry
-
-### Monitoring Stack
-- **Prometheus**: Metrics collection and alerting
-- **Grafana**: Real-time dashboards and visualization
-- **OpenTelemetry**: Distributed tracing and observability
-- **Streamlit Dashboard**: System health and performance monitoring
-
-### Development Tools
-- **Docker**: Containerization with multi-stage builds
-- **pytest**: Comprehensive test suite with coverage
-- **CI/CD**: Rule validation, safety regression, promotion gates
-- **Code Quality**: black, isort, flake8, mypy
-
-## 📈 Active Learning
-
-Weekly human review process:
-
-1. **Generate Disagreements**: `make generate-disagreements`
-2. **Audit UI**: `make serve` → Review 50-100 samples
-3. **Extract Patterns**: New DSL rules from failure modes
-4. **Update Models**: Gold labels for retraining
-5. **Improve Prompts**: Based on failure analysis
-
-## 🔬 Key Features
-
-### Conformal Prediction
-- Split conformal thresholds for coverage guarantees
-- Per-slice threshold overrides for critical segments
-- Risk-controlled abstention (≤1% error @ ≥85% coverage)
-
-### Cost Optimization
-- Tiered cascade with early exits
-- Consensus detection bypasses expensive models
-- Target: <$0.01 average cost per prediction
-
-### Calibration
-- Platt scaling, isotonic regression, temperature scaling
-- Expected Calibration Error (ECE) monitoring
-- Brier score tracking for probabilistic accuracy
-
-### Safety & Security
-- Input sanitization and validation
-- Rate limiting and authentication
-- Backup and disaster recovery procedures
-- Comprehensive error handling with graceful degradation
-
-## 📊 Monitoring & Alerting
-
-Real-time tracking of:
-- **Performance**: F1, precision, recall per slice
-- **Calibration**: ECE, Brier scores, reliability diagrams  
-- **System Health**: Latency, throughput, error rates
-- **Business Metrics**: Cost per prediction, abstention rates
-- **Data Quality**: Drift detection, distribution shifts
-
-## 🔗 API Usage
-
-```python
-import requests
-
-# Make prediction
-response = requests.post(
-    "http://localhost:8000/predict",
-    headers={"Authorization": "Bearer your-token"},
-    json={"text": "Sample bird flu content..."}
-)
-
-result = response.json()
-# {
-#   "prediction": "high_risk", 
-#   "confidence": 0.92,
-#   "abstain": false,
-#   "voter_outputs": {...},
-#   "latency_ms": 145
-# }
+python scripts/train_stacker.py
+# - Trains ensemble stacker on voter outputs
+# - Feature engineering and model selection
+# - Cross-validation for hyperparameter tuning
 ```
 
 ## 🧪 Testing
@@ -217,12 +198,9 @@ result = response.json()
 # Full test suite
 make test
 
-# Safety regression only
-make test-safety
-
-# Lint and format
-make lint
+# Code formatting and linting
 make format
+make lint
 
 # Clean artifacts
 make clean
@@ -231,37 +209,51 @@ make clean
 ## 📋 Requirements
 
 - **Python**: ≥3.9
-- **GPU**: Recommended for LLM training (8GB+ VRAM)
-- **Memory**: 16GB+ RAM for full system
-- **Storage**: 50GB+ for models and artifacts
+- **GPU**: Recommended for LLM fine-tuning (8GB+ VRAM)
+- **Memory**: 16GB+ RAM for full pipeline
+- **Storage**: 20GB+ for models and data
+
+### Key Dependencies
+
+- `torch>=2.0.0` - PyTorch framework
+- `transformers>=4.35.0` - Hugging Face transformers
+- `peft>=0.7.0` - Parameter-Efficient Fine-Tuning
+- `scikit-learn>=1.3.0` - Classical ML models
+- `datasets>=2.14.0` - Data loading and processing
+
+## 🔧 Development
+
+### Adding New Models
+
+1. Create new voter in `voters/` directory
+2. Implement training and inference methods
+3. Add configuration to `configs/voters.yaml`
+4. Update training pipeline in `scripts/`
+
+### Custom Datasets
+
+1. Place data files in `data/raw/`
+2. Update `scripts/prepare_data.py` for preprocessing
+3. Modify label definitions in `configs/labels.yaml`
 
 ## 📚 Documentation
 
-- **Development Guide**: See `CLAUDE.md` for detailed guidance
-- **API Documentation**: Available at `/docs` when server running
-- **Configuration Reference**: Comments in `configs/*.yaml` files
-- **Deployment Guide**: Docker and production setup instructions
+- **CLAUDE.md**: Detailed technical guidance for development
+- **configs/**: Inline documentation in YAML configuration files
+- **Code Comments**: Implementation details in Python modules
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature-name`
-3. Make changes following code quality standards
-4. Run tests: `make test && make lint`
-5. Submit pull request with clear description
+3. Follow code quality standards: `make lint && make test`
+4. Submit pull request with clear description
 
 ## 📄 License
 
 [MIT License](LICENSE) - see LICENSE file for details.
 
-## 🆘 Support
-
-- **Issues**: [GitHub Issues](https://github.com/kevinnbass/fine_tune_llm/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/kevinnbass/fine_tune_llm/discussions)
-- **Documentation**: See `CLAUDE.md` for technical details
-
 ---
 
-**Built with**: PyTorch, Transformers, PEFT, FastAPI, PostgreSQL, Redis, Prometheus, Grafana, Docker
-
-**Enterprise-ready**: Production monitoring, security, scalability, and reliability built-in.
+**Focus**: Model fine-tuning and ensemble training for bird flu classification
+**Built with**: PyTorch, Transformers, PEFT, scikit-learn, Snorkel

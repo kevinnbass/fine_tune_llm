@@ -1,4 +1,4 @@
-.PHONY: install test lint format clean train-all eval-all
+.PHONY: install test lint format clean train-all eval
 
 install:
 	pip install -e .
@@ -19,15 +19,8 @@ lint:
 test:
 	pytest tests/ -v --cov=. --cov-report=html
 
-test-safety:
-	python scripts/eval_full_system.py --safety-set-only
-
 prepare-data:
 	python scripts/prepare_data.py
-
-train-weak-supervision:
-	python scripts/run_lfs.py
-	python scripts/train_weak_supervision.py
 
 train-classical:
 	python scripts/train_classical.py
@@ -35,23 +28,17 @@ train-classical:
 train-lora:
 	python scripts/train_lora_sft.py
 
+train-weak-supervision:
+	python scripts/train_weak_supervision.py
+
 train-stacker:
 	python scripts/predict_all_voters.py
 	python scripts/train_stacker.py
 
-set-thresholds:
-	python scripts/set_conformal_threshold.py
+train-all: prepare-data train-classical train-lora train-weak-supervision train-stacker
 
-train-all: prepare-data train-weak-supervision train-classical train-lora train-stacker set-thresholds
-
-eval-all:
+eval:
 	python scripts/eval_full_system.py
-
-generate-disagreements:
-	python scripts/generate_disagreements.py
-
-serve:
-	streamlit run miner/audit_ui/app.py
 
 clean:
 	rm -rf artifacts/probs/*.jsonl
