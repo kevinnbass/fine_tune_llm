@@ -156,3 +156,49 @@ instruction_format:
           "rationale": "Ambiguous content without clear indicators",
           "abstain": true
         }
+
+# High-Stakes Precision and Auditability Features
+high_stakes:
+  # Uncertainty-aware fine-tuning for precision
+  uncertainty:
+    enabled: false  # Enable for high-stakes mode
+    method: "mc_dropout"  # Options: mc_dropout, deep_ensemble
+    num_samples: 5  # Forward passes for estimation
+    abstention_threshold: 0.7  # Abstain if uncertainty > this
+    fp_penalty_weight: 2.0  # Heavy penalty for overconfident false positives
+    
+  # Factual accuracy enhancement with RELIANCE
+  factual:
+    enabled: false
+    reliance_steps: 3  # Number of intermediate reasoning steps to check
+    fact_penalty_weight: 2.0  # Heavy for high-stakes precision
+    self_consistency_threshold: 0.8  # Agreement threshold for factual claims
+    
+  # Bias auditing for fairness
+  bias_audit:
+    enabled: false
+    audit_categories: ["gender", "race", "age", "nationality"]
+    bias_threshold: 0.1  # Maximum allowed bias score
+    mitigation_weight: 1.5  # Weight for bias mitigation in loss
+    
+  # Explainable reasoning
+  explainable:
+    enabled: false
+    chain_of_thought: true  # Require step-by-step reasoning
+    reasoning_steps: 3  # Minimum reasoning steps
+    faithfulness_check: true  # Verify reasoning leads to conclusion
+    
+  # Procedural alignment for domains
+  procedural:
+    enabled: false
+    domain: "medical"  # Options: medical, legal, financial
+    procedure_file: "configs/procedures.yaml"  # Domain-specific procedures
+    compliance_weight: 2.0  # Weight for procedure compliance
+    
+  # Verifiable training provenance
+  verifiable:
+    enabled: false
+    hash_artifacts: true  # Hash all training artifacts
+    cryptographic_proof: true  # Generate cryptographic proofs
+    audit_log: "artifacts/audit_trail.jsonl"  # Audit trail file
+    checkpoint_hashing: true  # Hash each checkpoint

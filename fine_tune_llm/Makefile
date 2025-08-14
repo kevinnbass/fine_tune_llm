@@ -78,6 +78,28 @@ docker-clean:
 	docker system prune -f
 	docker image prune -f
 
+# High-stakes precision training
+train-uncertainty:
+	python scripts/train_high_stakes.py --uncertainty-enabled
+
+train-factual:
+	python scripts/train_high_stakes.py --factual-enabled
+
+train-bias-audit:
+	python scripts/train_high_stakes.py --bias-audit-enabled
+
+train-explainable:
+	python scripts/train_high_stakes.py --explainable-enabled
+
+train-procedural:
+	python scripts/train_high_stakes.py --procedural-enabled
+
+train-verifiable:
+	python scripts/train_high_stakes.py --verifiable-enabled
+
+train-all-high-stakes:
+	python scripts/train_high_stakes.py --uncertainty-enabled --factual-enabled --bias-audit-enabled --explainable-enabled --procedural-enabled --verifiable-enabled
+
 help:
 	@echo "Available commands:"
 	@echo "  install-dev    - Install development dependencies"
@@ -104,3 +126,12 @@ help:
 	@echo "  docker-logs    - View container logs"
 	@echo "  docker-shell   - Open shell in container"
 	@echo "  docker-clean   - Clean Docker cache"
+	@echo ""
+	@echo "High-stakes precision training:"
+	@echo "  train-uncertainty    - Train with uncertainty quantification"
+	@echo "  train-factual        - Train with RELIANCE factual accuracy"
+	@echo "  train-bias-audit     - Train with bias auditing"
+	@echo "  train-explainable    - Train with explainable reasoning"
+	@echo "  train-procedural     - Train with procedural alignment"
+	@echo "  train-verifiable     - Train with verifiable provenance"
+	@echo "  train-all-high-stakes - Train with all high-stakes features"

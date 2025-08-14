@@ -72,6 +72,14 @@ This repository implements a complete LLM fine-tuning ecosystem with state-of-th
 - **Conformal Prediction**: Risk-controlled abstention
 - **Real-time Monitoring**: Training progress and metrics
 
+### 🔒 Precision-Optimized Features for High-Stakes Domains
+- **Uncertainty-Aware Fine-Tuning**: Monte Carlo Dropout with abstention thresholds
+- **RELIANCE Factual Accuracy**: Step-by-step verification and self-consistency
+- **Bias Auditing Pipeline**: Multi-category bias detection and mitigation
+- **Explainable Reasoning**: Chain-of-thought with faithfulness verification
+- **Procedural Alignment**: Domain-specific compliance (medical, legal, financial)
+- **Verifiable Training**: Cryptographic proofs and complete audit trails
+
 ## 📁 Project Structure
 
 ```
@@ -83,9 +91,13 @@ llm-finetuning/
 ├── voters/llm/            # Core training modules
 │   ├── dataset.py         # Enhanced data preparation
 │   ├── sft_lora.py        # Advanced LoRA training
+│   ├── uncertainty.py     # Uncertainty-aware training
+│   ├── fact_check.py      # RELIANCE factual accuracy
+│   ├── high_stakes_audit.py # Bias auditing and compliance
 │   └── evaluate.py        # Evaluation pipeline
 ├── scripts/
 │   ├── train_lora_sft.py  # Enhanced training script
+│   ├── train_high_stakes.py # High-stakes precision training
 │   ├── infer_model.py     # Structured inference
 │   ├── prepare_data.py    # Data preparation with augmentation
 │   ├── tune_hyperparams.py # Optuna optimization
@@ -154,6 +166,12 @@ make train-qlora
 
 # DoRA method (often better than LoRA)
 make train-dora
+
+# High-stakes precision training with uncertainty quantification
+make train-uncertainty
+
+# Train with all high-stakes features enabled
+make train-all-high-stakes
 
 # Hyperparameter optimization
 make tune
@@ -251,6 +269,44 @@ data:
       - "random_insertion"
       - "contextual_embedding"
     aug_p: 0.1                   # Augmentation probability
+
+# High-stakes precision and auditability features
+high_stakes:
+  uncertainty:
+    enabled: false               # Enable uncertainty-aware training
+    method: "mc_dropout"          # "mc_dropout" or "deep_ensembles"
+    num_samples: 5               # Monte Carlo samples
+    abstention_threshold: 0.7    # Threshold for abstention
+    fp_penalty_weight: 2.0       # False positive penalty
+  
+  factual:
+    enabled: false               # Enable RELIANCE factual accuracy
+    reliance_steps: 3            # Number of verification steps
+    fact_penalty_weight: 2.0     # Factual error penalty
+    self_consistency_threshold: 0.8
+  
+  bias_audit:
+    enabled: false               # Enable bias auditing
+    audit_categories: ["gender", "race", "age"]
+    bias_threshold: 0.1          # Bias detection threshold
+    mitigation_weight: 1.5       # Bias mitigation strength
+  
+  explainable:
+    enabled: false               # Enable explainable reasoning
+    chain_of_thought: true       # Chain-of-thought prompting
+    reasoning_steps: 3           # Minimum reasoning steps
+    faithfulness_check: true     # Verify reasoning faithfulness
+  
+  procedural:
+    enabled: false               # Enable procedural alignment
+    domain: "medical"             # Domain: medical, legal, financial
+    compliance_weight: 2.0       # Compliance loss weight
+  
+  verifiable:
+    enabled: false               # Enable verifiable training
+    hash_artifacts: true         # Hash training artifacts
+    cryptographic_proof: true    # Create cryptographic proofs
+    audit_log: "artifacts/audit_trail.jsonl"
 ```
 
 ## 🧠 Supported Models
@@ -280,6 +336,16 @@ data:
 - **Memory**: 16GB+ VRAM for full precision, 7GB+ with QLoRA
 
 ## 📝 Changelog
+
+### v0.3.1 (2025-08-14) - High-Stakes Precision & Auditability Enhancements
+- 🔒 **Uncertainty-Aware Fine-Tuning**: Monte Carlo Dropout with abstention mechanisms
+- 🎯 **RELIANCE Factual Accuracy**: Step-by-step verification and self-consistency checking
+- ⚖️ **Bias Auditing Pipeline**: Multi-category bias detection and mitigation
+- 🧠 **Explainable Reasoning**: Chain-of-thought with faithfulness verification
+- 📋 **Procedural Alignment**: Domain-specific compliance for medical/legal/financial
+- 🔐 **Verifiable Training**: Cryptographic proofs and complete audit trails
+- 🧪 **Comprehensive Testing**: Test suite for all high-stakes features
+- 📚 **Enhanced Documentation**: Complete integration guides and examples
 
 ### v0.2.1 (2025-08-14) - Further Enhancements
 - 🐳 **Docker Support**: Full containerization with GPU support
@@ -401,6 +467,15 @@ make train-qlora     # QLoRA with 4-bit quantization
 make train-dora      # DoRA method training
 make train-adalora   # AdaLoRA adaptive training
 
+# High-stakes precision training commands
+make train-uncertainty    # Uncertainty-aware training
+make train-factual        # RELIANCE factual accuracy
+make train-bias-audit     # Bias auditing enabled
+make train-explainable    # Explainable reasoning
+make train-procedural     # Procedural alignment
+make train-verifiable     # Verifiable training
+make train-all-high-stakes # All high-stakes features
+
 # Analysis and optimization  
 make eval            # Comprehensive model evaluation
 make tune            # Hyperparameter optimization with Optuna
@@ -438,6 +513,82 @@ python scripts/infer_model.py \
     --text "Your text here" \
     --structured \
     --schema '{"decision": "str", "confidence": "float", "rationale": "str"}'
+```
+
+### High-Stakes Precision Training
+
+The platform provides specialized features for mission-critical applications requiring maximum accuracy and auditability:
+
+#### Uncertainty-Aware Fine-Tuning
+```bash
+# Enable uncertainty quantification with Monte Carlo Dropout
+make train-uncertainty
+
+# Features:
+# - Abstention mechanisms for high-uncertainty predictions
+# - False positive penalty optimization
+# - Calibrated confidence scores
+# - Risk-controlled decision boundaries
+```
+
+#### Factual Accuracy with RELIANCE Framework
+```bash
+# Step-by-step factual verification training
+make train-factual
+
+# Features:
+# - Multi-step reasoning verification
+# - Self-consistency checking
+# - Factual claim validation
+# - Error penalty optimization
+```
+
+#### Comprehensive Example - Medical Domain
+```bash
+# Train with all high-stakes features for medical applications
+python scripts/train_high_stakes.py \
+    --uncertainty-enabled \
+    --factual-enabled \
+    --bias-audit-enabled \
+    --explainable-enabled \
+    --procedural-enabled \
+    --verifiable-enabled \
+    --config configs/llm_lora.yaml
+
+# This enables:
+# - Uncertainty quantification with abstention
+# - Medical fact-checking and verification
+# - Bias detection across demographics
+# - Explainable chain-of-thought reasoning
+# - Medical compliance checking
+# - Complete cryptographic audit trail
+```
+
+#### Bias Auditing & Mitigation
+```bash
+# Comprehensive bias detection and mitigation
+make train-bias-audit
+
+# Audits for:
+# - Gender bias in language and predictions
+# - Racial and ethnic bias patterns
+# - Age-related discrimination
+# - Nationality and cultural bias
+```
+
+#### Domain-Specific Procedural Alignment
+```yaml
+# Configure for specific high-stakes domains
+high_stakes:
+  procedural:
+    domain: "medical"  # or "legal", "financial"
+    compliance_weight: 2.0
+    procedure_file: "configs/medical_procedures.yaml"
+
+# Ensures compliance with:
+# - Medical disclaimers and recommendations
+# - Legal jurisdiction and citation requirements
+# - Financial risk disclosures and regulations
 ```
 
 ### Memory Optimization Tips
@@ -503,6 +654,12 @@ datasets>=2.14.0       # Dataset processing
 # Production features
 gradio>=4.0.0          # Web UI
 outlines>=0.0.20       # Structured generation
+
+# High-stakes precision features
+imbalanced-learn>=0.11.0  # Bias detection algorithms
+scikit-learn>=1.3.0    # Statistical analysis
+cryptography>=41.0.0   # Cryptographic proofs
+jsonschema>=4.20.0     # Schema validation
 ```
 
 ## 🧪 Quality Assurance
@@ -566,6 +723,12 @@ docker-compose --profile monitoring up -d
 | **Hyperparameter Tuning** | ✅ Optuna | ❌ | ❌ | ❌ |
 | **Structured Output** | ✅ Outlines | ❌ | ❌ | ❌ |
 | **Data Augmentation** | ✅ nlpaug | Partial | ❌ | ❌ |
+| **Uncertainty-Aware Fine-Tuning** | ✅ | ❌ | ❌ | ❌ |
+| **Factual Accuracy (RELIANCE)** | ✅ | ❌ | ❌ | ❌ |
+| **Bias Auditing Pipeline** | ✅ | ❌ | ❌ | ❌ |
+| **Explainable Reasoning** | ✅ | ❌ | ❌ | ❌ |
+| **Procedural Alignment** | ✅ | ❌ | ❌ | ❌ |
+| **Verifiable Training** | ✅ | ❌ | ❌ | ❌ |
 | **Docker Support** | ✅ | ✅ | ✅ | ❌ |
 | **Memory Efficiency** | High (Consumer GPUs) | High | Medium | Very High |
 | **Evaluation Pipeline** | ✅ Comprehensive | ✅ Basic | ✅ Custom | ❌ |
@@ -603,12 +766,18 @@ make ui                # Launch web interface
 
 ## 🛤️ Future Roadmap
 
-### v0.3.0 - Vision & Multimodal (Q1 2025)
+### v0.3.2 - Integration & Testing (Q1 2025)
+- 🧪 **Advanced Testing**: Integration tests for high-stakes features
+- 📊 **Benchmark Suite**: Performance evaluation on high-stakes tasks
+- 🔧 **UI Integration**: Web interface support for precision features
+- 📋 **Compliance Templates**: Pre-built templates for different domains
+
+### v0.4.0 - Vision & Multimodal (Q2 2025)
 - 🖼️ **Vision-Language Models**: LLaVA, BLIP-2, and multimodal fine-tuning
 - 📷 **Image-Text Datasets**: Support for VQA, image captioning tasks
 - 🎨 **UI Enhancements**: Image upload and multimodal inference interface
 
-### v0.4.0 - Reinforcement Learning (Q2 2025)
+### v0.5.0 - Reinforcement Learning (Q3 2025)
 - 🏆 **RLHF Integration**: PPO and DPO pipeline implementation
 - 👥 **Human Feedback**: Built-in annotation tools for preference data
 - 🎯 **Reward Modeling**: Automated reward model training

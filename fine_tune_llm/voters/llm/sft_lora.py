@@ -38,7 +38,15 @@ try:
     WANDB_AVAILABLE = True
 except ImportError:
     WANDB_AVAILABLE = False
-    logger.warning("W&B not available. Install with: pip install wandb")
+
+# Import high-stakes modules if available
+try:
+    from .uncertainty import MCDropoutWrapper, compute_uncertainty_aware_loss, should_abstain
+    from .fact_check import RELIANCEFactChecker, FactualDataFilter
+    from .high_stakes_audit import BiasAuditor, ExplainableReasoning, ProceduralAlignment, VerifiableTraining
+    HIGH_STAKES_AVAILABLE = True
+except ImportError:
+    HIGH_STAKES_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +72,30 @@ class EnhancedLoRASFTTrainer:
         if self.config["evaluation"]["enabled"]:
             for metric_name in self.config["evaluation"]["metrics"]:
                 self.metrics[metric_name] = evaluate.load(metric_name)
+        
+        # Initialize high-stakes components if available
+        self.high_stakes_components = {}
+        if HIGH_STAKES_AVAILABLE:
+            self._initialize_high_stakes_components()
+    
+    def _initialize_high_stakes_components(self):
+        """Initialize high-stakes precision and auditing components."""
+        high_stakes_config = self.config.get('high_stakes', {})
+        
+        # Bias auditor
+        if high_stakes_config.get('bias_audit', {}).get('enabled', False):
+            self.high_stakes_components['bias_auditor'] = BiasAuditor(self.config)
+            logger.info("Initialized bias auditor")
+        
+        # Procedural alignment
+        if high_stakes_config.get('procedural', {}).get('enabled', False):
+            self.high_stakes_components['procedural'] = ProceduralAlignment(self.config)
+            logger.info("Initialized procedural alignment")
+        
+        # Verifiable training
+        if high_stakes_config.get('verifiable', {}).get('enabled', False):
+            self.high_stakes_components['verifiable'] = VerifiableTraining(self.config)
+            logger.info("Initialized verifiable training")
 
     def get_quantization_config(self) -> Optional[BitsAndBytesConfig]:
         """Get quantization configuration for QLoRA."""
@@ -163,6 +195,18 @@ class EnhancedLoRASFTTrainer:
         # Apply LoRA/DoRA
         self.model = get_peft_model(self.model, peft_config)
         self.model.print_trainable_parameters()
+
+        # Apply uncertainty wrapper if enabled
+        if HIGH_STAKES_AVAILABLE:
+            uncertainty_config = self.config.get('high_stakes', {}).get('uncertainty', {})
+            if uncertainty_config.get('enabled', False):
+                if uncertainty_config.get('method') == 'mc_dropout':
+                    self.model = MCDropoutWrapper(
+                        self.model, 
+                        num_samples=uncertainty_config.get('num_samples', 5),
+                        dropout_rate=0.1
+                    )
+                    logger.info("Applied MC Dropout uncertainty wrapper")
 
         method_name = {"lora": "LoRA", "dora": "DoRA", "adalora": "AdaLoRA"}.get(
             self.config["lora"]["method"], "LoRA"
