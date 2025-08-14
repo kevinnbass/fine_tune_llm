@@ -1,0 +1,97 @@
+# Deterministic DSL rules for bird flu classification
+# Rules are evaluated in priority order (lower number = higher priority)
+
+rules:
+  # High-risk patterns
+  - id: h5n1_explicit
+    pattern: "\\b[Hh]5[Nn]1\\b"
+    label: HIGH_RISK
+    confidence: 0.95
+    priority: 1
+    description: "Explicit H5N1 mention"
+    
+  - id: avian_flu_outbreak
+    pattern: "\\b(avian|bird)\\s+(flu|influenza)\\s+(outbreak|pandemic|epidemic)\\b"
+    label: HIGH_RISK
+    confidence: 0.9
+    priority: 2
+    case_insensitive: true
+    
+  - id: zoonotic_transmission
+    pattern: "\\b(zoonotic|animal.to.human|cross.species)\\s+transmission.*\\b(flu|influenza|H5N1)\\b"
+    label: HIGH_RISK
+    confidence: 0.85
+    priority: 3
+    case_insensitive: true
+    
+  # Medium-risk patterns
+  - id: flu_symptoms_birds
+    pattern: "\\b(birds?|poultry|chickens?)\\b.*\\b(respiratory|fever|lethargy|mortality)\\b"
+    label: MEDIUM_RISK
+    confidence: 0.7
+    priority: 10
+    max_distance: 50  # Max chars between matched groups
+    
+  - id: biosecurity_measures
+    pattern: "\\b(biosecurity|quarantine|culling)\\b.*\\b(birds?|poultry|farms?)\\b"
+    label: MEDIUM_RISK
+    confidence: 0.65
+    priority: 11
+    case_insensitive: true
+    
+  # Low-risk patterns
+  - id: general_flu_discussion
+    pattern: "\\b(flu|influenza)\\b(?!.*(bird|avian|H5N1|poultry))"
+    label: LOW_RISK
+    confidence: 0.6
+    priority: 20
+    case_insensitive: true
+    
+  - id: bird_health_general
+    pattern: "\\b(bird|avian)\\s+(health|disease|illness)\\b(?!.*(flu|influenza|H5N1))"
+    label: LOW_RISK
+    confidence: 0.55
+    priority: 21
+    
+  # Safety rules (force abstention)
+  - id: corrupted_text
+    pattern: "[\x00-\x08\x0B-\x0C\x0E-\x1F]{5,}"
+    action: ABSTAIN
+    priority: 0
+    description: "Text appears corrupted"
+    
+  - id: non_english_majority
+    pattern: "[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]{20,}"
+    action: ABSTAIN
+    priority: 0
+    description: "Non-English text (CJK characters)"
+    
+  # Negation modifiers (reduce confidence)
+  - id: negation_modifier
+    pattern: "\\b(not?|no|never|neither|none)\\s+(bird\\s*flu|avian\\s*flu|H5N1)"
+    modifier: 0.3  # Multiply confidence by 0.3
+    priority: 5
+    
+# Combination rules (require multiple patterns)
+combinations:
+  - id: research_paper_high_risk
+    requires_all:
+      - pattern: "(abstract|introduction|methods|results)"
+      - pattern: "\\b(H5N1|avian\\s+influenza)\\b"
+    label: HIGH_RISK
+    confidence: 0.92
+    priority: 4
+    
+  - id: news_article_medium_risk
+    requires_all:
+      - pattern: "(reported|sources?|officials?|statement)"
+      - pattern: "\\b(bird|poultry)\\b"
+      - pattern: "\\b(flu|disease|outbreak)\\b"
+    label: MEDIUM_RISK
+    confidence: 0.75
+    priority: 12
+    
+# Confidence thresholds
+thresholds:
+  min_confidence_to_predict: 0.5  # Below this, ABSTAIN
+  high_confidence: 0.8  # For tier-0 fast acceptance

@@ -1,0 +1,74 @@
+# Voter configuration
+voters:
+  regex_dsl:
+    enabled: true
+    priority: 1  # Run first (cheapest)
+    cost_cents: 0.0001
+    timeout_ms: 10
+    abstain_threshold: null  # DSL handles abstention internally
+    
+  tfidf_lr:
+    enabled: true
+    priority: 2
+    cost_cents: 0.001
+    timeout_ms: 50
+    model_path: artifacts/models/tfidf_lr_v1.pkl
+    abstain_threshold: 0.7
+    calibration:
+      method: platt
+      target_ece: 0.03
+      
+  tfidf_svm:
+    enabled: true
+    priority: 2
+    cost_cents: 0.001
+    timeout_ms: 50
+    model_path: artifacts/models/tfidf_svm_v1.pkl
+    abstain_threshold: 0.7
+    calibration:
+      method: isotonic
+      target_ece: 0.03
+      
+  ws_label_model:
+    enabled: true
+    priority: 2
+    cost_cents: 0.002
+    timeout_ms: 100
+    model_path: artifacts/models/label_model_v1.pkl
+    abstain_threshold: 0.65
+    min_evidence: 2  # Minimum LF votes to make prediction
+    
+  distilbert:
+    enabled: false  # Optional, heavier than classical
+    priority: 3
+    cost_cents: 0.01
+    timeout_ms: 200
+    model_path: artifacts/models/distilbert_v1
+    abstain_threshold: 0.75
+    calibration:
+      method: temperature
+      target_ece: 0.03
+      
+  llm_lora:
+    enabled: true
+    priority: 4  # Most expensive, run last
+    cost_cents: 0.05
+    timeout_ms: 2000
+    model_id: Qwen/Qwen2.5-7B
+    adapter_path: artifacts/models/qwen25_lora_v1
+    abstain_threshold: 0.8
+    temperature: 1.0  # For calibration
+    max_length: 2048
+    schema_validation: true
+    
+# Cascade configuration
+cascade:
+  tier_0_consensus_threshold: 0.9  # All voters agree with high confidence
+  tier_0_safety_rules: true  # Apply safety DSL rules
+  tier_1_stacker: logistic  # Options: logistic, xgboost
+  tier_2_conformal: true
+  
+# Cost budget per 1000 predictions
+cost_budget:
+  max_cost_per_1k: 10.0  # $10 per 1000 predictions
+  llm_call_rate_target: 0.1  # Aim for <10% LLM calls

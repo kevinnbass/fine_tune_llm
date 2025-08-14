@@ -1,0 +1,29 @@
+# Label configuration
+labels:
+  - name: HIGH_RISK
+    harm_weight: 10.0
+    description: "High risk bird flu content"
+  - name: MEDIUM_RISK
+    harm_weight: 5.0
+    description: "Medium risk content with potential implications"
+  - name: LOW_RISK
+    harm_weight: 1.0
+    description: "Low risk or general discussion"
+  - name: NO_RISK
+    harm_weight: 0.1
+    description: "No risk or unrelated content"
+
+abstain:
+  enabled: true
+  default_threshold: 0.7  # Max-prob threshold for per-voter abstention
+  cascade_threshold: 0.85  # Higher threshold for final cascade
+  max_abstain_rate: 0.15  # Maximum allowed abstention rate
+  
+critical_errors:
+  # Define which misclassifications are critical
+  - from: NO_RISK
+    to: HIGH_RISK
+    weight: 100.0
+  - from: LOW_RISK
+    to: HIGH_RISK
+    weight: 50.0

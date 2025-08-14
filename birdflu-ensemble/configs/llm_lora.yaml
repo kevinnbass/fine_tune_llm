@@ -1,0 +1,94 @@
+# LoRA SFT configuration for LLM voter
+lora:
+  # Base model
+  model_id: Qwen/Qwen2.5-7B
+  tokenizer_id: Qwen/Qwen2.5-7B
+  
+  # LoRA parameters
+  r: 16  # Rank
+  lora_alpha: 32
+  lora_dropout: 0.1
+  target_modules:
+    - q_proj
+    - v_proj
+    - k_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+    
+  # Training parameters
+  learning_rate: 2e-4
+  num_epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 4
+  warmup_ratio: 0.03
+  weight_decay: 0.001
+  max_grad_norm: 0.3
+  
+  # Sequence parameters
+  max_length: 2048
+  padding: true
+  truncation: true
+  
+  # Training optimizations
+  fp16: false
+  bf16: true  # Use bfloat16 for better stability
+  gradient_checkpointing: true
+  optim: paged_adamw_32bit
+  
+  # Data configuration
+  packing: true  # Pack multiple examples per sequence
+  num_proc: 4  # Parallel data processing
+  
+  # Evaluation
+  eval_steps: 100
+  save_steps: 200
+  logging_steps: 10
+  eval_strategy: steps
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: eval_f1
+  greater_is_better: true
+  
+  # Early stopping
+  early_stopping: true
+  early_stopping_patience: 3
+  
+# Instruction format
+instruction_format:
+  system_prompt: |
+    You are a specialized classifier for bird flu content. 
+    Analyze the text and return a JSON response with your classification.
+    You MUST return valid JSON with "decision", "rationale", and "abstain" fields.
+    If you are uncertain or the text is ambiguous, set "abstain": true.
+    
+  input_template: |
+    Text to classify:
+    {text}
+    
+    Metadata:
+    {metadata}
+    
+  output_template: |
+    {
+      "decision": "{label}",
+      "rationale": "{rationale}",
+      "abstain": {abstain}
+    }
+    
+  abstain_examples:
+    - text: "The document appears corrupted with mixed languages and symbols..."
+      output: |
+        {
+          "decision": null,
+          "rationale": "Text appears corrupted or unintelligible",
+          "abstain": true
+        }
+    - text: "This might be about birds or it might be about flu but I'm not sure..."
+      output: |
+        {
+          "decision": null,
+          "rationale": "Ambiguous content without clear indicators",
+          "abstain": true
+        }

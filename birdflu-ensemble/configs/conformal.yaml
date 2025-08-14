@@ -1,0 +1,37 @@
+# Conformal prediction configuration
+conformal:
+  # Global settings
+  method: split_conformal  # Options: split_conformal, adaptive_conformal
+  calibration_split: 0.2  # Fraction of dev set for calibration
+  
+  # Risk targets
+  global:
+    max_error_rate: 0.01  # 1% maximum error rate
+    min_coverage: 0.85  # 85% minimum coverage
+    critical_error_weight: 10.0  # Weight for critical misclassifications
+    
+  # Per-slice overrides (stricter for important slices)
+  per_slice:
+    medical_domain:
+      max_error_rate: 0.005  # 0.5% for medical
+      min_coverage: 0.9
+    research_paper:
+      max_error_rate: 0.007
+      min_coverage: 0.88
+    high_uncertainty:
+      max_error_rate: 0.015
+      min_coverage: 0.8
+      
+  # Adaptive settings (if enabled)
+  adaptive:
+    enabled: false  # Start with static thresholds
+    learning_rate: 0.01
+    update_frequency: 1000  # Update every N predictions
+    window_size: 5000  # Rolling window for statistics
+    
+  # Monitoring
+  monitoring:
+    track_coverage: true
+    track_error_rate: true
+    alert_on_violation: true
+    log_frequency: 100  # Log stats every N predictions

@@ -1,0 +1,161 @@
+# GitHub Actions workflow for model promotion gates
+name: Model Promotion Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_version:
+        description: 'Model version to promote'
+        required: true
+        type: string
+      target_env:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  evaluate-candidate:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      promotion_decision: ${{ steps.evaluate.outputs.decision }}
+      metrics_summary: ${{ steps.evaluate.outputs.summary }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        pip install -e .
+    
+    - name: Download candidate model
+      run: |
+        echo "Downloading model version: ${{ inputs.model_version }}"
+        # Download from model registry
+        mkdir -p artifacts/models/candidate
+    
+    - name: Download champion model
+      run: |
+        echo "Downloading current champion model"
+        mkdir -p artifacts/models/champion
+    
+    - name: Run champion/challenger evaluation
+      id: evaluate
+      run: |
+        python scripts/champion_challenger.py \
+          --champion artifacts/models/champion \
+          --challenger artifacts/models/candidate \
+          --test_data data/test/promotion_test.csv \
+          --output promotion_results.json
+        
+        # Parse results
+        DECISION=$(python -c "
+        import json
+        with open('promotion_results.json') as f:
+            results = json.load(f)
+        
+        # Promotion criteria
+        promote = True
+        
+        # Overall F1 must improve
+        if results['challenger']['f1_weighted'] <= results['champion']['f1_weighted']:
+            promote = False
+            print('FAIL: F1 not improved')
+        
+        # Worst slice must not degrade more than 0.5%
+        if results['challenger']['worst_slice_f1'] < results['champion']['worst_slice_f1'] - 0.005:
+            promote = False
+            print('FAIL: Worst slice degraded')
+        
+        # Abstention rate must not exceed 15%
+        if results['challenger']['abstention_rate'] > 0.15:
+            promote = False
+            print('FAIL: Abstention rate too high')
+        
+        # LLM call rate must not exceed 10%
+        if results['challenger']['llm_call_rate'] > 0.10:
+            promote = False
+            print('FAIL: LLM call rate too high')
+        
+        print('PASS' if promote else 'FAIL')
+        ")
+        
+        echo "decision=$DECISION" >> $GITHUB_OUTPUT
+        
+        # Generate summary
+        SUMMARY=$(python -c "
+        import json
+        with open('promotion_results.json') as f:
+            results = json.load(f)
+        
+        print(f\"Champion F1: {results['champion']['f1_weighted']:.3f}\")
+        print(f\"Challenger F1: {results['challenger']['f1_weighted']:.3f}\")
+        print(f\"Improvement: {results['challenger']['f1_weighted'] - results['champion']['f1_weighted']:.3f}\")
+        ")
+        
+        echo "summary<<EOF" >> $GITHUB_OUTPUT
+        echo "$SUMMARY" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Upload evaluation results
+      uses: actions/upload-artifact@v3
+      with:
+        name: promotion-results
+        path: promotion_results.json
+  
+  promote-model:
+    needs: evaluate-candidate
+    if: needs.evaluate-candidate.outputs.promotion_decision == 'PASS'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Promote model
+      run: |
+        echo "Promoting model ${{ inputs.model_version }} to ${{ inputs.target_env }}"
+        echo "Metrics: ${{ needs.evaluate-candidate.outputs.metrics_summary }}"
+        
+        # Actual promotion logic would go here
+        # - Update model registry
+        # - Deploy to target environment
+        # - Update configs
+    
+    - name: Notify success
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Model promoted successfully!\n\n${{ needs.evaluate-candidate.outputs.metrics_summary }}'
+          })
+  
+  reject-promotion:
+    needs: evaluate-candidate
+    if: needs.evaluate-candidate.outputs.promotion_decision == 'FAIL'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Reject promotion
+      run: |
+        echo "Model ${{ inputs.model_version }} failed promotion gates"
+        echo "Metrics: ${{ needs.evaluate-candidate.outputs.metrics_summary }}"
+    
+    - name: Notify failure
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '❌ Model failed promotion gates!\n\n${{ needs.evaluate-candidate.outputs.metrics_summary }}'
+          })
