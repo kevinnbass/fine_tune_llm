@@ -7,11 +7,77 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Tuple
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock, AsyncMock, MagicMock
 import sys
+import os
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
+
+# Windows-specific configuration
+if sys.platform == "win32":
+    # Set multiprocessing start method for Windows
+    import multiprocessing
+    if multiprocessing.get_start_method(allow_none=True) != 'spawn':
+        try:
+            multiprocessing.set_start_method('spawn', force=True)
+        except RuntimeError:
+            pass  # Already set
+    
+    # Increase default timeout for Windows
+    os.environ.setdefault('PYTEST_TIMEOUT', '300')
+    
+    # Set environment variables to optimize transformers on Windows
+    os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
+    os.environ.setdefault('OMP_NUM_THREADS', '1')
+
+# Add custom command line options
+def pytest_addoption(parser):
+    """Add custom command line options."""
+    parser.addoption(
+        "--quick",
+        action="store_true",
+        default=False,
+        help="Run quick tests only (mock ML dependencies)"
+    )
+    parser.addoption(
+        "--ml",
+        action="store_true", 
+        default=False,
+        help="Run ML tests (may timeout on Windows)"
+    )
+
+def pytest_configure(config):
+    """Configure pytest with Windows-specific settings."""
+    # Register markers
+    config.addinivalue_line("markers", "quick: Quick tests without ML imports")
+    config.addinivalue_line("markers", "ml: Tests requiring ML libraries")
+    config.addinivalue_line("markers", "slow: Slow tests that may timeout")
+    
+    # Mock heavy imports when running quick tests
+    if config.getoption("--quick", default=False):
+        sys.modules['transformers'] = MagicMock()
+        sys.modules['torch'] = MagicMock()
+        sys.modules['peft'] = MagicMock()
+        sys.modules['accelerate'] = MagicMock()
+        sys.modules['trl'] = MagicMock()
+        sys.modules['bitsandbytes'] = MagicMock()
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection based on markers."""
+    # Skip ML tests unless explicitly requested
+    if not config.getoption("--ml"):
+        skip_ml = pytest.mark.skip(reason="ML tests skipped (use --ml to run)")
+        for item in items:
+            if "ml" in item.keywords:
+                item.add_marker(skip_ml)
+    
+    # Run only quick tests if requested
+    if config.getoption("--quick"):
+        skip_slow = pytest.mark.skip(reason="Slow test skipped in quick mode")
+        for item in items:
+            if "ml" in item.keywords or "slow" in item.keywords:
+                item.add_marker(skip_slow)
 
 
 @pytest.fixture(scope="session")
