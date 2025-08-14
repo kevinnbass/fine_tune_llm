@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Implementation Roadmap
+
+**ACTIVE ROADMAP**: `fine_tune_llm/IMPLEMENTATION_ROADMAP.md`
+
+This comprehensive roadmap addresses five critical optimization areas:
+1. **File and Directory Organization** - Streamline structure and eliminate redundancies
+2. **Code Architecture** - Improve modularity, separation of concerns, and design patterns  
+3. **Consolidation** - Merge duplicate functionality and eliminate code redundancy
+4. **Integration** - Ensure seamless component interaction and data flow
+5. **Test Coverage** - Achieve comprehensive testing of all modules and integration points
+
+**Status**: Active implementation in progress. Refer to roadmap for detailed tasks and timeline.
+
 ## Project Overview
 
 This is a **pure LLM fine-tuning repository** focused on LoRA (Low-Rank Adaptation) fine-tuning for large language models. The primary target is GLM-4.5-Air with Qwen2.5-7B as an alternative.
