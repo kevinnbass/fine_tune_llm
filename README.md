@@ -49,6 +49,9 @@ This repository implements a complete LLM fine-tuning ecosystem with state-of-th
 - **QLoRA**: 4-bit/8-bit quantization for memory efficiency
 - **DoRA**: Decomposed LoRA as high-performance alternative  
 - **AdaLoRA**: Adaptive rank allocation with automatic pruning
+- **DyLoRA**: Dynamic rank adaptation without hyperparameter search
+- **LoRA-FA**: Memory-efficient with frozen projections
+- **SparseLoRA**: Contextual sparsity for acceleration
 - **Multi-GPU**: Distributed training with automatic optimization
 
 ### 🎯 Multi-Model Architecture
@@ -56,6 +59,8 @@ This repository implements a complete LLM fine-tuning ecosystem with state-of-th
 - **Qwen2.5-7B**: Alternative high-performance model
 - **Mistral-7B**: Popular open-source option
 - **Llama-3-8B**: Meta's latest architecture
+- **MoE Support**: Mixture of Experts with precision gating
+- **MoA Support**: Mixture of Agents for collaborative decisions
 
 ### 🔧 Production Tooling
 - **Web UI**: Gradio-based interface for non-technical users
@@ -71,6 +76,10 @@ This repository implements a complete LLM fine-tuning ecosystem with state-of-th
 - **Learning Rate Schedulers**: Cosine and linear scheduling
 - **Conformal Prediction**: Risk-controlled abstention
 - **Real-time Monitoring**: Training progress and metrics
+- **ORPO/DPO/PPO**: Preference optimization for alignment
+- **Pruning**: Precision-aware model compression
+- **EAS**: Efficient attention skipping
+- **LOMO/MeZO**: Memory-efficient optimizers
 
 ## 📁 Project Structure
 
@@ -93,6 +102,40 @@ llm-finetuning/
 ├── ui.py                  # Gradio web interface
 └── artifacts/             # Models, logs, and results
 ```
+
+## 🔒 Precision-Optimized Features for High-Stakes Domains
+
+This platform includes cutting-edge techniques from 2024-2025 research for maximum precision in high-stakes applications:
+
+### Advanced PEFT Methods
+- **DyLoRA**: Dynamically adjusts LoRA rank based on precision metrics
+- **LoRA-FA**: Freezes projection matrices with calibration loss
+- **SparseLoRA**: Activates only high-confidence paths
+- **Half Fine-Tuning (HFT)**: Updates only precision-critical layers
+- **Forward-Only Fine-Tuning**: Uses in-context learning without backprop
+
+### Mixture Architectures
+- **Mixture of Experts (MoE)**: Routes queries to domain-specific experts with precision gating
+- **Mixture of Agents (MoA)**: Collaborative fact-checking and classification agents
+
+### Optimization & Alignment
+- **ORPO**: Odds-ratio preference optimization for factuality
+- **Precision Pruning**: Removes parameters that harm precision
+- **EAS**: Skips low-confidence attention heads
+- **LOMO/MeZO**: Memory-efficient optimizers with precision gradients
+
+### Data Efficiency & Safety
+- **DEFT**: Selects high-precision influence samples
+- **Continuous Learning**: Replay buffer of high-precision examples
+- **Data Purification**: Filters harmful/low-quality data
+- **High-Stakes Preprocessing**: SMOTE balancing, quality checks
+
+### Domain-Specific & Safety Tools
+- **Medical/Legal/Financial Wrappers**: Domain constraints and factuality checks
+- **Llama Guard Integration**: Content moderation for safety
+- **ShieldGemma Support**: Multi-category safety filtering
+- **Over-Memorization Mitigation**: Regularization and diversity penalties
+- **Verifiable Fine-Tuning**: Cryptographic proofs of training
 
 ## 🚀 Quick Start
 
@@ -154,6 +197,21 @@ make train-qlora
 
 # DoRA method (often better than LoRA)
 make train-dora
+
+# Advanced PEFT methods
+make train-dylora    # Dynamic rank adaptation
+make train-lorafa    # Memory-efficient with frozen projections
+make train-adalora   # Adaptive rank allocation
+
+# Mixture architectures
+make train-moe       # Mixture of Experts
+make train-moa       # Mixture of Agents
+
+# Preference optimization
+make train-orpo      # Odds-ratio preference optimization
+
+# Data-efficient training
+make train-deft      # Influence-based data selection
 
 # Hyperparameter optimization
 make tune
@@ -280,6 +338,18 @@ data:
 - **Memory**: 16GB+ VRAM for full precision, 7GB+ with QLoRA
 
 ## 📝 Changelog
+
+### v0.3.0 (2025-08-14) - Precision-Optimized Enhancements
+- 🎯 **Advanced PEFT**: DyLoRA, LoRA-FA, SparseLoRA, HFT, Forward-Only training
+- 🤖 **Mixture Architectures**: MoE with precision gating, MoA for collaboration
+- 📊 **Preference Optimization**: ORPO, enhanced DPO/PPO integration
+- ✂️ **Efficiency**: Precision pruning, EAS, LOMO/MeZO optimizers
+- 📚 **Data Efficiency**: DEFT selection, continuous learning, data purification
+- 🏥 **Domain-Specific**: Medical/Legal/Financial wrappers with safety
+- 🛡️ **Safety Tools**: Llama Guard and ShieldGemma integration
+- 🔐 **Verifiable Training**: Cryptographic proofs and audit trails
+- 🧠 **Memorization Mitigation**: Regularization and diversity penalties
+- ⚡ **Hardware Optimization**: Custom accelerator support
 
 ### v0.2.1 (2025-08-14) - Further Enhancements
 - 🐳 **Docker Support**: Full containerization with GPU support
@@ -562,12 +632,21 @@ docker-compose --profile monitoring up -d
 |--------------|---------------|---------------|---------|---------|
 | **Multi-Model Support** | GLM, Qwen, Mistral, Llama | 100+ LLMs/VLMs | Llama-focused | Llama/Mistral |
 | **QLoRA/DoRA/AdaLoRA** | ✅ All | ✅ QLoRA | ✅ QLoRA/DoRA | ✅ Custom |
+| **DyLoRA Support** | ✅ | ❌ | ❌ | ❌ |
+| **LoRA-FA/SparseLoRA** | ✅ | ❌ | ❌ | ❌ |
+| **MoE/MoA Support** | ✅ | ❌ | ❌ | ❌ |
+| **ORPO/DPO/PPO** | ✅ All | ✅ DPO | ✅ DPO | ❌ |
+| **HFT/Forward-Only** | ✅ | ❌ | ❌ | ❌ |
 | **Web UI** | ✅ Gradio | ✅ Gradio | ❌ | ❌ |
 | **Hyperparameter Tuning** | ✅ Optuna | ❌ | ❌ | ❌ |
 | **Structured Output** | ✅ Outlines | ❌ | ❌ | ❌ |
 | **Data Augmentation** | ✅ nlpaug | Partial | ❌ | ❌ |
+| **DEFT/Continuous Learning** | ✅ | ❌ | ❌ | ❌ |
+| **Safety Tools** | ✅ Llama Guard/ShieldGemma | ❌ | ❌ | ❌ |
+| **Domain-Specific** | ✅ Medical/Legal/Financial | ❌ | ❌ | ❌ |
+| **Verifiable Training** | ✅ | ❌ | ❌ | ❌ |
 | **Docker Support** | ✅ | ✅ | ✅ | ❌ |
-| **Memory Efficiency** | High (Consumer GPUs) | High | Medium | Very High |
+| **Memory Efficiency** | Very High (LOMO/MeZO) | High | Medium | Very High |
 | **Evaluation Pipeline** | ✅ Comprehensive | ✅ Basic | ✅ Custom | ❌ |
 | **Experiment Tracking** | ✅ W&B + TensorBoard | ✅ W&B/TensorBoard | ✅ W&B | ❌ |
 | **Learning Curve** | Medium | Easy | Hard | Easy |
@@ -603,15 +682,15 @@ make ui                # Launch web interface
 
 ## 🛤️ Future Roadmap
 
-### v0.3.0 - Vision & Multimodal (Q1 2025)
+### v0.4.0 - Vision & Multimodal (Q1 2025)
 - 🖼️ **Vision-Language Models**: LLaVA, BLIP-2, and multimodal fine-tuning
 - 📷 **Image-Text Datasets**: Support for VQA, image captioning tasks
 - 🎨 **UI Enhancements**: Image upload and multimodal inference interface
 
-### v0.4.0 - Reinforcement Learning (Q2 2025)
-- 🏆 **RLHF Integration**: PPO and DPO pipeline implementation
+### v0.5.0 - Enhanced RLHF (Q2 2025)
+- 🏆 **Advanced RLHF**: Constitutional AI and RLAIF methods
 - 👥 **Human Feedback**: Built-in annotation tools for preference data
-- 🎯 **Reward Modeling**: Automated reward model training
+- 🎯 **Reward Modeling**: Automated reward model training with interpretability
 
 ### v0.5.0 - Advanced Training (Q3 2025)
 - 🌐 **Federated Learning**: Privacy-preserving distributed training
