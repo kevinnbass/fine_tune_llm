@@ -420,14 +420,94 @@ fine_tune_llm/
     └── services/                    # Service-specific containers
 ```
 
-#### 1.2 Comprehensive File Migration Strategy
-- **285K+ LOC Refactoring**: Break down monolithic files systematically
-- **God Class Decomposition**: Split `high_stakes_audit.py` (51K LOC) into focused modules
-- **Evaluation Module Restructuring**: Decompose `evaluate.py` (45K LOC) into specialized components
-- **Dashboard Modularization**: Break `dashboard.py` (35K LOC) into reusable components
-- **Training Pipeline Refactoring**: Restructure `sft_lora.py` (36K LOC) into composable parts
-- **Script Consolidation**: Merge overlapping scripts, eliminate redundancy
-- **Test Reorganization**: Move 20+ test files into structured hierarchy
+#### 1.2 Comprehensive File Migration Strategy with Safety Protocols
+
+**CRITICAL: God Class Decomposition Safety Protocol**
+
+Before decomposing any god class file, the following mandatory steps MUST be executed:
+
+##### 1.2.1 Pre-Decomposition Safety Measures
+- **Full Backup Creation**: 
+  - Create timestamped backup of original file (e.g., `high_stakes_audit_backup_20250814_143022.py`)
+  - Store backup in `backups/god_classes/` directory with git tracking
+  - Create SHA-256 checksum of original file for integrity verification
+  
+- **Comprehensive Testing Baseline**:
+  - Run ALL existing tests against original god class
+  - Record test results with full output logs
+  - Create performance benchmarks (execution time, memory usage)
+  - Document all public API methods and their signatures
+  
+- **Functionality Mapping**:
+  - Create comprehensive dependency graph of all methods
+  - Document all class attributes and their usage
+  - Map all external dependencies and imports
+  - Identify all side effects and state mutations
+  
+- **Integration Point Analysis**:
+  - Document all files that import the god class
+  - Record all method calls from external modules
+  - Map all configuration dependencies
+  - Identify all event emissions and subscriptions
+
+##### 1.2.2 Decomposition Process
+- **285K+ LOC Refactoring**: Break down monolithic files systematically with validation
+- **God Class Decomposition**: 
+  - `high_stakes_audit.py` (51K LOC) → 50+ focused modules with interface preservation
+  - Create facade pattern to maintain backward compatibility
+  - Implement gradual migration with deprecation warnings
+  
+- **Evaluation Module Restructuring**: 
+  - `evaluate.py` (45K LOC) → specialized evaluation components
+  - Maintain original API through coordinator class
+  
+- **Dashboard Modularization**: 
+  - `dashboard.py` (35K LOC) → reusable UI components
+  - Preserve all event handlers and state management
+  
+- **Training Pipeline Refactoring**: 
+  - `sft_lora.py` (36K LOC) → composable training parts
+  - Ensure training reproducibility with same random seeds
+
+##### 1.2.3 Post-Decomposition Validation
+- **Functional Equivalence Testing**:
+  - Run ALL original tests against new decomposed structure
+  - Compare test results with baseline (must be 100% match)
+  - Verify performance metrics are within 5% of original
+  
+- **API Compatibility Verification**:
+  - Test all external imports still work
+  - Verify method signatures match exactly
+  - Ensure return types are identical
+  
+- **Integration Testing**:
+  - Run full end-to-end workflows
+  - Test all UI interactions if applicable
+  - Verify configuration loading and saving
+  
+- **Regression Testing**:
+  - Run specialized regression test suite
+  - Test edge cases and error conditions
+  - Verify exception handling matches original
+
+##### 1.2.4 Rollback Protocol
+- **Automatic Rollback Triggers**:
+  - Any test failure compared to baseline
+  - Performance degradation > 5%
+  - Missing functionality detected
+  - API incompatibility found
+  
+- **Rollback Process**:
+  - Restore from timestamped backup
+  - Verify checksum matches original
+  - Run smoke tests to confirm restoration
+  - Document rollback reason for analysis
+
+##### 1.2.5 Migration Completion
+- **Script Consolidation**: Merge overlapping scripts with validation
+- **Test Reorganization**: Move 20+ test files maintaining coverage
+- **Documentation Update**: Update all references to new module structure
+- **Deprecation Schedule**: Plan gradual removal of compatibility layers
 
 #### 1.3 Advanced Package Architecture
 - **Hierarchical Import Structure**: Clear public/private API boundaries
