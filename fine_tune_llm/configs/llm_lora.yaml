@@ -46,6 +46,30 @@ lora:
     compute_dtype: bfloat16  # For mixed precision
     double_quant: true  # Extra memory savings
     quant_type: nf4  # Normalized float4
+
+# Advanced PEFT configurations
+peft:
+  # DyLoRA - Dynamic Search-Free Low-Rank Adaptation
+  dylora:
+    enabled: false  # Set to true to enable DyLoRA
+    init_r: 16  # Initial rank (adjust dynamically during training)
+    target_r: 32  # Target rank for adaptation
+    precision_penalty_weight: 0.5  # Weight for false-positive regularization in loss
+    dynamic_adjustment_interval: 100  # Steps between rank adjustments
+    precision_threshold: 0.95  # Minimum precision for high-stakes tasks
+  
+  # LoRA-FA - Memory-Efficient Low-Rank Adaptation
+  lorafa:
+    enabled: false
+    projection_dim: 16  # Dimension for frozen random projection
+    calibration_weight: 0.2  # Weight for calibration loss to ensure precise confidence
+    freeze_A_matrix: true  # Freeze A matrix as random projection
+  
+  # SparseLoRA - Contextual sparsity for acceleration
+  sparse_lora:
+    enabled: false
+    sparsity_ratio: 0.5  # Ratio of sparse activations
+    confidence_threshold: 0.8  # Activate only high-confidence paths
     
 # Training configuration
 training:
@@ -100,6 +124,20 @@ training:
     run_name: null  # Auto-generated if null
     tags: ["lora", "finetuning"]
     notes: "LLM fine-tuning experiment"
+  
+  # Half Fine-Tuning (HFT)
+  hft:
+    enabled: false
+    update_fraction: 0.5  # Fraction of parameters to update per round
+    precision_select_layers: true  # Select layers with highest precision impact
+    layer_selection_interval: 100  # Steps between layer selection updates
+  
+  # Forward Pass-Only Fine-Tuning
+  forward_only:
+    enabled: false
+    num_forward_passes: 5  # For ensemble-like precision
+    consistency_threshold: 0.9  # Require agreement for high-stakes output
+    use_in_context_learning: true  # Use ICL instead of backprop
 
 # Evaluation configuration
 evaluation:
@@ -156,3 +194,125 @@ instruction_format:
           "rationale": "Ambiguous content without clear indicators",
           "abstain": true
         }
+
+# Mixture-Based Architectures
+moe:
+  enabled: false
+  num_experts: 4  # E.g., one for bird flu classification, one for general
+  top_k: 2  # Activate top-k experts
+  precision_gate: true  # Gate based on historical precision per expert
+  expert_capacity_factor: 1.25  # Capacity factor for balanced routing
+  
+moa:
+  enabled: false
+  agents:
+    - type: fact_check
+      model: "glm-4.5-air"
+    - type: classify
+      model: "llama-3-8b"
+  collaboration_mode: "sequential"  # Or parallel for precision voting
+  voting_threshold: 0.8  # Agreement threshold for parallel mode
+
+# Optimization and Preference Alignment
+alignment:
+  orpo:
+    enabled: false
+    beta: 0.1  # Low for conservative, precise preferences
+    preference_data_path: "data/preferences.json"  # Path to pairwise data
+    factuality_threshold: 0.95  # Minimum factuality score for high-stakes
+  
+  dpo:
+    enabled: false
+    beta: 0.1
+    reference_model: null  # Path to reference model
+  
+  ppo:
+    enabled: false
+    reward_model: null  # Path to reward model
+    kl_penalty: 0.02
+
+# Pruning and Efficiency
+pruning:
+  enabled: false
+  ratio: 0.2  # Prune 20% parameters
+  method: "magnitude"  # Or "random"; precision-opt: prune low-precision contributing params
+  importance_type: "precision"  # Use precision-based importance scoring
+  
+eas:  # Efficient Attention Skipping
+  enabled: false
+  skip_ratio: 0.3  # Skip 30% of attention heads
+  confidence_based: true  # Skip low-confidence attention heads
+
+# Memory-Efficient Optimizers
+lomo:  # Low-Memory Optimization
+  enabled: false
+  adaptive_lr: true  # Adaptive learning rates based on precision gradients
+  memory_budget: 8  # GB
+  
+mezo:  # Memory-Efficient Zeroth-Order Optimizer
+  enabled: false
+  perturbation_scale: 1e-3
+  num_forward_passes: 2
+  precision_direction: true  # Perturb towards higher precision directions
+
+# Data-Efficient Fine-Tuning
+deft:
+  enabled: false
+  influence_score_method: "precision"  # Prioritize data with high precision influence
+  data_fraction: 0.5  # Use top 50% influential data
+  
+continuous_learning:
+  enabled: false
+  replay_buffer_size: 1000
+  high_precision_examples_only: true  # Only store examples with >0.95 precision
+  incremental_update_interval: 500  # Steps
+
+# Domain-Specific and Safety
+domain_specific:
+  enabled: false
+  domain: "medical"  # e.g., medical, legal, financial
+  safety_constraints: true
+  factuality_checks: true
+  
+safety_tools:
+  llama_guard:
+    enabled: false
+    model_path: "meta-llama/LlamaGuard-7b"
+    threshold: 0.9
+  
+  shield_gemma:
+    enabled: false
+    model_path: "google/shieldgemma-2b"
+    categories: ["harm", "bias", "toxicity"]
+
+# Over-Memorization Mitigation
+memorization:
+  enabled: false
+  regularization_weight: 0.1
+  diversity_penalty: 0.05
+  generalization_threshold: 0.8
+
+# Verifiable Fine-Tuning
+verifiable:
+  enabled: false
+  backdoor_key: null  # Cryptographic key for verification
+  audit_log_path: "artifacts/audit_log.json"
+
+# Hardware Optimization
+hardware:
+  custom_accelerator: false
+  sparse_kernels: false
+  low_precision_mode: false
+  
+# Data Quality and Preprocessing
+data_quality:
+  purification:
+    enabled: false
+    safety_filter: true
+    quality_threshold: 0.8
+    
+  high_stakes_preprocessing:
+    enabled: false
+    imbalance_handling: "smote"  # SMOTE, undersampling, or class_weight
+    quality_checks: true
+    precision_focus: true

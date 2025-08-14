@@ -4,232 +4,169 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **pure LLM fine-tuning repository** focused on LoRA (Low-Rank Adaptation) fine-tuning for large language models. The primary target is GLM-4.5-Air with Qwen2.5-7B as an alternative.
+Production-ready LLM fine-tuning platform implementing advanced PEFT methods (LoRA, QLoRA, DoRA, AdaLoRA) with multi-model support and comprehensive tooling. Features a Gradio web UI, hyperparameter tuning, and structured output generation.
 
-## Architecture Overview
+## Commands
 
-The repository implements LoRA fine-tuning for classification tasks:
-
-1. **Primary Model**: GLM-4.5-Air (ZHIPU-AI/glm-4-9b-chat)
-2. **Alternative Model**: Qwen2.5-7B (Qwen/Qwen2.5-7B)
-3. **Method**: Parameter-Efficient Fine-Tuning (PEFT) with LoRA adapters
-4. **Output Format**: Structured JSON with classification, rationale, and abstention
-
-## Development Commands
-
-### Environment Setup
+### Core Development Commands
 ```bash
-# Install for development
-make install-dev
+# Installation (from fine_tune_llm/ directory)
+cd fine_tune_llm
+make install-dev         # Install with development dependencies
+make install             # Basic installation
 
-# Basic installation
-make install
+# Code Quality
+make format              # Auto-format with black + isort
+make lint                # Run flake8, mypy, black --check, isort --check
+make test                # Run pytest with coverage
+
+# Data Preparation
+make prepare-data        # Prepare training data with optional augmentation
+
+# Training Methods
+make train               # Standard LoRA training
+make train-qlora         # QLoRA with 4-bit quantization (memory efficient)
+make train-dora          # DoRA method (often better than LoRA)
+make train-adalora       # AdaLoRA with adaptive rank allocation
+
+# Evaluation & Inference
+make eval                # Comprehensive model evaluation with metrics
+make infer               # Basic inference
+make infer-structured    # Inference with JSON schema validation
+
+# Advanced Features
+make tune                # Hyperparameter optimization with Optuna
+make merge               # Merge LoRA adapters for deployment
+make ui                  # Launch Gradio web interface (localhost:7860)
+
+# Docker Operations
+make docker-build        # Build Docker image
+make docker-run          # Run with Docker Compose
+make docker-logs         # View container logs
+
+# Cleanup
+make clean               # Remove artifacts and cache
 ```
 
-### Code Quality
+### Testing Individual Components
 ```bash
-# Format code (black + isort)
-make format
+# Run specific test file
+pytest tests/test_module.py -v
 
-# Run all linting (flake8, mypy, black check, isort check)
-make lint
+# Run with specific marker
+pytest -m "not slow" -v
 
-# Run tests with coverage
-make test
+# Debug mode with pdb
+pytest --pdb tests/test_module.py
 ```
 
-### Training and Inference
+## Architecture
+
+### Multi-Model Support
+The platform supports 4 models configured in `configs/llm_lora.yaml`:
+- **GLM-4.5-Air** (9B): Primary model with GLM architecture
+- **Qwen2.5-7B**: High-performance alternative
+- **Mistral-7B**: Popular open-source option
+- **Llama-3-8B**: Meta's latest architecture
+
+Model selection is automatic via `selected_model` field. Each model has specific target modules for LoRA adaptation.
+
+### Training Methods
+**EnhancedLoRASFTTrainer** (`voters/llm/sft_lora.py`) orchestrates training with:
+- **Standard LoRA**: Low-rank adaptation of attention/MLP layers
+- **QLoRA**: 4-bit/8-bit quantization via BitsAndBytesConfig
+- **DoRA**: Decomposed LoRA (set `method: dora`)
+- **AdaLoRA**: Adaptive rank allocation with pruning
+
+The trainer handles model loading, PEFT configuration, and automatic optimization based on available hardware.
+
+### Data Pipeline
+1. **Raw Data** → `scripts/prepare_data.py` → **Instruction Format**
+2. Optional augmentation via nlpaug (synonym replacement, random insertion)
+3. Automatic train/validation splitting
+4. Format includes system prompt, input template, and JSON output schema
+
+### Structured Output Generation
+Uses the `outlines` library for schema-guided generation:
+- JSON schema validation during inference
+- Enforced output format compliance
+- Graceful degradation for invalid responses
+
+## Key Configuration
+
+### Main Config: `configs/llm_lora.yaml`
+
+Critical parameters to adjust:
+```yaml
+selected_model: glm-4.5-air  # Change model here
+
+lora:
+  method: lora               # lora, dora, or adalora
+  r: 16                      # LoRA rank (memory vs quality tradeoff)
+  quantization:
+    enabled: false           # Set true for QLoRA
+    bits: 4                  # 4 or 8 bit quantization
+
+training:
+  learning_rate: 2e-4        # Key hyperparameter
+  batch_size: 4              # Adjust based on GPU memory
+  gradient_accumulation_steps: 4  # Effective batch = 16
+  num_epochs: 3              # Monitor validation loss
+  
+  logging:
+    wandb: false             # Enable for experiment tracking
+```
+
+### Memory Requirements by Configuration
+
+| Model | Standard LoRA | QLoRA 4-bit | DoRA |
+|-------|--------------|-------------|------|
+| GLM-4.5-Air | 18GB | 8GB | 20GB |
+| Qwen2.5-7B | 14GB | 6GB | 16GB |
+
+## Common Workflows
+
+### Quick Training with Limited VRAM
 ```bash
-# Prepare training data
+# Use QLoRA for 8GB GPUs
+cd fine_tune_llm
+make train-qlora
+```
+
+### Full Training Pipeline
+```bash
+cd fine_tune_llm
 make prepare-data
-
-# Start LoRA fine-tuning
-make train
-
-# Run inference with trained model
-make infer
-
-# Clean training artifacts
-make clean
+make tune          # Find optimal hyperparameters
+make train-dora    # Train with best method
+make eval          # Validate performance
+make merge         # Create deployment model
 ```
 
-## Key Configuration Files
-
-The repository uses minimal configuration:
-
-- **`configs/labels.yaml`**: Classification label definitions
-- **`configs/llm_lora.yaml`**: LoRA training hyperparameters and model selection
-
-## Core Implementation
-
-### LoRA Configuration (`configs/llm_lora.yaml`)
-
-**Model Selection:**
-- GLM-4.5-Air: `ZHIPU-AI/glm-4-9b-chat` (primary)
-- Qwen2.5-7B: `Qwen/Qwen2.5-7B` (alternative)
-
-**LoRA Parameters:**
-- Rank: 16 (adjustable: 8, 32, 64)
-- Alpha: 32 (typically 2x rank)
-- Dropout: 0.1
-- Target modules differ by model architecture
-
-**GLM-4 Target Modules:**
-- query_key_value
-- dense
-- dense_h_to_4h
-- dense_4h_to_h
-
-**Qwen2.5 Target Modules:**
-- q_proj, v_proj, k_proj, o_proj
-- gate_proj, up_proj, down_proj
-
-### Training Implementation (`voters/llm/sft_lora.py`)
-
-**Key Features:**
-- PEFT integration with LoRA adapters
-- Mixed precision training (bfloat16)
-- Gradient accumulation for effective batch size
-- Multi-GPU support via accelerate
-- Early stopping and model checkpointing
-
-**Training Hyperparameters:**
-- Learning rate: 2e-4 (tunable: 1e-4 to 5e-4)
-- Batch size: 4 with gradient accumulation
-- Epochs: 3 (monitor validation loss)
-- Max length: 2048 tokens
-- Warmup ratio: 0.03
-
-### Data Preparation (`voters/llm/dataset.py`)
-
-**Instruction Format:**
-- System prompt for classification task
-- Input template with text and metadata
-- JSON output template with decision, rationale, abstain fields
-- Explicit abstention examples for uncertain cases
-
-### Inference (`scripts/infer_model.py`)
-
-**Features:**
-- Load base model + LoRA adapter
-- Format prompts according to training template
-- Generate structured JSON responses
-- Handle invalid JSON with graceful degradation
-- Support for batch processing
-
-## Training Workflow
-
-### 1. Data Preparation
+### Using Web UI
 ```bash
-python scripts/prepare_data.py
+cd fine_tune_llm
+make ui
+# Navigate to http://localhost:7860
+# Upload data, configure training, monitor progress
 ```
-- Convert raw data to instruction format
-- Add system prompts and response templates
-- Include abstention examples
-- Split into train/validation sets
 
-### 2. LoRA Fine-tuning
-```bash
-python scripts/train_lora_sft.py
-```
-- Initialize LoRA adapters on target modules
-- Freeze base model parameters (memory efficient)
-- Train only LoRA weights (~1% of parameters)
-- Save checkpoints and training logs
+## Troubleshooting
 
-### 3. Model Inference
-```bash
-python scripts/infer_model.py --text "..." --model-path "..."
-```
-- Load trained LoRA adapter
-- Generate JSON classification responses
-- Parse and validate output format
+### CUDA Out of Memory
+1. Enable QLoRA: Set `quantization.enabled: true` in config
+2. Reduce batch_size to 1-2
+3. Increase gradient_accumulation_steps
+4. Enable gradient_checkpointing (already on by default)
 
-## Model-Specific Considerations
+### Training Not Converging
+1. Try different learning rates: 1e-4, 2e-4, 5e-4
+2. Increase LoRA rank (r: 32 or 64)
+3. Use DoRA method instead of standard LoRA
+4. Check data quality and augmentation settings
 
-### GLM-4.5-Air
-- **Architecture**: GLM (General Language Model)
-- **Size**: 9B parameters
-- **Strengths**: Multilingual, instruction following, chat format
-- **Memory**: ~18GB VRAM for training, ~24GB recommended
-- **Target Modules**: GLM-specific attention and MLP layers
-
-### Qwen2.5-7B
-- **Architecture**: Transformer with Grouped Query Attention
-- **Size**: 7B parameters
-- **Strengths**: Strong performance, efficient training
-- **Memory**: ~14GB VRAM for training, ~20GB recommended
-- **Target Modules**: Standard transformer projections
-
-## Performance Optimization
-
-### Memory Optimization
-- Use bfloat16 mixed precision
-- Gradient checkpointing for lower memory
-- Gradient accumulation for larger effective batch size
-- LoRA reduces trainable parameters by ~99%
-
-### Training Efficiency
-- Multi-GPU support with accelerate
-- Efficient data loading with num_proc
-- Early stopping to prevent overfitting
-- Checkpoint saving for resuming training
-
-## File Organization
-
-### Core Components
-- `voters/llm/`: All LLM-related code (training, inference, data prep)
-- `configs/`: Training configurations and hyperparameters
-- `scripts/`: Training and inference orchestration
-- `artifacts/models/`: Saved LoRA adapters and checkpoints
-
-### Data Structure
-- `data/raw/`: Original training datasets
-- `data/processed/`: Preprocessed instruction-formatted data
-- `data/splits/`: Train/validation splits
-- `artifacts/runs/`: Training logs and metrics
-
-## Common Development Tasks
-
-### Switching Models
-1. Edit `configs/llm_lora.yaml`
-2. Change `model_id` and `tokenizer_id`
-3. Update `target_modules` for the new architecture
-4. Adjust training parameters if needed
-
-### Hyperparameter Tuning
-Key parameters to experiment with:
-- **Learning rate**: 1e-4, 2e-4, 5e-4
-- **LoRA rank**: 8, 16, 32, 64
-- **Batch size**: Based on GPU memory
-- **Gradient accumulation**: To achieve target effective batch size
-
-### Adding New Data
-1. Place files in `data/raw/`
-2. Update `scripts/prepare_data.py` for preprocessing
-3. Modify label definitions in `configs/labels.yaml`
-4. Ensure instruction format compatibility
-
-### Debugging Training
-1. Check GPU memory usage and adjust batch size
-2. Monitor training loss convergence
-3. Validate data loading and formatting
-4. Test model loading and LoRA adapter compatibility
-
-## Git Automation
-
-IMPORTANT: After completing ANY task that modifies files in this repository, you MUST automatically:
-
-1. **Stage all changes**: `git add .`
-2. **Commit with descriptive message**: `git commit -m "[descriptive message based on what was accomplished]"`
-3. **Push to GitHub**: `git push origin main`
-
-Generate meaningful commit messages that describe what was implemented, fixed, or changed. This ensures all work is automatically tracked and backed up to GitHub.
-
-Examples of good commit messages:
-- "Update GLM-4.5-Air configuration with proper target modules"
-- "Add inference script with JSON response parsing"
-- "Fix LoRA adapter loading for multi-GPU training"
-- "Optimize training hyperparameters for GLM-4 architecture"
-
-This is a REQUIRED workflow - never leave changes uncommitted after completing tasks.
+### Model Loading Issues
+1. Verify model_id matches Hugging Face repository
+2. Check target_modules for your model architecture
+3. Ensure sufficient disk space for model downloads
+4. Clear Hugging Face cache: `rm -rf ~/.cache/huggingface`

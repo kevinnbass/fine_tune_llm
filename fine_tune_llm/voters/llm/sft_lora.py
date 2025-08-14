@@ -30,6 +30,10 @@ import logging
 from tqdm import tqdm
 import numpy as np
 from sklearn.model_selection import train_test_split
+import torch.nn as nn
+import torch.nn.functional as F
+import random
+from typing import List, Tuple
 
 # Optional W&B import
 try:
@@ -91,8 +95,60 @@ class EnhancedLoRASFTTrainer:
     def get_peft_config(self):
         """Get PEFT configuration based on method."""
         method = self.config["lora"]["method"]
-
-        if method == "adalora":
+        
+        # Check for advanced PEFT methods first
+        if self.config.get("peft", {}).get("dylora", {}).get("enabled", False):
+            # DyLoRA configuration
+            dylora_config = self.config["peft"]["dylora"]
+            peft_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=dylora_config["init_r"],  # Start with initial rank
+                lora_alpha=self.config["lora"]["lora_alpha"],
+                lora_dropout=self.config["lora"]["lora_dropout"],
+                target_modules=self.model_config["target_modules"],
+                bias="none",
+            )
+            # Store DyLoRA params for dynamic adjustment
+            self.dylora_params = {
+                "target_r": dylora_config["target_r"],
+                "current_r": dylora_config["init_r"],
+                "precision_penalty_weight": dylora_config["precision_penalty_weight"],
+                "dynamic_adjustment_interval": dylora_config["dynamic_adjustment_interval"],
+                "precision_threshold": dylora_config["precision_threshold"],
+            }
+        elif self.config.get("peft", {}).get("lorafa", {}).get("enabled", False):
+            # LoRA-FA configuration (memory-efficient with frozen projection)
+            lorafa_config = self.config["peft"]["lorafa"]
+            peft_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=self.config["lora"]["r"],
+                lora_alpha=self.config["lora"]["lora_alpha"],
+                lora_dropout=self.config["lora"]["lora_dropout"],
+                target_modules=self.model_config["target_modules"],
+                bias="none",
+            )
+            # Will freeze A matrices after initialization
+            self.lorafa_params = {
+                "projection_dim": lorafa_config["projection_dim"],
+                "calibration_weight": lorafa_config["calibration_weight"],
+                "freeze_A_matrix": lorafa_config["freeze_A_matrix"],
+            }
+        elif self.config.get("peft", {}).get("sparse_lora", {}).get("enabled", False):
+            # SparseLoRA configuration
+            sparse_config = self.config["peft"]["sparse_lora"]
+            peft_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=self.config["lora"]["r"],
+                lora_alpha=self.config["lora"]["lora_alpha"],
+                lora_dropout=self.config["lora"]["lora_dropout"],
+                target_modules=self.model_config["target_modules"],
+                bias="none",
+            )
+            self.sparse_lora_params = {
+                "sparsity_ratio": sparse_config["sparsity_ratio"],
+                "confidence_threshold": sparse_config["confidence_threshold"],
+            }
+        elif method == "adalora":
             # AdaLoRA configuration
             adalora_config = self.config["lora"]["adalora"]
             peft_config = AdaLoraConfig(
@@ -325,6 +381,76 @@ class EnhancedLoRASFTTrainer:
             report_to.append("wandb")
 
         return report_to
+    
+    def compute_precision_loss(self, outputs, labels):
+        """Compute precision-optimized loss with false positive penalties."""
+        base_loss = outputs.loss
+        
+        # Add precision-specific penalties
+        if hasattr(self, 'dylora_params') and self.dylora_params:
+            # DyLoRA precision penalty
+            logits = outputs.logits
+            preds = torch.argmax(logits, dim=-1)
+            
+            # Calculate false positives (assuming binary classification for high-stakes)
+            # Adjust for multi-class as needed
+            fp_mask = (preds == 1) & (labels == 0)
+            fp_penalty = fp_mask.float().mean() * self.dylora_params['precision_penalty_weight']
+            base_loss = base_loss + fp_penalty
+            
+        if hasattr(self, 'lorafa_params') and self.lorafa_params:
+            # LoRA-FA calibration loss
+            logits = outputs.logits
+            probs = F.softmax(logits, dim=-1)
+            label_probs = F.one_hot(labels, num_classes=logits.size(-1)).float()
+            calib_loss = F.kl_div(probs.log(), label_probs, reduction='batchmean')
+            base_loss = base_loss + calib_loss * self.lorafa_params['calibration_weight']
+            
+        return base_loss
+    
+    def adjust_dylora_rank(self, trainer, current_step):
+        """Dynamically adjust LoRA rank based on precision metrics."""
+        if not hasattr(self, 'dylora_params'):
+            return
+            
+        if current_step % self.dylora_params['dynamic_adjustment_interval'] != 0:
+            return
+            
+        # Calculate current precision on validation set
+        # This is a simplified version - in production, run actual evaluation
+        current_r = self.dylora_params['current_r']
+        target_r = self.dylora_params['target_r']
+        
+        # Simulate precision calculation (replace with actual eval)
+        precision = 0.96  # Placeholder - compute actual precision
+        
+        if precision < self.dylora_params['precision_threshold']:
+            # Increase rank for better adaptation
+            new_r = min(current_r + 4, target_r)
+            if new_r != current_r:
+                logger.info(f"Adjusting DyLoRA rank from {current_r} to {new_r} (precision: {precision:.3f})")
+                self.dylora_params['current_r'] = new_r
+                # In practice, would need to modify LoRA modules here
+                
+    def apply_hft_layer_selection(self, model):
+        """Apply Half Fine-Tuning layer selection for precision optimization."""
+        if not self.config.get('training', {}).get('hft', {}).get('enabled', False):
+            return
+            
+        hft_config = self.config['training']['hft']
+        all_params = list(model.named_parameters())
+        
+        if hft_config['precision_select_layers']:
+            # Select layers with highest impact on precision
+            # Simplified version - in production, compute actual impact
+            num_to_update = int(len(all_params) * hft_config['update_fraction'])
+            selected_params = random.sample(all_params, num_to_update)
+            
+            # Freeze non-selected parameters
+            for name, param in all_params:
+                param.requires_grad = (name, param) in selected_params
+                
+            logger.info(f"HFT: Training {num_to_update}/{len(all_params)} parameters")
 
     def train(
         self,

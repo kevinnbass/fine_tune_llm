@@ -34,6 +34,27 @@ train-dora:
 train-adalora:
 	python scripts/train_lora_sft.py --lora-method adalora
 
+train-dylora:
+	python scripts/train_lora_sft.py --peft-method dylora
+
+train-lorafa:
+	python scripts/train_lora_sft.py --peft-method lorafa
+
+train-moe:
+	python scripts/train_lora_sft.py --use-moe
+
+train-moa:
+	python scripts/train_lora_sft.py --use-moa
+
+train-orpo:
+	python scripts/train_orpo.py
+
+train-with-pruning:
+	python scripts/train_lora_sft.py --enable-pruning
+
+train-deft:
+	python scripts/train_lora_sft.py --use-deft
+
 infer:
 	python scripts/infer_model.py
 
