@@ -35,6 +35,18 @@ __all__ = [
     "ProceduralAlignment",
     "VerifiableTraining",
     
+    # Advanced metrics
+    "compute_ece",
+    "compute_mce",
+    "compute_brier_score",
+    "compute_abstention_metrics",
+    "compute_risk_aware_metrics",
+    "MetricsAggregator",
+    
+    # Conformal prediction
+    "ConformalPredictor", 
+    "RiskControlledPredictor",
+    
     # Utilities
     "ConfigManager",
     "ModelLoader",
@@ -70,6 +82,13 @@ def __getattr__(name):
     elif name in ["BiasAuditor", "ExplainableReasoning", "ProceduralAlignment", "VerifiableTraining"]:
         from . import high_stakes_audit
         return getattr(high_stakes_audit, name)
+    elif name in ["compute_ece", "compute_mce", "compute_brier_score", "compute_abstention_metrics",
+                   "compute_risk_aware_metrics", "MetricsAggregator"]:
+        from . import metrics
+        return getattr(metrics, name)
+    elif name in ["ConformalPredictor", "RiskControlledPredictor"]:
+        from . import conformal
+        return getattr(conformal, name)
     elif name in ["ConfigManager", "ModelLoader", "PromptFormatter", "MetricsTracker", 
                    "ErrorHandler", "load_config", "format_prompt", "parse_model_output"]:
         from . import utils
