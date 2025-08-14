@@ -1,41 +1,72 @@
 """
-Training package for model training and fine-tuning.
+Training system for fine-tune LLM library.
 
-This package provides comprehensive training capabilities including
-trainers, callbacks, strategies, and loss functions.
+Provides comprehensive training capabilities with LoRA, calibration-aware
+training, conformal prediction, and advanced monitoring.
 """
 
-from .trainers import BaseTrainer, CalibratedTrainer, EnhancedLoRASFTTrainer, create_trainer
-from .callbacks import (
-    BaseTrainingCallback,
-    CalibrationMonitorCallback,
-    MetricsAggregatorCallback, 
-    EarlyStoppingCallback,
-    ProgressCallback,
-    ResourceMonitorCallback,
-    create_callback
-)
+# Public API - Core training components
+from .factory import TrainerFactory
+
+# Public API - Trainers (explicit imports for hierarchical structure)
+from .trainers.base import BaseTrainer
+from .trainers.calibrated import CalibratedTrainer
+from .trainers.lora import LoRATrainer
+
+# Public API - Training strategies
+from .strategies.base import BaseStrategy
+from .strategies.lora import LoRAStrategy
+
+# Public API - Callbacks (explicit imports)
+from .callbacks.base import BaseTrainingCallback
+from .callbacks.calibration import CalibrationMonitorCallback
+from .callbacks.metrics import MetricsAggregatorCallback
+from .callbacks.early_stopping import EarlyStoppingCallback
+from .callbacks.progress import ProgressCallback
+from .callbacks.resource import ResourceMonitorCallback
+
+# Public API - Loss functions
+try:
+    from .losses.base import BaseLoss
+    from .losses.abstention import AbstentionLoss
+    from .losses.calibration import CalibrationLoss
+except ImportError:
+    # Graceful fallback if loss modules not implemented yet
+    BaseLoss = None
+    AbstentionLoss = None
+    CalibrationLoss = None
 
 __all__ = [
-    # Trainers
-    'BaseTrainer',
-    'CalibratedTrainer',
-    'EnhancedLoRASFTTrainer',
-    'create_trainer',
+    # Core training
+    "TrainerFactory",
+    "BaseTrainer",
+    "CalibratedTrainer",
+    "LoRATrainer",
+    
+    # Training strategies
+    "BaseStrategy",
+    "LoRAStrategy",
     
     # Callbacks
-    'BaseTrainingCallback',
-    'CalibrationMonitorCallback',
-    'MetricsAggregatorCallback',
-    'EarlyStoppingCallback', 
-    'ProgressCallback',
-    'ResourceMonitorCallback',
-    'create_callback',
+    "BaseTrainingCallback",
+    "CalibrationMonitorCallback",
+    "MetricsAggregatorCallback",
+    "EarlyStoppingCallback", 
+    "ProgressCallback",
+    "ResourceMonitorCallback",
+    
+    # Loss functions (if available)
+    "BaseLoss",
+    "AbstentionLoss",
+    "CalibrationLoss"
 ]
 
-# Version information
-__version__ = '2.0.0'
+# Remove None values from exports
+__all__ = [name for name in __all__ if globals().get(name) is not None]
 
-# Package metadata
-__author__ = 'Fine-Tune LLM Team'
-__description__ = 'Comprehensive training framework for LLM fine-tuning'
+# Private imports for internal use
+try:
+    from . import _internals
+except ImportError:
+    # Create placeholder if internals not implemented
+    pass

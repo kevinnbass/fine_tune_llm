@@ -19,6 +19,14 @@ from .schemas import (
     LLMLoRAConfig, ModelType, LoRAMethod, SchedulerType,
     LLM_CONFIG_SCHEMA
 )
+from .secrets import (
+    SecretManager, SecretConfigMixin,
+    get_global_secret_manager, set_secret, get_secret,
+    delete_secret, has_secret
+)
+from .versioning import (
+    ConfigVersionManager, ConfigVersion, ChangeType
+)
 
 __all__ = [
     # Configuration management
@@ -60,5 +68,19 @@ __all__ = [
     "SchedulerType",
     
     # JSON Schema
-    "LLM_CONFIG_SCHEMA"
+    "LLM_CONFIG_SCHEMA",
+    
+    # Secret management
+    "SecretManager",
+    "SecretConfigMixin",
+    "get_global_secret_manager",
+    "set_secret",
+    "get_secret", 
+    "delete_secret",
+    "has_secret",
+    
+    # Configuration versioning
+    "ConfigVersionManager",
+    "ConfigVersion",
+    "ChangeType"
 ]

@@ -205,6 +205,23 @@ class SystemEnvironmentError(SystemError):
     """System environment errors."""
     pass
 
+# Security-related errors
+class SecurityError(FineTuneLLMError):
+    """Security-related issues."""
+    pass
+
+class CryptographyError(SecurityError):
+    """Cryptography and encryption errors."""
+    pass
+
+class AuthenticationError(SecurityError):
+    """Authentication-related errors."""
+    pass
+
+class AuthorizationError(SecurityError):
+    """Authorization and permission errors."""
+    pass
+
 # Utility functions for exception handling
 def create_error_context(
     component: str,
@@ -282,6 +299,12 @@ __all__ = [
     "ResourceExhaustionError",
     "PermissionError",
     "SystemEnvironmentError",
+    
+    # Security exceptions
+    "SecurityError",
+    "CryptographyError",
+    "AuthenticationError",
+    "AuthorizationError",
     
     # Utility functions
     "create_error_context",

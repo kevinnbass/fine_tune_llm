@@ -1,0 +1,215 @@
+{
+  "timestamp": "2025-08-14T18:20:21.603113Z",
+  "class_name": "TrainingDashboard",
+  "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\dashboard_backup_20250814_123055.py",
+  "static_analysis": {
+    "file_info": {
+      "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\dashboard_backup_20250814_123055.py",
+      "size": 35114,
+      "hash": "cbd59bb8791fcaaf0b045fdc695984fc59c4c681cc2e5d47b864a8db12a94afd",
+      "lines_of_code": 646
+    },
+    "imports": [
+      {
+        "line": 9,
+        "statement": "import json"
+      },
+      {
+        "line": 10,
+        "statement": "import time"
+      },
+      {
+        "line": 11,
+        "statement": "import threading"
+      },
+      {
+        "line": 12,
+        "statement": "from pathlib import Path"
+      },
+      {
+        "line": 13,
+        "statement": "from typing import Dict, List, Optional, Any"
+      },
+      {
+        "line": 14,
+        "statement": "from datetime import datetime, timedelta"
+      },
+      {
+        "line": 15,
+        "statement": "import logging"
+      },
+      {
+        "line": 16,
+        "statement": "from dataclasses import dataclass, asdict"
+      },
+      {
+        "line": 17,
+        "statement": "import numpy as np"
+      },
+      {
+        "line": 21,
+        "statement": "import streamlit as st"
+      },
+      {
+        "line": 22,
+        "statement": "import plotly.graph_objects as go"
+      },
+      {
+        "line": 23,
+        "statement": "import plotly.express as px"
+      },
+      {
+        "line": 24,
+        "statement": "from plotly.subplots import make_subplots"
+      },
+      {
+        "line": 25,
+        "statement": "import pandas as pd"
+      },
+      {
+        "line": 32,
+        "statement": "from .metrics import MetricsAggregator"
+      },
+      {
+        "line": 33,
+        "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+      },
+      {
+        "line": 886,
+        "statement": "import sys"
+      }
+    ],
+    "classes": {
+      "TrainingMetrics": {
+        "line_start": 42,
+        "methods": [],
+        "properties": [],
+        "class_variables": []
+      },
+      "TrainingDashboard": {
+        "line_start": 86,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 89,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "start_monitoring",
+            "line": 126,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "stop_monitoring",
+            "line": 139,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "_monitor_loop",
+            "line": 146,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_update_metrics",
+            "line": 156,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "add_metrics",
+            "line": 226,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "get_metrics_dataframe",
+            "line": 247,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "create_dashboard",
+            "line": 260,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "_render_current_status",
+            "line": 333,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_get_metric_delta",
+            "line": 400,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_render_training_plots",
+            "line": 412,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_render_advanced_plots",
+            "line": 467,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_render_risk_prediction_interface",
+            "line": 590,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_make_risk_controlled_prediction",
+            "line": 700,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_render_metrics_table",
+            "line": 816,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "run_dashboard",
+            "line": 859,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      }
+    },
+    "functions": [],
+    "constants": []
+  },
+  "metrics": {
+    "total_classes": 2,
+    "total_methods": 16,
+    "total_functions": 0,
+    "total_imports": 17,
+    "lines_of_code": 646,
+    "file_size_bytes": 35114
+  },
+  "complexity_indicators": {
+    "method_count_per_class": {
+      "TrainingMetrics": 0,
+      "TrainingDashboard": 16
+    },
+    "private_method_ratio": {
+      "TrainingMetrics": 0,
+      "TrainingDashboard": 0.625
+    },
+    "class_depth_estimate": 2
+  }
+}

@@ -1,0 +1,2507 @@
+{
+  "class_name": "EnhancedLoRASFTTrainer",
+  "functionality_map": {
+    "file_info": {
+      "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\sft_lora_backup_20250814_123726.py",
+      "size": 35861,
+      "lines": 873,
+      "non_empty_lines": 717,
+      "comment_lines": 102
+    },
+    "imports": {
+      "stdlib": [
+        "os",
+        "json",
+        "logging"
+      ],
+      "third_party": [
+        "torch",
+        "numpy"
+      ],
+      "local": [
+        "yaml",
+        "evaluate",
+        "wandb",
+        "argparse"
+      ],
+      "from_imports": {
+        "pathlib": {
+          "category": "stdlib",
+          "items": [
+            "Path"
+          ]
+        },
+        "typing": {
+          "category": "stdlib",
+          "items": [
+            "Dict",
+            "Any",
+            "Optional",
+            "Union"
+          ]
+        },
+        "transformers": {
+          "category": "third_party",
+          "items": [
+            "AutoModelForCausalLM",
+            "AutoTokenizer",
+            "TrainingArguments",
+            "Trainer",
+            "DataCollatorForLanguageModeling",
+            "EarlyStoppingCallback",
+            "BitsAndBytesConfig",
+            "get_cosine_schedule_with_warmup",
+            "get_linear_schedule_with_warmup"
+          ]
+        },
+        "peft": {
+          "category": "local",
+          "items": [
+            "LoraConfig",
+            "AdaLoraConfig",
+            "get_peft_model",
+            "TaskType",
+            "prepare_model_for_kbit_training"
+          ]
+        },
+        "datasets": {
+          "category": "third_party",
+          "items": [
+            "Dataset",
+            "load_from_disk"
+          ]
+        },
+        "tqdm": {
+          "category": "local",
+          "items": [
+            "tqdm"
+          ]
+        },
+        "sklearn.model_selection": {
+          "category": "third_party",
+          "items": [
+            "train_test_split"
+          ]
+        },
+        "uncertainty": {
+          "category": "local",
+          "items": [
+            "MCDropoutWrapper",
+            "compute_uncertainty_aware_loss",
+            "should_abstain"
+          ]
+        },
+        "fact_check": {
+          "category": "local",
+          "items": [
+            "RELIANCEFactChecker",
+            "FactualDataFilter"
+          ]
+        },
+        "high_stakes_audit": {
+          "category": "local",
+          "items": [
+            "BiasAuditor",
+            "ExplainableReasoning",
+            "ProceduralAlignment",
+            "VerifiableTraining"
+          ]
+        },
+        "metrics": {
+          "category": "local",
+          "items": [
+            "compute_ece",
+            "compute_mce",
+            "compute_brier_score",
+            "compute_abstention_metrics",
+            "compute_risk_aware_metrics",
+            "compute_confidence_metrics",
+            "MetricsAggregator"
+          ]
+        },
+        "conformal": {
+          "category": "local",
+          "items": [
+            "ConformalPredictor",
+            "RiskControlledPredictor"
+          ]
+        },
+        "utils": {
+          "category": "local",
+          "items": [
+            "MetricsTracker",
+            "ErrorHandler"
+          ]
+        }
+      },
+      "import_aliases": {
+        "np": "numpy"
+      }
+    },
+    "classes": {
+      "CalibratedTrainer": {
+        "name": "CalibratedTrainer",
+        "line_start": 61,
+        "line_end": 286,
+        "bases": [
+          "Trainer"
+        ],
+        "decorators": [],
+        "methods": {
+          "__init__": {
+            "name": "__init__",
+            "line_start": 64,
+            "line_end": 77,
+            "line_count": 14,
+            "parameters": [
+              "self",
+              "metrics_aggregator",
+              "conformal_predictor",
+              "abstention_loss_config"
+            ],
+            "decorators": [],
+            "docstring": null,
+            "has_args": true,
+            "has_kwargs": true,
+            "is_async": false,
+            "calls_made": [
+              "__init__",
+              "float",
+              "self.abstention_loss_config.get",
+              "self.abstention_loss_config.get",
+              "self.abstention_loss_config.get",
+              "self.abstention_loss_config.get",
+              "super"
+            ],
+            "complexity": 0,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "evaluate": {
+            "name": "evaluate",
+            "line_start": 79,
+            "line_end": 155,
+            "line_count": 77,
+            "parameters": [
+              "self",
+              "eval_dataset",
+              "ignore_keys",
+              "metric_key_prefix"
+            ],
+            "decorators": [],
+            "docstring": "Enhanced evaluation with calibration and advanced metrics.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "evaluate",
+              "self.get_eval_dataloader",
+              "self._get_predictions_and_labels",
+              "super",
+              "compute_brier_score",
+              "compute_confidence_metrics",
+              "confidence_metrics.items",
+              "self.calibration_history.append",
+              "logger.warning",
+              "len",
+              "len",
+              "np.max",
+              "np.argmax",
+              "astype",
+              "compute_ece",
+              "compute_mce",
+              "compute_ece",
+              "compute_mce",
+              "abstentions.sum",
+              "compute_abstention_metrics",
+              "abstention_metrics.items",
+              "self.conformal_predictor.calibrate",
+              "self.conformal_predictor.evaluate_coverage",
+              "coverage_metrics.items",
+              "self.metrics_aggregator.add_metrics",
+              "astype",
+              "hasattr",
+              "int",
+              "k.replace",
+              "eval_results.items",
+              "k.startswith"
+            ],
+            "complexity": 11,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "_get_predictions_and_labels": {
+            "name": "_get_predictions_and_labels",
+            "line_start": 157,
+            "line_end": 200,
+            "line_count": 44,
+            "parameters": [
+              "self",
+              "dataloader"
+            ],
+            "decorators": [],
+            "docstring": "Extract predictions, labels, and probabilities from dataloader.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.model.eval",
+              "torch.no_grad",
+              "np.concatenate",
+              "np.concatenate",
+              "np.concatenate",
+              "self.model",
+              "torch.softmax",
+              "probabilities.append",
+              "torch.argmax",
+              "predictions.append",
+              "len",
+              "np.array",
+              "np.array",
+              "reshape",
+              "numpy",
+              "numpy",
+              "labels.append",
+              "isinstance",
+              "v.to",
+              "batch.items",
+              "numpy",
+              "np.array",
+              "probs.cpu",
+              "preds.cpu",
+              "cpu"
+            ],
+            "complexity": 4,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "should_adjust_learning_rate": {
+            "name": "should_adjust_learning_rate",
+            "line_start": 202,
+            "line_end": 209,
+            "line_count": 8,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Check if learning rate should be adjusted based on calibration.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "all",
+              "len",
+              "range",
+              "len"
+            ],
+            "complexity": 1,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "adjust_learning_rate": {
+            "name": "adjust_learning_rate",
+            "line_start": 211,
+            "line_end": 217,
+            "line_count": 7,
+            "parameters": [
+              "self",
+              "factor"
+            ],
+            "decorators": [],
+            "docstring": "Adjust learning rate based on calibration drift.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "logger.info"
+            ],
+            "complexity": 2,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "compute_abstention_aware_loss": {
+            "name": "compute_abstention_aware_loss",
+            "line_start": 219,
+            "line_end": 282,
+            "line_count": 64,
+            "parameters": [
+              "self",
+              "model",
+              "inputs",
+              "return_outputs"
+            ],
+            "decorators": [],
+            "docstring": "Compute abstention-aware loss that encourages confident predictions\nand penalizes uncertain predictions appropriately.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "model",
+              "inputs.get",
+              "torch.nn.CrossEntropyLoss",
+              "loss_fct",
+              "torch.softmax",
+              "total_loss.mean",
+              "logits.dim",
+              "contiguous",
+              "contiguous",
+              "shift_logits.view",
+              "shift_labels.view",
+              "len",
+              "torch.max",
+              "torch.relu",
+              "torch.sum",
+              "model",
+              "shift_logits.size",
+              "torch.tensor",
+              "model",
+              "torch.log"
+            ],
+            "complexity": 5,
+            "return_count": 5,
+            "returns_none": false
+          },
+          "compute_loss": {
+            "name": "compute_loss",
+            "line_start": 284,
+            "line_end": 286,
+            "line_count": 3,
+            "parameters": [
+              "self",
+              "model",
+              "inputs",
+              "return_outputs"
+            ],
+            "decorators": [],
+            "docstring": "Override compute_loss to use abstention-aware loss.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.compute_abstention_aware_loss"
+            ],
+            "complexity": 0,
+            "return_count": 1,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "{'metrics_aggregator', 'best_ece', 'uncertainty_weight', 'calibration_history', 'abstention_penalty', 'conformal_predictor', 'abstention_threshold', 'use_abstention_loss', 'abstention_loss_config'}",
+        "docstring": "Enhanced Trainer with calibration monitoring and advanced metrics.",
+        "complexity_metrics": {
+          "method_count": 7,
+          "line_count": 226,
+          "cyclomatic_complexity": 23,
+          "public_methods": 5,
+          "private_methods": 2,
+          "property_count": 0,
+          "inheritance_depth": 1
+        }
+      },
+      "CalibrationMonitorCallback": {
+        "name": "CalibrationMonitorCallback",
+        "line_start": 289,
+        "line_end": 298,
+        "bases": [],
+        "decorators": [],
+        "methods": {
+          "on_evaluate": {
+            "name": "on_evaluate",
+            "line_start": 292,
+            "line_end": 298,
+            "line_count": 7,
+            "parameters": [
+              "self",
+              "args",
+              "state",
+              "control",
+              "trainer"
+            ],
+            "decorators": [],
+            "docstring": "Called after evaluation.",
+            "has_args": false,
+            "has_kwargs": true,
+            "is_async": false,
+            "calls_made": [
+              "isinstance",
+              "trainer.should_adjust_learning_rate",
+              "trainer.adjust_learning_rate",
+              "logger.info"
+            ],
+            "complexity": 2,
+            "return_count": 0,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "set()",
+        "docstring": "Callback to monitor calibration and adjust learning rate.",
+        "complexity_metrics": {
+          "method_count": 1,
+          "line_count": 10,
+          "cyclomatic_complexity": 2,
+          "public_methods": 1,
+          "private_methods": 0,
+          "property_count": 0,
+          "inheritance_depth": 0
+        }
+      },
+      "EnhancedLoRASFTTrainer": {
+        "name": "EnhancedLoRASFTTrainer",
+        "line_start": 301,
+        "line_end": 795,
+        "bases": [],
+        "decorators": [],
+        "methods": {
+          "__init__": {
+            "name": "__init__",
+            "line_start": 304,
+            "line_end": 346,
+            "line_count": 43,
+            "parameters": [
+              "self",
+              "config_path"
+            ],
+            "decorators": [],
+            "docstring": "Initialize enhanced LoRA SFT trainer.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "Path",
+              "self.output_dir.mkdir",
+              "open",
+              "yaml.safe_load",
+              "MetricsAggregator",
+              "self.config.get",
+              "get",
+              "get",
+              "self._initialize_high_stakes_components",
+              "evaluate.load",
+              "get",
+              "ConformalPredictor",
+              "logger.info",
+              "RiskControlledPredictor",
+              "logger.info",
+              "advanced_config.get",
+              "advanced_config.get"
+            ],
+            "complexity": 6,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "_initialize_high_stakes_components": {
+            "name": "_initialize_high_stakes_components",
+            "line_start": 348,
+            "line_end": 365,
+            "line_count": 18,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Initialize high-stakes precision and auditing components.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.config.get",
+              "get",
+              "get",
+              "get",
+              "BiasAuditor",
+              "logger.info",
+              "ProceduralAlignment",
+              "logger.info",
+              "VerifiableTraining",
+              "logger.info",
+              "high_stakes_config.get",
+              "high_stakes_config.get",
+              "high_stakes_config.get"
+            ],
+            "complexity": 3,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "get_quantization_config": {
+            "name": "get_quantization_config",
+            "line_start": 367,
+            "line_end": 388,
+            "line_count": 22,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Get quantization configuration for QLoRA.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "BitsAndBytesConfig",
+              "BitsAndBytesConfig",
+              "ValueError"
+            ],
+            "complexity": 3,
+            "return_count": 3,
+            "returns_none": false
+          },
+          "get_peft_config": {
+            "name": "get_peft_config",
+            "line_start": 390,
+            "line_end": 423,
+            "line_count": 34,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Get PEFT configuration based on method.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "AdaLoraConfig",
+              "LoraConfig",
+              "adalora_config.get",
+              "adalora_config.get",
+              "adalora_config.get",
+              "adalora_config.get"
+            ],
+            "complexity": 1,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "setup_model_and_tokenizer": {
+            "name": "setup_model_and_tokenizer",
+            "line_start": 425,
+            "line_end": 481,
+            "line_count": 57,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Setup model and tokenizer with LoRA/QLoRA/DoRA.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "logger.info",
+              "AutoTokenizer.from_pretrained",
+              "self.get_quantization_config",
+              "AutoModelForCausalLM.from_pretrained",
+              "self.get_peft_config",
+              "get_peft_model",
+              "self.model.print_trainable_parameters",
+              "get",
+              "logger.info",
+              "prepare_model_for_kbit_training",
+              "get",
+              "uncertainty_config.get",
+              "self.config.get",
+              "uncertainty_config.get",
+              "MCDropoutWrapper",
+              "logger.info",
+              "uncertainty_config.get"
+            ],
+            "complexity": 5,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "get_model_specific_prompt": {
+            "name": "get_model_specific_prompt",
+            "line_start": 483,
+            "line_end": 496,
+            "line_count": 14,
+            "parameters": [
+              "self",
+              "text",
+              "metadata"
+            ],
+            "decorators": [],
+            "docstring": "Format prompt according to model-specific chat template.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.model_config.get",
+              "strip"
+            ],
+            "complexity": 3,
+            "return_count": 4,
+            "returns_none": false
+          },
+          "prepare_dataset": {
+            "name": "prepare_dataset",
+            "line_start": 498,
+            "line_end": 543,
+            "line_count": 46,
+            "parameters": [
+              "self",
+              "dataset"
+            ],
+            "decorators": [],
+            "docstring": "Prepare dataset for training with model-specific formatting.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "dataset.map",
+              "example.get",
+              "example.get",
+              "self.get_model_specific_prompt",
+              "example.get",
+              "self.tokenizer",
+              "copy",
+              "example.get",
+              "example.get",
+              "format_example",
+              "get"
+            ],
+            "complexity": 0,
+            "return_count": 3,
+            "returns_none": false
+          },
+          "split_dataset": {
+            "name": "split_dataset",
+            "line_start": 545,
+            "line_end": 563,
+            "line_count": 19,
+            "parameters": [
+              "self",
+              "dataset"
+            ],
+            "decorators": [],
+            "docstring": "Split dataset into train/validation sets.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "list",
+              "train_test_split",
+              "Dataset.from_list",
+              "Dataset.from_list",
+              "ex.get"
+            ],
+            "complexity": 1,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "compute_metrics": {
+            "name": "compute_metrics",
+            "line_start": 565,
+            "line_end": 575,
+            "line_count": 11,
+            "parameters": [
+              "self",
+              "eval_pred"
+            ],
+            "decorators": [],
+            "docstring": "Compute evaluation metrics.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "predictions.mean",
+              "item",
+              "torch.exp",
+              "torch.tensor"
+            ],
+            "complexity": 0,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "get_scheduler": {
+            "name": "get_scheduler",
+            "line_start": 577,
+            "line_end": 594,
+            "line_count": 18,
+            "parameters": [
+              "self",
+              "optimizer",
+              "num_training_steps"
+            ],
+            "decorators": [],
+            "docstring": "Get learning rate scheduler.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "get_cosine_schedule_with_warmup",
+              "get_linear_schedule_with_warmup"
+            ],
+            "complexity": 2,
+            "return_count": 3,
+            "returns_none": false
+          },
+          "init_wandb": {
+            "name": "init_wandb",
+            "line_start": 596,
+            "line_end": 628,
+            "line_count": 33,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Initialize Weights & Biases if enabled.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "wandb_config.get",
+              "wandb_config.get",
+              "wandb.init",
+              "logger.info",
+              "wandb_config.get",
+              "logger.warning",
+              "wandb_config.get",
+              "wandb_config.get"
+            ],
+            "complexity": 4,
+            "return_count": 2,
+            "returns_none": true
+          },
+          "get_report_to": {
+            "name": "get_report_to",
+            "line_start": 630,
+            "line_end": 638,
+            "line_count": 9,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Get list of reporting tools.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "wandb_config.get",
+              "report_to.append"
+            ],
+            "complexity": 1,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "train": {
+            "name": "train",
+            "line_start": 640,
+            "line_end": 795,
+            "line_count": 156,
+            "parameters": [
+              "self",
+              "train_dataset",
+              "eval_dataset",
+              "resume_from_checkpoint"
+            ],
+            "decorators": [],
+            "docstring": "Train the model with all enhancements.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.init_wandb",
+              "self.setup_model_and_tokenizer",
+              "logger.info",
+              "self.prepare_dataset",
+              "TrainingArguments",
+              "DataCollatorForLanguageModeling",
+              "logger.info",
+              "logger.info",
+              "logger.info",
+              "trainer.train",
+              "logger.info",
+              "trainer.save_model",
+              "self.tokenizer.save_pretrained",
+              "logger.info",
+              "self.split_dataset",
+              "self.prepare_dataset",
+              "callbacks.append",
+              "callbacks.append",
+              "get",
+              "CalibratedTrainer",
+              "Trainer",
+              "trainer.create_optimizer",
+              "self.get_scheduler",
+              "logger.info",
+              "str",
+              "str",
+              "open",
+              "json.dump",
+              "len",
+              "str",
+              "get",
+              "get",
+              "self.get_report_to",
+              "str",
+              "EarlyStoppingCallback",
+              "CalibrationMonitorCallback",
+              "self.config.get",
+              "len",
+              "len"
+            ],
+            "complexity": 8,
+            "return_count": 1,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "{'metrics_aggregator', 'config', 'metrics', 'risk_controlled_predictor', 'conformal_predictor', 'high_stakes_components', 'output_dir', 'model_config'}",
+        "docstring": "Enhanced LoRA Supervised Fine-Tuning with QLoRA, DoRA, and multi-model support.",
+        "complexity_metrics": {
+          "method_count": 13,
+          "line_count": 495,
+          "cyclomatic_complexity": 37,
+          "public_methods": 11,
+          "private_methods": 2,
+          "property_count": 0,
+          "inheritance_depth": 0
+        }
+      }
+    },
+    "functions": {
+      "train_and_eval": {
+        "name": "train_and_eval",
+        "line_start": 798,
+        "line_end": 807,
+        "line_count": 10,
+        "parameters": [
+          "config"
+        ],
+        "decorators": [],
+        "docstring": "Wrapper function for hyperparameter tuning.",
+        "has_args": false,
+        "has_kwargs": false,
+        "is_async": false,
+        "calls_made": [
+          "EnhancedLoRASFTTrainer"
+        ],
+        "complexity": 0,
+        "return_count": 1,
+        "returns_none": false
+      },
+      "main": {
+        "name": "main",
+        "line_start": 810,
+        "line_end": 868,
+        "line_count": 59,
+        "parameters": [],
+        "decorators": [],
+        "docstring": "Main training function.",
+        "has_args": false,
+        "has_kwargs": false,
+        "is_async": false,
+        "calls_made": [
+          "argparse.ArgumentParser",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.parse_args",
+          "args.train_data.endswith",
+          "EnhancedLoRASFTTrainer",
+          "trainer.train",
+          "open",
+          "yaml.safe_load",
+          "int",
+          "open",
+          "yaml.dump",
+          "Dataset.from_list",
+          "load_from_disk",
+          "args.eval_data.endswith",
+          "open",
+          "json.load",
+          "Dataset.from_list",
+          "load_from_disk",
+          "open",
+          "json.load"
+        ],
+        "complexity": 5,
+        "return_count": 0,
+        "returns_none": false
+      }
+    },
+    "dependencies": {
+      "internal_calls": {
+        "global": [
+          "logging.getLogger",
+          "main"
+        ],
+        "train_and_eval": [
+          "EnhancedLoRASFTTrainer"
+        ],
+        "main": [
+          "argparse.ArgumentParser",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.parse_args",
+          "args.train_data.endswith",
+          "EnhancedLoRASFTTrainer",
+          "trainer.train",
+          "open",
+          "yaml.safe_load",
+          "int",
+          "open",
+          "yaml.dump",
+          "Dataset.from_list",
+          "load_from_disk",
+          "args.eval_data.endswith",
+          "open",
+          "json.load",
+          "Dataset.from_list",
+          "load_from_disk",
+          "open",
+          "json.load"
+        ],
+        "CalibratedTrainer.__init__": [
+          "__init__",
+          "float",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "super"
+        ],
+        "CalibratedTrainer.evaluate": [
+          "evaluate",
+          "self.get_eval_dataloader",
+          "self._get_predictions_and_labels",
+          "super",
+          "compute_brier_score",
+          "compute_confidence_metrics",
+          "confidence_metrics.items",
+          "self.calibration_history.append",
+          "logger.warning",
+          "len",
+          "len",
+          "np.max",
+          "np.argmax",
+          "astype",
+          "compute_ece",
+          "compute_mce",
+          "compute_ece",
+          "compute_mce",
+          "abstentions.sum",
+          "compute_abstention_metrics",
+          "abstention_metrics.items",
+          "self.conformal_predictor.calibrate",
+          "self.conformal_predictor.evaluate_coverage",
+          "coverage_metrics.items",
+          "self.metrics_aggregator.add_metrics",
+          "astype",
+          "hasattr",
+          "int",
+          "k.replace",
+          "eval_results.items",
+          "k.startswith"
+        ],
+        "CalibratedTrainer._get_predictions_and_labels": [
+          "self.model.eval",
+          "torch.no_grad",
+          "np.concatenate",
+          "np.concatenate",
+          "np.concatenate",
+          "self.model",
+          "torch.softmax",
+          "probabilities.append",
+          "torch.argmax",
+          "predictions.append",
+          "len",
+          "np.array",
+          "np.array",
+          "reshape",
+          "numpy",
+          "numpy",
+          "labels.append",
+          "isinstance",
+          "v.to",
+          "batch.items",
+          "numpy",
+          "np.array",
+          "probs.cpu",
+          "preds.cpu",
+          "cpu"
+        ],
+        "CalibratedTrainer.should_adjust_learning_rate": [
+          "all",
+          "len",
+          "range",
+          "len"
+        ],
+        "CalibratedTrainer.compute_abstention_aware_loss": [
+          "model",
+          "inputs.get",
+          "torch.nn.CrossEntropyLoss",
+          "loss_fct",
+          "torch.softmax",
+          "total_loss.mean",
+          "logits.dim",
+          "contiguous",
+          "contiguous",
+          "shift_logits.view",
+          "shift_labels.view",
+          "len",
+          "torch.max",
+          "torch.relu",
+          "torch.sum",
+          "model",
+          "shift_logits.size",
+          "torch.tensor",
+          "model",
+          "torch.log"
+        ],
+        "CalibratedTrainer.compute_loss": [
+          "self.compute_abstention_aware_loss"
+        ],
+        "CalibrationMonitorCallback.on_evaluate": [
+          "isinstance",
+          "trainer.should_adjust_learning_rate",
+          "trainer.adjust_learning_rate",
+          "logger.info"
+        ],
+        "EnhancedLoRASFTTrainer.__init__": [
+          "Path",
+          "self.output_dir.mkdir",
+          "open",
+          "yaml.safe_load",
+          "MetricsAggregator",
+          "self.config.get",
+          "get",
+          "get",
+          "self._initialize_high_stakes_components",
+          "evaluate.load",
+          "get",
+          "ConformalPredictor",
+          "logger.info",
+          "RiskControlledPredictor",
+          "logger.info",
+          "advanced_config.get",
+          "advanced_config.get"
+        ],
+        "EnhancedLoRASFTTrainer._initialize_high_stakes_components": [
+          "self.config.get",
+          "get",
+          "get",
+          "get",
+          "BiasAuditor",
+          "logger.info",
+          "ProceduralAlignment",
+          "logger.info",
+          "VerifiableTraining",
+          "logger.info",
+          "high_stakes_config.get",
+          "high_stakes_config.get",
+          "high_stakes_config.get"
+        ],
+        "EnhancedLoRASFTTrainer.setup_model_and_tokenizer": [
+          "logger.info",
+          "AutoTokenizer.from_pretrained",
+          "self.get_quantization_config",
+          "AutoModelForCausalLM.from_pretrained",
+          "self.get_peft_config",
+          "get_peft_model",
+          "self.model.print_trainable_parameters",
+          "get",
+          "logger.info",
+          "prepare_model_for_kbit_training",
+          "get",
+          "uncertainty_config.get",
+          "self.config.get",
+          "uncertainty_config.get",
+          "MCDropoutWrapper",
+          "logger.info",
+          "uncertainty_config.get"
+        ],
+        "EnhancedLoRASFTTrainer.get_model_specific_prompt": [
+          "self.model_config.get",
+          "strip"
+        ],
+        "EnhancedLoRASFTTrainer.prepare_dataset": [
+          "dataset.map",
+          "get"
+        ],
+        "EnhancedLoRASFTTrainer.split_dataset": [
+          "list",
+          "train_test_split",
+          "Dataset.from_list",
+          "Dataset.from_list",
+          "ex.get"
+        ],
+        "EnhancedLoRASFTTrainer.compute_metrics": [
+          "predictions.mean",
+          "item",
+          "torch.exp",
+          "torch.tensor"
+        ],
+        "EnhancedLoRASFTTrainer.init_wandb": [
+          "wandb_config.get",
+          "wandb_config.get",
+          "wandb.init",
+          "logger.info",
+          "wandb_config.get",
+          "logger.warning",
+          "wandb_config.get",
+          "wandb_config.get"
+        ],
+        "EnhancedLoRASFTTrainer.train": [
+          "self.init_wandb",
+          "self.setup_model_and_tokenizer",
+          "logger.info",
+          "self.prepare_dataset",
+          "TrainingArguments",
+          "DataCollatorForLanguageModeling",
+          "logger.info",
+          "logger.info",
+          "logger.info",
+          "trainer.train",
+          "logger.info",
+          "trainer.save_model",
+          "self.tokenizer.save_pretrained",
+          "logger.info",
+          "self.split_dataset",
+          "self.prepare_dataset",
+          "callbacks.append",
+          "callbacks.append",
+          "get",
+          "CalibratedTrainer",
+          "Trainer",
+          "trainer.create_optimizer",
+          "self.get_scheduler",
+          "logger.info",
+          "str",
+          "str",
+          "open",
+          "json.dump",
+          "len",
+          "str",
+          "get",
+          "get",
+          "self.get_report_to",
+          "str",
+          "EarlyStoppingCallback",
+          "CalibrationMonitorCallback",
+          "self.config.get",
+          "len",
+          "len"
+        ],
+        "EnhancedLoRASFTTrainer.get_quantization_config": [
+          "BitsAndBytesConfig",
+          "BitsAndBytesConfig",
+          "ValueError"
+        ],
+        "EnhancedLoRASFTTrainer.get_peft_config": [
+          "AdaLoraConfig",
+          "LoraConfig",
+          "adalora_config.get",
+          "adalora_config.get",
+          "adalora_config.get",
+          "adalora_config.get"
+        ],
+        "EnhancedLoRASFTTrainer.format_example": [
+          "example.get",
+          "example.get",
+          "self.get_model_specific_prompt",
+          "example.get",
+          "example.get",
+          "example.get"
+        ],
+        "EnhancedLoRASFTTrainer.tokenize_function": [
+          "self.tokenizer",
+          "copy",
+          "format_example"
+        ],
+        "EnhancedLoRASFTTrainer.get_scheduler": [
+          "get_cosine_schedule_with_warmup",
+          "get_linear_schedule_with_warmup"
+        ],
+        "EnhancedLoRASFTTrainer.get_report_to": [
+          "wandb_config.get",
+          "report_to.append"
+        ],
+        "CalibratedTrainer.adjust_learning_rate": [
+          "logger.info"
+        ]
+      },
+      "external_calls": {},
+      "attribute_access": {
+        "global": [
+          "logging.getLogger"
+        ],
+        "train_and_eval": [
+          "trainer.config"
+        ],
+        "main": [
+          "args.model",
+          "args.lora_method",
+          "args.eval_data",
+          "argparse.ArgumentParser",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.parse_args",
+          "args.model",
+          "args.quantization",
+          "args.train_data.endswith",
+          "args.config",
+          "trainer.train",
+          "args.config",
+          "yaml.safe_load",
+          "args.config",
+          "yaml.dump",
+          "args.train_data",
+          "Dataset.from_list",
+          "args.train_data",
+          "args.eval_data.endswith",
+          "args.resume",
+          "args.quantization",
+          "args.train_data",
+          "json.load",
+          "args.eval_data",
+          "Dataset.from_list",
+          "args.eval_data",
+          "args.eval_data",
+          "json.load"
+        ],
+        "CalibratedTrainer.__init__": [
+          "self.metrics_aggregator",
+          "self.conformal_predictor",
+          "self.calibration_history",
+          "self.best_ece",
+          "self.abstention_loss_config",
+          "self.use_abstention_loss",
+          "self.abstention_threshold",
+          "self.abstention_penalty",
+          "self.uncertainty_weight",
+          "__init__",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config",
+          "self.abstention_loss_config",
+          "self.abstention_loss_config",
+          "self.abstention_loss_config"
+        ],
+        "CalibratedTrainer.compute_abstention_aware_loss": [
+          "outputs.logits",
+          "self.use_abstention_loss",
+          "inputs.get",
+          "torch.nn.CrossEntropyLoss",
+          "torch.softmax",
+          "self.abstention_penalty",
+          "self.uncertainty_weight",
+          "total_loss.mean",
+          "outputs.loss",
+          "loss",
+          "outputs.loss",
+          "torch.nn",
+          "logits.dim",
+          "contiguous",
+          "contiguous",
+          "shift_logits.view",
+          "shift_labels.view",
+          "torch.max",
+          "torch.relu",
+          "torch.sum",
+          "shift_logits.size",
+          "torch.tensor",
+          "self.abstention_threshold",
+          "logits.device",
+          "torch.log"
+        ],
+        "EnhancedLoRASFTTrainer.__init__": [
+          "self.model_config",
+          "self.output_dir",
+          "self.metrics",
+          "self.metrics_aggregator",
+          "self.conformal_predictor",
+          "self.risk_controlled_predictor",
+          "self.high_stakes_components",
+          "self.config",
+          "self.config",
+          "self.output_dir.mkdir",
+          "self.metrics_aggregator",
+          "yaml.safe_load",
+          "self.config",
+          "self.output_dir",
+          "self.config",
+          "self.output_dir",
+          "self.config.get",
+          "get",
+          "self.conformal_predictor",
+          "get",
+          "self.risk_controlled_predictor",
+          "self._initialize_high_stakes_components",
+          "self.config",
+          "self.metrics",
+          "evaluate.load",
+          "self.config",
+          "get",
+          "logger.info",
+          "logger.info",
+          "advanced_config.get",
+          "advanced_config.get"
+        ],
+        "EnhancedLoRASFTTrainer.setup_model_and_tokenizer": [
+          "self.tokenizer",
+          "self.model",
+          "self.model",
+          "logger.info",
+          "AutoTokenizer.from_pretrained",
+          "self.tokenizer.pad_token",
+          "self.tokenizer.pad_token",
+          "self.tokenizer.eos_token",
+          "self.get_quantization_config",
+          "AutoModelForCausalLM.from_pretrained",
+          "self.model",
+          "self.get_peft_config",
+          "self.model",
+          "self.model.print_trainable_parameters",
+          "get",
+          "logger.info",
+          "self.model_config",
+          "self.tokenizer",
+          "self.tokenizer",
+          "self.tokenizer",
+          "self.model_config",
+          "self.model",
+          "self.model",
+          "get",
+          "uncertainty_config.get",
+          "torch.bfloat16",
+          "torch.float16",
+          "self.model",
+          "self.config",
+          "self.model_config",
+          "self.config.get",
+          "uncertainty_config.get",
+          "self.model",
+          "logger.info",
+          "self.config",
+          "self.config",
+          "self.config",
+          "uncertainty_config.get"
+        ],
+        "CalibratedTrainer.evaluate": [
+          "evaluate",
+          "self.get_eval_dataloader",
+          "self._get_predictions_and_labels",
+          "confidence_metrics.items",
+          "self.calibration_history.append",
+          "self.best_ece",
+          "self.best_ece",
+          "self.conformal_predictor",
+          "self.metrics_aggregator",
+          "logger.warning",
+          "probabilities.shape",
+          "np.max",
+          "np.argmax",
+          "astype",
+          "abstentions.sum",
+          "abstention_metrics.items",
+          "self.calibration_history",
+          "self.conformal_predictor.calibrate",
+          "self.conformal_predictor.evaluate_coverage",
+          "coverage_metrics.items",
+          "self.metrics_aggregator.add_metrics",
+          "astype",
+          "self.conformal_predictor",
+          "self.conformal_predictor",
+          "self.state",
+          "self.state.epoch",
+          "k.replace",
+          "self.metrics_aggregator",
+          "probabilities.shape",
+          "probabilities.shape",
+          "probabilities.shape",
+          "self.state",
+          "eval_results.items",
+          "k.startswith"
+        ],
+        "CalibratedTrainer._get_predictions_and_labels": [
+          "self.model.eval",
+          "self.model",
+          "torch.no_grad",
+          "outputs.logits",
+          "np.concatenate",
+          "np.concatenate",
+          "np.concatenate",
+          "self.model",
+          "torch.softmax",
+          "probabilities.append",
+          "torch.argmax",
+          "predictions.append",
+          "predictions.shape",
+          "np.array",
+          "np.array",
+          "reshape",
+          "numpy",
+          "numpy",
+          "labels.append",
+          "torch.Tensor",
+          "v.to",
+          "self.args.device",
+          "batch.items",
+          "numpy",
+          "np.array",
+          "self.args",
+          "probs.cpu",
+          "preds.cpu",
+          "cpu"
+        ],
+        "CalibratedTrainer.should_adjust_learning_rate": [
+          "self.calibration_history",
+          "self.calibration_history"
+        ],
+        "CalibratedTrainer.adjust_learning_rate": [
+          "self.optimizer",
+          "self.optimizer.param_groups",
+          "self.optimizer",
+          "logger.info"
+        ],
+        "CalibratedTrainer.compute_loss": [
+          "self.compute_abstention_aware_loss"
+        ],
+        "EnhancedLoRASFTTrainer._initialize_high_stakes_components": [
+          "self.config.get",
+          "get",
+          "get",
+          "get",
+          "self.config",
+          "self.high_stakes_components",
+          "self.config",
+          "logger.info",
+          "self.high_stakes_components",
+          "self.config",
+          "logger.info",
+          "self.high_stakes_components",
+          "self.config",
+          "logger.info",
+          "high_stakes_config.get",
+          "high_stakes_config.get",
+          "high_stakes_config.get"
+        ],
+        "EnhancedLoRASFTTrainer.get_quantization_config": [
+          "torch.bfloat16",
+          "torch.float16",
+          "self.config"
+        ],
+        "EnhancedLoRASFTTrainer.get_model_specific_prompt": [
+          "self.model_config.get",
+          "strip",
+          "self.model_config",
+          "self.config"
+        ],
+        "EnhancedLoRASFTTrainer.prepare_dataset": [
+          "dataset.map",
+          "dataset.column_names",
+          "get",
+          "self.config"
+        ],
+        "EnhancedLoRASFTTrainer.compute_metrics": [
+          "predictions.mean",
+          "item",
+          "torch.exp",
+          "torch.tensor"
+        ],
+        "EnhancedLoRASFTTrainer.init_wandb": [
+          "wandb_config.get",
+          "wandb_config.get",
+          "wandb.init",
+          "logger.info",
+          "self.config",
+          "wandb_config.get",
+          "logger.warning",
+          "self.model_config",
+          "wandb_config.get",
+          "wandb_config.get",
+          "self.config",
+          "self.config",
+          "self.config"
+        ],
+        "EnhancedLoRASFTTrainer.train": [
+          "self.init_wandb",
+          "self.setup_model_and_tokenizer",
+          "logger.info",
+          "self.prepare_dataset",
+          "trainer.optimizer",
+          "trainer.lr_scheduler",
+          "logger.info",
+          "logger.info",
+          "logger.info",
+          "trainer.train",
+          "logger.info",
+          "trainer.save_model",
+          "self.tokenizer.save_pretrained",
+          "self.model_config",
+          "logger.info",
+          "self.split_dataset",
+          "self.prepare_dataset",
+          "self.tokenizer",
+          "callbacks.append",
+          "self.metrics_aggregator",
+          "callbacks.append",
+          "self.metrics_aggregator",
+          "get",
+          "trainer.create_optimizer",
+          "self.get_scheduler",
+          "logger.info",
+          "self.tokenizer",
+          "self.config",
+          "self.config",
+          "self.config",
+          "json.dump",
+          "self.config",
+          "self.config",
+          "self.output_dir",
+          "get",
+          "get",
+          "self.get_report_to",
+          "self.config",
+          "self.metrics_aggregator",
+          "self.conformal_predictor",
+          "self.model",
+          "self.model",
+          "self.config",
+          "self.output_dir",
+          "self.output_dir",
+          "self.output_dir",
+          "self.output_dir",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.output_dir",
+          "self.config.get",
+          "self.compute_metrics",
+          "self.compute_metrics",
+          "self.config",
+          "self.config",
+          "self.model_config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config"
+        ],
+        "CalibrationMonitorCallback.on_evaluate": [
+          "trainer.should_adjust_learning_rate",
+          "trainer.adjust_learning_rate",
+          "logger.info"
+        ],
+        "EnhancedLoRASFTTrainer.get_peft_config": [
+          "self.config",
+          "self.config",
+          "TaskType.CAUSAL_LM",
+          "TaskType.CAUSAL_LM",
+          "self.model_config",
+          "adalora_config.get",
+          "adalora_config.get",
+          "adalora_config.get",
+          "adalora_config.get",
+          "self.model_config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config",
+          "self.config"
+        ],
+        "EnhancedLoRASFTTrainer.format_example": [
+          "example.get",
+          "example.get",
+          "self.get_model_specific_prompt",
+          "example.get",
+          "example.get",
+          "example.get"
+        ],
+        "EnhancedLoRASFTTrainer.tokenize_function": [
+          "self.tokenizer",
+          "copy",
+          "self.config",
+          "self.config",
+          "self.config"
+        ],
+        "EnhancedLoRASFTTrainer.split_dataset": [
+          "self.config",
+          "Dataset.from_list",
+          "Dataset.from_list",
+          "self.config",
+          "ex.get"
+        ],
+        "EnhancedLoRASFTTrainer.get_scheduler": [
+          "self.config"
+        ],
+        "EnhancedLoRASFTTrainer.get_report_to": [
+          "self.config",
+          "wandb_config.get",
+          "report_to.append"
+        ]
+      },
+      "inheritance_chain": {
+        "CalibratedTrainer": [
+          "Trainer"
+        ]
+      },
+      "composition_relationships": {}
+    },
+    "call_graph": {
+      "CalibratedTrainer.__init__": {
+        "type": "method",
+        "calls": [
+          "__init__",
+          "float",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "self.abstention_loss_config.get",
+          "super"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 14
+      },
+      "CalibratedTrainer.evaluate": {
+        "type": "method",
+        "calls": [
+          "evaluate",
+          "self.get_eval_dataloader",
+          "self._get_predictions_and_labels",
+          "super",
+          "compute_brier_score",
+          "compute_confidence_metrics",
+          "confidence_metrics.items",
+          "self.calibration_history.append",
+          "logger.warning",
+          "len",
+          "len",
+          "np.max",
+          "np.argmax",
+          "astype",
+          "compute_ece",
+          "compute_mce",
+          "compute_ece",
+          "compute_mce",
+          "abstentions.sum",
+          "compute_abstention_metrics",
+          "abstention_metrics.items",
+          "self.conformal_predictor.calibrate",
+          "self.conformal_predictor.evaluate_coverage",
+          "coverage_metrics.items",
+          "self.metrics_aggregator.add_metrics",
+          "astype",
+          "hasattr",
+          "int",
+          "k.replace",
+          "eval_results.items",
+          "k.startswith"
+        ],
+        "called_by": [],
+        "complexity": 11,
+        "line_count": 77
+      },
+      "CalibratedTrainer._get_predictions_and_labels": {
+        "type": "method",
+        "calls": [
+          "self.model.eval",
+          "torch.no_grad",
+          "np.concatenate",
+          "np.concatenate",
+          "np.concatenate",
+          "self.model",
+          "torch.softmax",
+          "probabilities.append",
+          "torch.argmax",
+          "predictions.append",
+          "len",
+          "np.array",
+          "np.array",
+          "reshape",
+          "numpy",
+          "numpy",
+          "labels.append",
+          "isinstance",
+          "v.to",
+          "batch.items",
+          "numpy",
+          "np.array",
+          "probs.cpu",
+          "preds.cpu",
+          "cpu"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 44
+      },
+      "CalibratedTrainer.should_adjust_learning_rate": {
+        "type": "method",
+        "calls": [
+          "all",
+          "len",
+          "range",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 8
+      },
+      "CalibratedTrainer.adjust_learning_rate": {
+        "type": "method",
+        "calls": [
+          "logger.info"
+        ],
+        "called_by": [],
+        "complexity": 2,
+        "line_count": 7
+      },
+      "CalibratedTrainer.compute_abstention_aware_loss": {
+        "type": "method",
+        "calls": [
+          "model",
+          "inputs.get",
+          "torch.nn.CrossEntropyLoss",
+          "loss_fct",
+          "torch.softmax",
+          "total_loss.mean",
+          "logits.dim",
+          "contiguous",
+          "contiguous",
+          "shift_logits.view",
+          "shift_labels.view",
+          "len",
+          "torch.max",
+          "torch.relu",
+          "torch.sum",
+          "model",
+          "shift_logits.size",
+          "torch.tensor",
+          "model",
+          "torch.log"
+        ],
+        "called_by": [],
+        "complexity": 5,
+        "line_count": 64
+      },
+      "CalibratedTrainer.compute_loss": {
+        "type": "method",
+        "calls": [
+          "self.compute_abstention_aware_loss"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 3
+      },
+      "CalibrationMonitorCallback.on_evaluate": {
+        "type": "method",
+        "calls": [
+          "isinstance",
+          "trainer.should_adjust_learning_rate",
+          "trainer.adjust_learning_rate",
+          "logger.info"
+        ],
+        "called_by": [],
+        "complexity": 2,
+        "line_count": 7
+      },
+      "EnhancedLoRASFTTrainer.__init__": {
+        "type": "method",
+        "calls": [
+          "Path",
+          "self.output_dir.mkdir",
+          "open",
+          "yaml.safe_load",
+          "MetricsAggregator",
+          "self.config.get",
+          "get",
+          "get",
+          "self._initialize_high_stakes_components",
+          "evaluate.load",
+          "get",
+          "ConformalPredictor",
+          "logger.info",
+          "RiskControlledPredictor",
+          "logger.info",
+          "advanced_config.get",
+          "advanced_config.get"
+        ],
+        "called_by": [],
+        "complexity": 6,
+        "line_count": 43
+      },
+      "EnhancedLoRASFTTrainer._initialize_high_stakes_components": {
+        "type": "method",
+        "calls": [
+          "self.config.get",
+          "get",
+          "get",
+          "get",
+          "BiasAuditor",
+          "logger.info",
+          "ProceduralAlignment",
+          "logger.info",
+          "VerifiableTraining",
+          "logger.info",
+          "high_stakes_config.get",
+          "high_stakes_config.get",
+          "high_stakes_config.get"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 18
+      },
+      "EnhancedLoRASFTTrainer.get_quantization_config": {
+        "type": "method",
+        "calls": [
+          "BitsAndBytesConfig",
+          "BitsAndBytesConfig",
+          "ValueError"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 22
+      },
+      "EnhancedLoRASFTTrainer.get_peft_config": {
+        "type": "method",
+        "calls": [
+          "AdaLoraConfig",
+          "LoraConfig",
+          "adalora_config.get",
+          "adalora_config.get",
+          "adalora_config.get",
+          "adalora_config.get"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 34
+      },
+      "EnhancedLoRASFTTrainer.setup_model_and_tokenizer": {
+        "type": "method",
+        "calls": [
+          "logger.info",
+          "AutoTokenizer.from_pretrained",
+          "self.get_quantization_config",
+          "AutoModelForCausalLM.from_pretrained",
+          "self.get_peft_config",
+          "get_peft_model",
+          "self.model.print_trainable_parameters",
+          "get",
+          "logger.info",
+          "prepare_model_for_kbit_training",
+          "get",
+          "uncertainty_config.get",
+          "self.config.get",
+          "uncertainty_config.get",
+          "MCDropoutWrapper",
+          "logger.info",
+          "uncertainty_config.get"
+        ],
+        "called_by": [],
+        "complexity": 5,
+        "line_count": 57
+      },
+      "EnhancedLoRASFTTrainer.get_model_specific_prompt": {
+        "type": "method",
+        "calls": [
+          "self.model_config.get",
+          "strip"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 14
+      },
+      "EnhancedLoRASFTTrainer.prepare_dataset": {
+        "type": "method",
+        "calls": [
+          "dataset.map",
+          "example.get",
+          "example.get",
+          "self.get_model_specific_prompt",
+          "example.get",
+          "self.tokenizer",
+          "copy",
+          "example.get",
+          "example.get",
+          "format_example",
+          "get"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 46
+      },
+      "EnhancedLoRASFTTrainer.split_dataset": {
+        "type": "method",
+        "calls": [
+          "list",
+          "train_test_split",
+          "Dataset.from_list",
+          "Dataset.from_list",
+          "ex.get"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 19
+      },
+      "EnhancedLoRASFTTrainer.compute_metrics": {
+        "type": "method",
+        "calls": [
+          "predictions.mean",
+          "item",
+          "torch.exp",
+          "torch.tensor"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 11
+      },
+      "EnhancedLoRASFTTrainer.get_scheduler": {
+        "type": "method",
+        "calls": [
+          "get_cosine_schedule_with_warmup",
+          "get_linear_schedule_with_warmup"
+        ],
+        "called_by": [],
+        "complexity": 2,
+        "line_count": 18
+      },
+      "EnhancedLoRASFTTrainer.init_wandb": {
+        "type": "method",
+        "calls": [
+          "wandb_config.get",
+          "wandb_config.get",
+          "wandb.init",
+          "logger.info",
+          "wandb_config.get",
+          "logger.warning",
+          "wandb_config.get",
+          "wandb_config.get"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 33
+      },
+      "EnhancedLoRASFTTrainer.get_report_to": {
+        "type": "method",
+        "calls": [
+          "wandb_config.get",
+          "report_to.append"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 9
+      },
+      "EnhancedLoRASFTTrainer.train": {
+        "type": "method",
+        "calls": [
+          "self.init_wandb",
+          "self.setup_model_and_tokenizer",
+          "logger.info",
+          "self.prepare_dataset",
+          "TrainingArguments",
+          "DataCollatorForLanguageModeling",
+          "logger.info",
+          "logger.info",
+          "logger.info",
+          "trainer.train",
+          "logger.info",
+          "trainer.save_model",
+          "self.tokenizer.save_pretrained",
+          "logger.info",
+          "self.split_dataset",
+          "self.prepare_dataset",
+          "callbacks.append",
+          "callbacks.append",
+          "get",
+          "CalibratedTrainer",
+          "Trainer",
+          "trainer.create_optimizer",
+          "self.get_scheduler",
+          "logger.info",
+          "str",
+          "str",
+          "open",
+          "json.dump",
+          "len",
+          "str",
+          "get",
+          "get",
+          "self.get_report_to",
+          "str",
+          "EarlyStoppingCallback",
+          "CalibrationMonitorCallback",
+          "self.config.get",
+          "len",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 8,
+        "line_count": 156
+      },
+      "train_and_eval": {
+        "type": "function",
+        "calls": [
+          "EnhancedLoRASFTTrainer"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 10
+      },
+      "main": {
+        "type": "function",
+        "calls": [
+          "argparse.ArgumentParser",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.add_argument",
+          "parser.parse_args",
+          "args.train_data.endswith",
+          "EnhancedLoRASFTTrainer",
+          "trainer.train",
+          "open",
+          "yaml.safe_load",
+          "int",
+          "open",
+          "yaml.dump",
+          "Dataset.from_list",
+          "load_from_disk",
+          "args.eval_data.endswith",
+          "open",
+          "json.load",
+          "Dataset.from_list",
+          "load_from_disk",
+          "open",
+          "json.load"
+        ],
+        "called_by": [],
+        "complexity": 5,
+        "line_count": 59
+      }
+    },
+    "data_flow": {
+      "global_variables": [
+        "logger"
+      ],
+      "shared_state": {},
+      "parameter_flow": {
+        "CalibratedTrainer.__init__": {
+          "parameters": [
+            "self",
+            "metrics_aggregator",
+            "conformal_predictor",
+            "abstention_loss_config"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": true,
+          "has_args": true
+        },
+        "CalibratedTrainer.evaluate": {
+          "parameters": [
+            "self",
+            "eval_dataset",
+            "ignore_keys",
+            "metric_key_prefix"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "CalibratedTrainer._get_predictions_and_labels": {
+          "parameters": [
+            "self",
+            "dataloader"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "CalibratedTrainer.should_adjust_learning_rate": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "CalibratedTrainer.adjust_learning_rate": {
+          "parameters": [
+            "self",
+            "factor"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "CalibratedTrainer.compute_abstention_aware_loss": {
+          "parameters": [
+            "self",
+            "model",
+            "inputs",
+            "return_outputs"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "CalibratedTrainer.compute_loss": {
+          "parameters": [
+            "self",
+            "model",
+            "inputs",
+            "return_outputs"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "CalibrationMonitorCallback.on_evaluate": {
+          "parameters": [
+            "self",
+            "args",
+            "state",
+            "control",
+            "trainer"
+          ],
+          "parameter_count": 5,
+          "has_self": true,
+          "has_kwargs": true,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.__init__": {
+          "parameters": [
+            "self",
+            "config_path"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer._initialize_high_stakes_components": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.get_quantization_config": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.get_peft_config": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.setup_model_and_tokenizer": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.get_model_specific_prompt": {
+          "parameters": [
+            "self",
+            "text",
+            "metadata"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.prepare_dataset": {
+          "parameters": [
+            "self",
+            "dataset"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.split_dataset": {
+          "parameters": [
+            "self",
+            "dataset"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.compute_metrics": {
+          "parameters": [
+            "self",
+            "eval_pred"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.get_scheduler": {
+          "parameters": [
+            "self",
+            "optimizer",
+            "num_training_steps"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.init_wandb": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.get_report_to": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "EnhancedLoRASFTTrainer.train": {
+          "parameters": [
+            "self",
+            "train_dataset",
+            "eval_dataset",
+            "resume_from_checkpoint"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        }
+      },
+      "return_patterns": {
+        "CalibratedTrainer.__init__": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "CalibratedTrainer.evaluate": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "CalibratedTrainer._get_predictions_and_labels": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "CalibratedTrainer.should_adjust_learning_rate": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "CalibratedTrainer.adjust_learning_rate": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "CalibratedTrainer.compute_abstention_aware_loss": {
+          "return_statements": 5,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "CalibratedTrainer.compute_loss": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "CalibrationMonitorCallback.on_evaluate": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "EnhancedLoRASFTTrainer.__init__": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "EnhancedLoRASFTTrainer._initialize_high_stakes_components": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "EnhancedLoRASFTTrainer.get_quantization_config": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "EnhancedLoRASFTTrainer.get_peft_config": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "EnhancedLoRASFTTrainer.setup_model_and_tokenizer": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "EnhancedLoRASFTTrainer.get_model_specific_prompt": {
+          "return_statements": 4,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "EnhancedLoRASFTTrainer.prepare_dataset": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "EnhancedLoRASFTTrainer.split_dataset": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "EnhancedLoRASFTTrainer.compute_metrics": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "EnhancedLoRASFTTrainer.get_scheduler": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "EnhancedLoRASFTTrainer.init_wandb": {
+          "return_statements": 2,
+          "returns_none": true,
+          "return_complexity": "multiple"
+        },
+        "EnhancedLoRASFTTrainer.get_report_to": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "EnhancedLoRASFTTrainer.train": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        }
+      }
+    },
+    "analysis_metadata": {
+      "timestamp": "2025-08-14T18:24:48.155988Z",
+      "analyzer_version": "1.0.0",
+      "file_analyzed": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\sft_lora_backup_20250814_123726.py",
+      "analysis_complete": true
+    }
+  },
+  "summary_report": {
+    "file_summary": {
+      "file_path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\sft_lora_backup_20250814_123726.py",
+      "total_classes": 3,
+      "total_methods": 21,
+      "total_functions": 2,
+      "total_imports": 9,
+      "lines_of_code": 717,
+      "total_complexity": 62
+    },
+    "complexity_analysis": {
+      "average_methods_per_class": 7.0,
+      "most_complex_class": {
+        "name": "EnhancedLoRASFTTrainer",
+        "complexity": 37,
+        "method_count": 13,
+        "line_count": 495
+      },
+      "most_connected_method": {
+        "name": "EnhancedLoRASFTTrainer.train",
+        "total_connections": 39,
+        "outgoing_calls": 39,
+        "incoming_calls": 0
+      },
+      "dependency_density": 1.0
+    },
+    "decomposition_candidates": [
+      {
+        "class_name": "CalibratedTrainer",
+        "reason": "god_class",
+        "method_count": 7,
+        "complexity": 23,
+        "line_count": 226,
+        "decomposition_suggestions": []
+      },
+      {
+        "class_name": "EnhancedLoRASFTTrainer",
+        "reason": "god_class",
+        "method_count": 13,
+        "complexity": 37,
+        "line_count": 495,
+        "decomposition_suggestions": [
+          "Extract get-related methods into separate class"
+        ]
+      }
+    ],
+    "external_dependencies": {
+      "third_party_imports": [
+        "torch",
+        "numpy"
+      ],
+      "high_coupling_indicators": [
+        "Highly connected methods: 9"
+      ]
+    }
+  }
+}

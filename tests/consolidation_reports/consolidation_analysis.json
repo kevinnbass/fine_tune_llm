@@ -1,0 +1,147 @@
+{
+  "duplicate_functions": [
+    {
+      "signature_hash": "0566e750",
+      "function_name": "main",
+      "args": [],
+      "occurrences": [
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\scripts\\consolidation_analysis.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\infer_model.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\launch_risk_ui.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\merge_lora.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\prepare_data.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\risk_prediction_ui.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\run_dashboard.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\train_high_stakes.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\tune_hyperparams.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\apps\\train\\train_lora_sft.py",
+          "function": "main",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\apps\\ui\\main.py",
+          "function": "main",
+          "args": []
+        }
+      ],
+      "script_count": 11
+    },
+    {
+      "signature_hash": "f8a66b5d",
+      "function_name": "__init__",
+      "args": [
+        "self",
+        "config"
+      ],
+      "occurrences": [
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\prepare_data.py",
+          "function": "__init__",
+          "args": [
+            "self",
+            "config"
+          ]
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\voters\\llm\\high_stakes_audit_facade.py",
+          "function": "__init__",
+          "args": [
+            "self",
+            "config"
+          ]
+        }
+      ],
+      "script_count": 2
+    },
+    {
+      "signature_hash": "74e530fc",
+      "function_name": "load_config",
+      "args": [
+        "self"
+      ],
+      "occurrences": [
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\prepare_data.py",
+          "function": "load_config",
+          "args": [
+            "self"
+          ]
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\apps\\ui\\main.py",
+          "function": "load_config",
+          "args": [
+            "self"
+          ]
+        }
+      ],
+      "script_count": 2
+    },
+    {
+      "signature_hash": "a317c7d4",
+      "function_name": "parse_args",
+      "args": [],
+      "occurrences": [
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\train_high_stakes.py",
+          "function": "parse_args",
+          "args": []
+        },
+        {
+          "script": "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\apps\\train\\train_lora_sft.py",
+          "function": "parse_args",
+          "args": []
+        }
+      ],
+      "script_count": 2
+    }
+  ],
+  "similar_imports": {},
+  "redundant_scripts": [],
+  "consolidation_opportunities": [
+    {
+      "type": "extract_common_functions",
+      "priority": "high",
+      "description": "Extract 4 duplicate functions into shared utility modules",
+      "affected_scripts": 17,
+      "action": "Create shared utility modules and refactor scripts to import common functions"
+    }
+  ]
+}

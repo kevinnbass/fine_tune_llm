@@ -1,0 +1,3473 @@
+{
+  "class_name": "AdvancedHighStakesAuditor",
+  "functionality_map": {
+    "file_info": {
+      "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+      "size": 51075,
+      "lines": 1233,
+      "non_empty_lines": 985,
+      "comment_lines": 84
+    },
+    "imports": {
+      "stdlib": [
+        "logging",
+        "json",
+        "hashlib",
+        "re"
+      ],
+      "third_party": [
+        "torch",
+        "torch.nn.functional",
+        "numpy"
+      ],
+      "local": [
+        "yaml"
+      ],
+      "from_imports": {
+        "typing": {
+          "category": "stdlib",
+          "items": [
+            "Dict",
+            "List",
+            "Optional",
+            "Tuple",
+            "Any"
+          ]
+        },
+        "pathlib": {
+          "category": "stdlib",
+          "items": [
+            "Path"
+          ]
+        },
+        "datetime": {
+          "category": "stdlib",
+          "items": [
+            "datetime"
+          ]
+        },
+        "metrics": {
+          "category": "local",
+          "items": [
+            "compute_ece",
+            "compute_mce",
+            "compute_brier_score",
+            "compute_abstention_metrics",
+            "compute_risk_aware_metrics",
+            "compute_confidence_metrics",
+            "MetricsAggregator"
+          ]
+        },
+        "conformal": {
+          "category": "local",
+          "items": [
+            "ConformalPredictor",
+            "RiskControlledPredictor"
+          ]
+        }
+      },
+      "import_aliases": {
+        "F": "torch.nn.functional",
+        "np": "numpy"
+      }
+    },
+    "classes": {
+      "BiasAuditor": {
+        "name": "BiasAuditor",
+        "line_start": 29,
+        "line_end": 218,
+        "bases": [],
+        "decorators": [],
+        "methods": {
+          "__init__": {
+            "name": "__init__",
+            "line_start": 32,
+            "line_end": 58,
+            "line_count": 27,
+            "parameters": [
+              "self",
+              "config"
+            ],
+            "decorators": [],
+            "docstring": null,
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "get",
+              "self.bias_config.get",
+              "self.bias_config.get",
+              "self.bias_config.get",
+              "config.get"
+            ],
+            "complexity": 0,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "detect_bias": {
+            "name": "detect_bias",
+            "line_start": 60,
+            "line_end": 103,
+            "line_count": 44,
+            "parameters": [
+              "self",
+              "text",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Detect bias in text and predictions.\n\nArgs:\n    text: Input text\n    predictions: Model predictions\n    \nReturns:\n    Dictionary of bias scores by category",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "text.lower",
+              "bias_scores.items",
+              "logger.error",
+              "self._detect_gender_bias",
+              "logger.warning",
+              "self.audit_log.append",
+              "self._detect_race_bias",
+              "self._detect_age_bias",
+              "isoformat",
+              "self._detect_nationality_bias",
+              "datetime.now"
+            ],
+            "complexity": 8,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "_detect_gender_bias": {
+            "name": "_detect_gender_bias",
+            "line_start": 105,
+            "line_end": 130,
+            "line_count": 26,
+            "parameters": [
+              "self",
+              "text",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Detect gender bias in text and predictions.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "sum",
+              "sum",
+              "sum",
+              "item",
+              "min",
+              "abs",
+              "len",
+              "predictions.std"
+            ],
+            "complexity": 3,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "_detect_race_bias": {
+            "name": "_detect_race_bias",
+            "line_start": 132,
+            "line_end": 141,
+            "line_count": 10,
+            "parameters": [
+              "self",
+              "text",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Detect racial bias in text.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "sum",
+              "min"
+            ],
+            "complexity": 0,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_detect_age_bias": {
+            "name": "_detect_age_bias",
+            "line_start": 143,
+            "line_end": 156,
+            "line_count": 14,
+            "parameters": [
+              "self",
+              "text",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Detect age bias in text.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "sum",
+              "sum",
+              "abs"
+            ],
+            "complexity": 1,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "_detect_nationality_bias": {
+            "name": "_detect_nationality_bias",
+            "line_start": 158,
+            "line_end": 167,
+            "line_count": 10,
+            "parameters": [
+              "self",
+              "text",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Detect nationality bias in text.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "sum",
+              "min"
+            ],
+            "complexity": 0,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "compute_bias_mitigation_loss": {
+            "name": "compute_bias_mitigation_loss",
+            "line_start": 169,
+            "line_end": 191,
+            "line_count": 23,
+            "parameters": [
+              "self",
+              "text",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Compute loss to mitigate bias.\n\nArgs:\n    text: Input text\n    predictions: Model predictions\n    \nReturns:\n    Bias mitigation loss",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.detect_bias",
+              "torch.tensor",
+              "self.bias_config.get",
+              "torch.tensor",
+              "sum",
+              "len",
+              "bias_scores.values"
+            ],
+            "complexity": 1,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "generate_audit_report": {
+            "name": "generate_audit_report",
+            "line_start": 193,
+            "line_end": 218,
+            "line_count": 26,
+            "parameters": [
+              "self",
+              "save_path"
+            ],
+            "decorators": [],
+            "docstring": "Generate comprehensive bias audit report.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "isoformat",
+              "len",
+              "logger.info",
+              "open",
+              "json.dump",
+              "datetime.now",
+              "len",
+              "np.mean",
+              "np.max",
+              "len"
+            ],
+            "complexity": 3,
+            "return_count": 1,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "{'config', 'audit_log', 'audit_categories', 'bias_config', 'bias_patterns', 'mitigation_weight', 'bias_threshold'}",
+        "docstring": "Audit and mitigate bias in high-stakes predictions.",
+        "complexity_metrics": {
+          "method_count": 8,
+          "line_count": 190,
+          "cyclomatic_complexity": 16,
+          "public_methods": 3,
+          "private_methods": 5,
+          "property_count": 0,
+          "inheritance_depth": 0
+        }
+      },
+      "ExplainableReasoning": {
+        "name": "ExplainableReasoning",
+        "line_start": 221,
+        "line_end": 377,
+        "bases": [],
+        "decorators": [],
+        "methods": {
+          "__init__": {
+            "name": "__init__",
+            "line_start": 224,
+            "line_end": 231,
+            "line_count": 8,
+            "parameters": [
+              "self",
+              "model",
+              "tokenizer",
+              "config"
+            ],
+            "decorators": [],
+            "docstring": null,
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "get",
+              "self.explain_config.get",
+              "self.explain_config.get",
+              "self.explain_config.get",
+              "config.get"
+            ],
+            "complexity": 0,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "generate_reasoning_chain": {
+            "name": "generate_reasoning_chain",
+            "line_start": 233,
+            "line_end": 277,
+            "line_count": 45,
+            "parameters": [
+              "self",
+              "input_text"
+            ],
+            "decorators": [],
+            "docstring": "Generate step-by-step reasoning chain.\n\nArgs:\n    input_text: Input requiring reasoning\n    \nReturns:\n    Tuple of (final_answer, reasoning_steps)",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.tokenizer",
+              "self.tokenizer.decode",
+              "self._extract_reasoning_steps",
+              "self._extract_final_answer",
+              "self.explain_config.get",
+              "torch.no_grad",
+              "self.model.generate",
+              "logger.error"
+            ],
+            "complexity": 2,
+            "return_count": 3,
+            "returns_none": false
+          },
+          "_extract_reasoning_steps": {
+            "name": "_extract_reasoning_steps",
+            "line_start": 279,
+            "line_end": 300,
+            "line_count": 22,
+            "parameters": [
+              "self",
+              "text"
+            ],
+            "decorators": [],
+            "docstring": "Extract individual reasoning steps from text.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "re.findall",
+              "text.split",
+              "s.strip",
+              "len",
+              "match.strip",
+              "len",
+              "s.strip"
+            ],
+            "complexity": 3,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_extract_final_answer": {
+            "name": "_extract_final_answer",
+            "line_start": 302,
+            "line_end": 323,
+            "line_count": 22,
+            "parameters": [
+              "self",
+              "text"
+            ],
+            "decorators": [],
+            "docstring": "Extract final answer from reasoning text.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "text.split",
+              "re.search",
+              "strip",
+              "strip",
+              "match.group"
+            ],
+            "complexity": 3,
+            "return_count": 3,
+            "returns_none": false
+          },
+          "verify_faithfulness": {
+            "name": "verify_faithfulness",
+            "line_start": 325,
+            "line_end": 377,
+            "line_count": 53,
+            "parameters": [
+              "self",
+              "reasoning_steps",
+              "final_answer"
+            ],
+            "decorators": [],
+            "docstring": "Verify that reasoning faithfully leads to conclusion.\n\nArgs:\n    reasoning_steps: List of reasoning steps\n    final_answer: Final conclusion\n    \nReturns:\n    Tuple of (is_faithful, faithfulness_score)",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "join",
+              "self.tokenizer",
+              "lower",
+              "torch.no_grad",
+              "self.model.generate",
+              "logger.error",
+              "self.tokenizer.decode",
+              "enumerate"
+            ],
+            "complexity": 4,
+            "return_count": 3,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "{'explain_config', 'config', 'chain_of_thought', 'tokenizer', 'model', 'faithfulness_check', 'min_steps'}",
+        "docstring": "Generate and verify explainable reasoning chains.",
+        "complexity_metrics": {
+          "method_count": 5,
+          "line_count": 157,
+          "cyclomatic_complexity": 12,
+          "public_methods": 2,
+          "private_methods": 3,
+          "property_count": 0,
+          "inheritance_depth": 0
+        }
+      },
+      "ProceduralAlignment": {
+        "name": "ProceduralAlignment",
+        "line_start": 380,
+        "line_end": 512,
+        "bases": [],
+        "decorators": [],
+        "methods": {
+          "__init__": {
+            "name": "__init__",
+            "line_start": 383,
+            "line_end": 390,
+            "line_count": 8,
+            "parameters": [
+              "self",
+              "config"
+            ],
+            "decorators": [],
+            "docstring": null,
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "get",
+              "self.procedural_config.get",
+              "self.procedural_config.get",
+              "self._load_procedures",
+              "config.get"
+            ],
+            "complexity": 0,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "_load_procedures": {
+            "name": "_load_procedures",
+            "line_start": 392,
+            "line_end": 436,
+            "line_count": 45,
+            "parameters": [
+              "self"
+            ],
+            "decorators": [],
+            "docstring": "Load domain-specific procedures.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.procedural_config.get",
+              "exists",
+              "Path",
+              "open",
+              "yaml.safe_load",
+              "logger.error"
+            ],
+            "complexity": 2,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "check_compliance": {
+            "name": "check_compliance",
+            "line_start": 438,
+            "line_end": 473,
+            "line_count": 36,
+            "parameters": [
+              "self",
+              "text"
+            ],
+            "decorators": [],
+            "docstring": "Check compliance with domain procedures.\n\nArgs:\n    text: Text to check for compliance\n    \nReturns:\n    Tuple of (is_compliant, compliance_score, missing_procedures)",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.procedures.get",
+              "text.lower",
+              "self.procedural_config.get",
+              "self._extract_key_terms",
+              "any",
+              "logger.warning",
+              "logger.debug",
+              "compliant_procedures.append",
+              "missing_procedures.append",
+              "len",
+              "len"
+            ],
+            "complexity": 4,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "_extract_key_terms": {
+            "name": "_extract_key_terms",
+            "line_start": 475,
+            "line_end": 481,
+            "line_count": 7,
+            "parameters": [
+              "self",
+              "procedure"
+            ],
+            "decorators": [],
+            "docstring": "Extract key terms from procedure for matching.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "split",
+              "procedure.lower",
+              "len"
+            ],
+            "complexity": 0,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "enhance_with_procedures": {
+            "name": "enhance_with_procedures",
+            "line_start": 483,
+            "line_end": 512,
+            "line_count": 30,
+            "parameters": [
+              "self",
+              "text"
+            ],
+            "decorators": [],
+            "docstring": "Enhance text with required procedures.\n\nArgs:\n    text: Original text\n    \nReturns:\n    Enhanced text with procedures",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.check_compliance",
+              "self.procedures.get",
+              "enumerate",
+              "self.procedural_config.get",
+              "self.domain.title"
+            ],
+            "complexity": 3,
+            "return_count": 3,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "{'config', 'domain', 'procedural_config', 'procedures', 'compliance_weight'}",
+        "docstring": "Ensure alignment with domain-specific procedures.",
+        "complexity_metrics": {
+          "method_count": 5,
+          "line_count": 133,
+          "cyclomatic_complexity": 9,
+          "public_methods": 2,
+          "private_methods": 3,
+          "property_count": 0,
+          "inheritance_depth": 0
+        }
+      },
+      "VerifiableTraining": {
+        "name": "VerifiableTraining",
+        "line_start": 515,
+        "line_end": 656,
+        "bases": [],
+        "decorators": [],
+        "methods": {
+          "__init__": {
+            "name": "__init__",
+            "line_start": 518,
+            "line_end": 522,
+            "line_count": 5,
+            "parameters": [
+              "self",
+              "config"
+            ],
+            "decorators": [],
+            "docstring": null,
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "get",
+              "Path",
+              "self.audit_log_path.parent.mkdir",
+              "self.verifiable_config.get",
+              "config.get"
+            ],
+            "complexity": 0,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "hash_artifact": {
+            "name": "hash_artifact",
+            "line_start": 524,
+            "line_end": 559,
+            "line_count": 36,
+            "parameters": [
+              "self",
+              "artifact",
+              "artifact_type"
+            ],
+            "decorators": [],
+            "docstring": "Create cryptographic hash of training artifact.\n\nArgs:\n    artifact: Artifact to hash (model, data, config, etc.)\n    artifact_type: Type of artifact\n    \nReturns:\n    Hash string",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.verifiable_config.get",
+              "hexdigest",
+              "artifact.named_parameters",
+              "param_str.encode",
+              "logger.error",
+              "encode",
+              "hashlib.sha256",
+              "encode",
+              "encode",
+              "tobytes",
+              "json.dumps",
+              "json.dumps",
+              "str",
+              "numpy",
+              "param.data.cpu"
+            ],
+            "complexity": 6,
+            "return_count": 3,
+            "returns_none": false
+          },
+          "log_training_event": {
+            "name": "log_training_event",
+            "line_start": 561,
+            "line_end": 589,
+            "line_count": 29,
+            "parameters": [
+              "self",
+              "event_type",
+              "details"
+            ],
+            "decorators": [],
+            "docstring": "Log training event to audit trail.\n\nArgs:\n    event_type: Type of event\n    details: Event details",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.verifiable_config.get",
+              "self.verifiable_config.get",
+              "isoformat",
+              "hexdigest",
+              "open",
+              "f.write",
+              "logger.error",
+              "datetime.now",
+              "hashlib.sha256",
+              "encode",
+              "json.dumps",
+              "json.dumps"
+            ],
+            "complexity": 3,
+            "return_count": 1,
+            "returns_none": true
+          },
+          "create_training_proof": {
+            "name": "create_training_proof",
+            "line_start": 591,
+            "line_end": 620,
+            "line_count": 30,
+            "parameters": [
+              "self",
+              "model",
+              "train_data",
+              "config"
+            ],
+            "decorators": [],
+            "docstring": "Create comprehensive proof of training.\n\nArgs:\n    model: Trained model\n    train_data: Training data\n    config: Training configuration\n    \nReturns:\n    Dictionary of proof elements",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "json.dumps",
+              "hexdigest",
+              "self.log_training_event",
+              "self.verifiable_config.get",
+              "isoformat",
+              "self.hash_artifact",
+              "self.hash_artifact",
+              "self.hash_artifact",
+              "hashlib.sha256",
+              "datetime.now",
+              "composite.encode"
+            ],
+            "complexity": 1,
+            "return_count": 2,
+            "returns_none": false
+          },
+          "verify_training": {
+            "name": "verify_training",
+            "line_start": 622,
+            "line_end": 656,
+            "line_count": 35,
+            "parameters": [
+              "self",
+              "model",
+              "proof"
+            ],
+            "decorators": [],
+            "docstring": "Verify training using proof.\n\nArgs:\n    model: Model to verify\n    proof: Training proof\n    \nReturns:\n    True if verification passes",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self.hash_artifact",
+              "proof.copy",
+              "proof_copy.pop",
+              "json.dumps",
+              "hexdigest",
+              "logger.info",
+              "proof.get",
+              "logger.error",
+              "logger.error",
+              "logger.error",
+              "hashlib.sha256",
+              "composite.encode"
+            ],
+            "complexity": 3,
+            "return_count": 4,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "{'audit_log_path', 'config', 'verifiable_config'}",
+        "docstring": "Create verifiable audit trail for training process.",
+        "complexity_metrics": {
+          "method_count": 5,
+          "line_count": 142,
+          "cyclomatic_complexity": 13,
+          "public_methods": 4,
+          "private_methods": 1,
+          "property_count": 0,
+          "inheritance_depth": 0
+        }
+      },
+      "AdvancedHighStakesAuditor": {
+        "name": "AdvancedHighStakesAuditor",
+        "line_start": 659,
+        "line_end": 1233,
+        "bases": [],
+        "decorators": [],
+        "methods": {
+          "__init__": {
+            "name": "__init__",
+            "line_start": 667,
+            "line_end": 710,
+            "line_count": 44,
+            "parameters": [
+              "self",
+              "config",
+              "model",
+              "tokenizer"
+            ],
+            "decorators": [],
+            "docstring": "Initialize advanced high-stakes auditor.\n\nArgs:\n    config: Configuration dictionary\n    model: Optional model for reasoning tasks\n    tokenizer: Optional tokenizer for reasoning tasks",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "BiasAuditor",
+              "VerifiableTraining",
+              "ProceduralAlignment",
+              "ExplainableReasoning",
+              "Path",
+              "audit_metrics_path.parent.mkdir",
+              "MetricsAggregator",
+              "config.get",
+              "get",
+              "get",
+              "logger.info",
+              "get",
+              "ConformalPredictor",
+              "RiskControlledPredictor",
+              "advanced_config.get",
+              "advanced_config.get"
+            ],
+            "complexity": 4,
+            "return_count": 0,
+            "returns_none": false
+          },
+          "conduct_comprehensive_audit": {
+            "name": "conduct_comprehensive_audit",
+            "line_start": 712,
+            "line_end": 786,
+            "line_count": 75,
+            "parameters": [
+              "self",
+              "predictions",
+              "ground_truth",
+              "texts",
+              "metadata"
+            ],
+            "decorators": [],
+            "docstring": "Conduct comprehensive high-stakes audit with advanced metrics.\n\nArgs:\n    predictions: List of model predictions with confidence scores\n    ground_truth: List of true labels\n    texts: List of input texts\n    metadata: Optional metadata for each prediction\n    \nReturns:\n    Comprehensive audit report",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "self._conduct_bias_audit",
+              "self._conduct_procedural_audit",
+              "self._conduct_risk_assessment_audit",
+              "self._conduct_coverage_calibration_audit",
+              "self._generate_overall_assessment",
+              "self.verifiable_training.log_training_event",
+              "isoformat",
+              "len",
+              "p.get",
+              "p.get",
+              "p.get",
+              "self._conduct_explainability_audit",
+              "self._conduct_advanced_metrics_audit",
+              "self.metrics_aggregator.add_metrics",
+              "len",
+              "datetime.now"
+            ],
+            "complexity": 3,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_conduct_bias_audit": {
+            "name": "_conduct_bias_audit",
+            "line_start": 788,
+            "line_end": 838,
+            "line_count": 51,
+            "parameters": [
+              "self",
+              "texts",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Conduct bias audit with enhanced metrics.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "enumerate",
+              "len",
+              "zip",
+              "isinstance",
+              "self.bias_auditor.detect_bias",
+              "all_bias_scores.append",
+              "set",
+              "pred.get",
+              "torch.tensor",
+              "torch.tensor",
+              "max",
+              "categories.update",
+              "len",
+              "list",
+              "bias_scores.values",
+              "len",
+              "append",
+              "scores.keys",
+              "scores.get",
+              "float",
+              "float",
+              "sum",
+              "values",
+              "pred.get",
+              "np.mean",
+              "np.max"
+            ],
+            "complexity": 7,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_conduct_procedural_audit": {
+            "name": "_conduct_procedural_audit",
+            "line_start": 840,
+            "line_end": 872,
+            "line_count": 33,
+            "parameters": [
+              "self",
+              "texts",
+              "predictions"
+            ],
+            "decorators": [],
+            "docstring": "Conduct procedural compliance audit.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "len",
+              "self.procedural_alignment.check_compliance",
+              "append",
+              "float",
+              "float",
+              "np.mean",
+              "np.min",
+              "len"
+            ],
+            "complexity": 5,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_conduct_explainability_audit": {
+            "name": "_conduct_explainability_audit",
+            "line_start": 874,
+            "line_end": 919,
+            "line_count": 46,
+            "parameters": [
+              "self",
+              "sample_texts"
+            ],
+            "decorators": [],
+            "docstring": "Conduct explainability audit on sample texts.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "len",
+              "float",
+              "float",
+              "self.explainable_reasoning.generate_reasoning_chain",
+              "min",
+              "append",
+              "self.explainable_reasoning.verify_faithfulness",
+              "append",
+              "np.mean",
+              "np.mean",
+              "len",
+              "logger.warning",
+              "len"
+            ],
+            "complexity": 4,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_conduct_advanced_metrics_audit": {
+            "name": "_conduct_advanced_metrics_audit",
+            "line_start": 921,
+            "line_end": 1007,
+            "line_count": 87,
+            "parameters": [
+              "self",
+              "pred_labels",
+              "ground_truth",
+              "confidences",
+              "abstentions"
+            ],
+            "decorators": [],
+            "docstring": "Conduct audit using advanced calibration and conformal metrics.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "np.array",
+              "np.array",
+              "np.array",
+              "np.array",
+              "compute_confidence_metrics",
+              "any",
+              "compute_risk_aware_metrics",
+              "conf_metrics.get",
+              "conf_metrics.get",
+              "np.array",
+              "np.array",
+              "np.array",
+              "compute_abstention_metrics",
+              "risk_metrics.get",
+              "risk_metrics.get",
+              "get",
+              "get",
+              "get",
+              "get",
+              "sum",
+              "logger.error",
+              "str",
+              "enumerate",
+              "len",
+              "len",
+              "float",
+              "float",
+              "float",
+              "self._label_to_index",
+              "self._label_to_index",
+              "abs",
+              "abs_metrics.get",
+              "abs_metrics.get",
+              "abs_metrics.get",
+              "risk_metrics.get",
+              "zip",
+              "compute_ece",
+              "compute_mce",
+              "compute_brier_score",
+              "conf_metrics.get",
+              "self._label_to_index",
+              "self._label_to_index",
+              "abs_metrics.get",
+              "adv_results.get",
+              "adv_results.get",
+              "adv_results.get",
+              "adv_results.get"
+            ],
+            "complexity": 5,
+            "return_count": 3,
+            "returns_none": false
+          },
+          "_conduct_risk_assessment_audit": {
+            "name": "_conduct_risk_assessment_audit",
+            "line_start": 1009,
+            "line_end": 1048,
+            "line_count": 40,
+            "parameters": [
+              "self",
+              "pred_labels",
+              "ground_truth",
+              "confidences"
+            ],
+            "decorators": [],
+            "docstring": "Conduct comprehensive risk assessment audit.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "set",
+              "enumerate",
+              "len",
+              "zip",
+              "pred_labels.count",
+              "ground_truth.count",
+              "self._calculate_misclassification_risk",
+              "len",
+              "append"
+            ],
+            "complexity": 4,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_conduct_coverage_calibration_audit": {
+            "name": "_conduct_coverage_calibration_audit",
+            "line_start": 1050,
+            "line_end": 1110,
+            "line_count": 61,
+            "parameters": [
+              "self",
+              "pred_labels",
+              "ground_truth",
+              "confidences",
+              "abstentions"
+            ],
+            "decorators": [],
+            "docstring": "Conduct coverage and calibration audit for high-stakes applications.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "sum",
+              "len",
+              "np.linspace",
+              "range",
+              "get",
+              "get",
+              "len",
+              "np.mean",
+              "len",
+              "sum",
+              "len",
+              "len",
+              "set",
+              "len",
+              "bin_mask.sum",
+              "float",
+              "np.array",
+              "np.array",
+              "np.mean",
+              "bin_accuracies.append",
+              "bin_confidences.append",
+              "bin_counts.append",
+              "abs",
+              "range",
+              "range",
+              "range",
+              "sum",
+              "len",
+              "len",
+              "zip",
+              "len",
+              "len",
+              "len",
+              "zip"
+            ],
+            "complexity": 5,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_calculate_misclassification_risk": {
+            "name": "_calculate_misclassification_risk",
+            "line_start": 1112,
+            "line_end": 1134,
+            "line_count": 23,
+            "parameters": [
+              "self",
+              "predicted",
+              "actual",
+              "confidence"
+            ],
+            "decorators": [],
+            "docstring": "Calculate risk score for a misclassification.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "risk_levels.get",
+              "risk_levels.get",
+              "min"
+            ],
+            "complexity": 1,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_label_to_index": {
+            "name": "_label_to_index",
+            "line_start": 1136,
+            "line_end": 1145,
+            "line_count": 10,
+            "parameters": [
+              "self",
+              "label"
+            ],
+            "decorators": [],
+            "docstring": "Convert label to index for metrics calculations.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "label_map.get"
+            ],
+            "complexity": 0,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_generate_overall_assessment": {
+            "name": "_generate_overall_assessment",
+            "line_start": 1147,
+            "line_end": 1186,
+            "line_count": 40,
+            "parameters": [
+              "self",
+              "audit_results"
+            ],
+            "decorators": [],
+            "docstring": "Generate overall audit assessment.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "audit_results.get",
+              "component_results.items",
+              "results.get",
+              "audit_passes.append",
+              "float",
+              "sum",
+              "len",
+              "self._generate_recommendations",
+              "sum",
+              "len"
+            ],
+            "complexity": 4,
+            "return_count": 1,
+            "returns_none": false
+          },
+          "_generate_recommendations": {
+            "name": "_generate_recommendations",
+            "line_start": 1188,
+            "line_end": 1233,
+            "line_count": 46,
+            "parameters": [
+              "self",
+              "component_results",
+              "audit_score"
+            ],
+            "decorators": [],
+            "docstring": "Generate recommendations based on audit results.",
+            "has_args": false,
+            "has_kwargs": false,
+            "is_async": false,
+            "calls_made": [
+              "component_results.get",
+              "component_results.get",
+              "component_results.get",
+              "component_results.get",
+              "component_results.get",
+              "component_results.get",
+              "bias_results.get",
+              "recommendations.append",
+              "recommendations.append",
+              "proc_results.get",
+              "recommendations.append",
+              "recommendations.append",
+              "recommendations.append",
+              "recommendations.append",
+              "recommendations.append",
+              "recommendations.append",
+              "risk_results.get",
+              "recommendations.append",
+              "recommendations.append",
+              "cov_results.get",
+              "recommendations.append",
+              "recommendations.append",
+              "recommendations.append",
+              "recommendations.append",
+              "expl_results.get",
+              "adv_results.get"
+            ],
+            "complexity": 7,
+            "return_count": 1,
+            "returns_none": false
+          }
+        },
+        "properties": [],
+        "class_variables": [],
+        "instance_variables": "{'metrics_aggregator', 'config', 'bias_auditor', 'procedural_alignment', 'risk_controlled_predictor', 'conformal_predictor', 'explainable_reasoning', 'tokenizer', 'model', 'verifiable_training'}",
+        "docstring": "Comprehensive high-stakes auditing system with advanced metrics integration.\n\nThis class integrates all high-stakes components with advanced metrics to provide\ncomprehensive auditing, monitoring, and quality assurance for critical applications.",
+        "complexity_metrics": {
+          "method_count": 12,
+          "line_count": 575,
+          "cyclomatic_complexity": 49,
+          "public_methods": 1,
+          "private_methods": 11,
+          "property_count": 0,
+          "inheritance_depth": 0
+        }
+      }
+    },
+    "functions": {},
+    "dependencies": {
+      "internal_calls": {
+        "global": [
+          "logging.getLogger"
+        ],
+        "BiasAuditor.__init__": [
+          "get",
+          "self.bias_config.get",
+          "self.bias_config.get",
+          "self.bias_config.get",
+          "config.get"
+        ],
+        "BiasAuditor._detect_gender_bias": [
+          "sum",
+          "sum",
+          "sum",
+          "item",
+          "min",
+          "abs",
+          "len",
+          "predictions.std"
+        ],
+        "BiasAuditor._detect_race_bias": [
+          "sum",
+          "min"
+        ],
+        "BiasAuditor._detect_age_bias": [
+          "sum",
+          "sum",
+          "abs"
+        ],
+        "BiasAuditor._detect_nationality_bias": [
+          "sum",
+          "min"
+        ],
+        "BiasAuditor.compute_bias_mitigation_loss": [
+          "self.detect_bias",
+          "torch.tensor",
+          "self.bias_config.get",
+          "torch.tensor",
+          "sum",
+          "len",
+          "bias_scores.values"
+        ],
+        "ExplainableReasoning.__init__": [
+          "get",
+          "self.explain_config.get",
+          "self.explain_config.get",
+          "self.explain_config.get",
+          "config.get"
+        ],
+        "ExplainableReasoning._extract_final_answer": [
+          "text.split",
+          "re.search",
+          "strip",
+          "strip",
+          "match.group"
+        ],
+        "ProceduralAlignment.__init__": [
+          "get",
+          "self.procedural_config.get",
+          "self.procedural_config.get",
+          "self._load_procedures",
+          "config.get"
+        ],
+        "ProceduralAlignment._load_procedures": [
+          "self.procedural_config.get",
+          "exists",
+          "Path",
+          "open",
+          "yaml.safe_load",
+          "logger.error"
+        ],
+        "ProceduralAlignment.check_compliance": [
+          "self.procedures.get",
+          "text.lower",
+          "self.procedural_config.get",
+          "self._extract_key_terms",
+          "any",
+          "logger.warning",
+          "logger.debug",
+          "compliant_procedures.append",
+          "missing_procedures.append",
+          "len",
+          "len"
+        ],
+        "ProceduralAlignment._extract_key_terms": [
+          "split",
+          "procedure.lower",
+          "len"
+        ],
+        "ProceduralAlignment.enhance_with_procedures": [
+          "self.check_compliance",
+          "self.procedures.get",
+          "enumerate",
+          "self.procedural_config.get",
+          "self.domain.title"
+        ],
+        "VerifiableTraining.__init__": [
+          "get",
+          "Path",
+          "self.audit_log_path.parent.mkdir",
+          "self.verifiable_config.get",
+          "config.get"
+        ],
+        "VerifiableTraining.log_training_event": [
+          "self.verifiable_config.get",
+          "self.verifiable_config.get",
+          "isoformat",
+          "hexdigest",
+          "open",
+          "f.write",
+          "logger.error",
+          "datetime.now",
+          "hashlib.sha256",
+          "encode",
+          "json.dumps",
+          "json.dumps"
+        ],
+        "VerifiableTraining.create_training_proof": [
+          "json.dumps",
+          "hexdigest",
+          "self.log_training_event",
+          "self.verifiable_config.get",
+          "isoformat",
+          "self.hash_artifact",
+          "self.hash_artifact",
+          "self.hash_artifact",
+          "hashlib.sha256",
+          "datetime.now",
+          "composite.encode"
+        ],
+        "AdvancedHighStakesAuditor.__init__": [
+          "BiasAuditor",
+          "VerifiableTraining",
+          "ProceduralAlignment",
+          "ExplainableReasoning",
+          "Path",
+          "audit_metrics_path.parent.mkdir",
+          "MetricsAggregator",
+          "config.get",
+          "get",
+          "get",
+          "logger.info",
+          "get",
+          "ConformalPredictor",
+          "RiskControlledPredictor",
+          "advanced_config.get",
+          "advanced_config.get"
+        ],
+        "AdvancedHighStakesAuditor.conduct_comprehensive_audit": [
+          "self._conduct_bias_audit",
+          "self._conduct_procedural_audit",
+          "self._conduct_risk_assessment_audit",
+          "self._conduct_coverage_calibration_audit",
+          "self._generate_overall_assessment",
+          "self.verifiable_training.log_training_event",
+          "isoformat",
+          "len",
+          "p.get",
+          "p.get",
+          "p.get",
+          "self._conduct_explainability_audit",
+          "self._conduct_advanced_metrics_audit",
+          "self.metrics_aggregator.add_metrics",
+          "len",
+          "datetime.now"
+        ],
+        "AdvancedHighStakesAuditor._conduct_bias_audit": [
+          "enumerate",
+          "len",
+          "zip",
+          "isinstance",
+          "self.bias_auditor.detect_bias",
+          "all_bias_scores.append",
+          "set",
+          "pred.get",
+          "torch.tensor",
+          "torch.tensor",
+          "max",
+          "categories.update",
+          "len",
+          "list",
+          "bias_scores.values",
+          "len",
+          "append",
+          "scores.keys",
+          "scores.get",
+          "float",
+          "float",
+          "sum",
+          "values",
+          "pred.get",
+          "np.mean",
+          "np.max"
+        ],
+        "AdvancedHighStakesAuditor._conduct_risk_assessment_audit": [
+          "set",
+          "enumerate",
+          "len",
+          "zip",
+          "pred_labels.count",
+          "ground_truth.count",
+          "self._calculate_misclassification_risk",
+          "len",
+          "append"
+        ],
+        "AdvancedHighStakesAuditor._conduct_coverage_calibration_audit": [
+          "sum",
+          "len",
+          "np.linspace",
+          "range",
+          "get",
+          "get",
+          "len",
+          "np.mean",
+          "len",
+          "sum",
+          "len",
+          "len",
+          "set",
+          "len",
+          "bin_mask.sum",
+          "float",
+          "np.array",
+          "np.array",
+          "np.mean",
+          "bin_accuracies.append",
+          "bin_confidences.append",
+          "bin_counts.append",
+          "abs",
+          "range",
+          "range",
+          "range",
+          "sum",
+          "len",
+          "len",
+          "zip",
+          "len",
+          "len",
+          "len",
+          "zip"
+        ],
+        "AdvancedHighStakesAuditor._calculate_misclassification_risk": [
+          "risk_levels.get",
+          "risk_levels.get",
+          "min"
+        ],
+        "AdvancedHighStakesAuditor._label_to_index": [
+          "label_map.get"
+        ],
+        "AdvancedHighStakesAuditor._generate_overall_assessment": [
+          "audit_results.get",
+          "component_results.items",
+          "results.get",
+          "audit_passes.append",
+          "float",
+          "sum",
+          "len",
+          "self._generate_recommendations",
+          "sum",
+          "len"
+        ],
+        "AdvancedHighStakesAuditor._generate_recommendations": [
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "bias_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "proc_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "risk_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "cov_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "expl_results.get",
+          "adv_results.get"
+        ],
+        "BiasAuditor.detect_bias": [
+          "text.lower",
+          "bias_scores.items",
+          "logger.error",
+          "self._detect_gender_bias",
+          "logger.warning",
+          "self.audit_log.append",
+          "self._detect_race_bias",
+          "self._detect_age_bias",
+          "isoformat",
+          "self._detect_nationality_bias",
+          "datetime.now"
+        ],
+        "BiasAuditor.generate_audit_report": [
+          "isoformat",
+          "len",
+          "logger.info",
+          "open",
+          "json.dump",
+          "datetime.now",
+          "len",
+          "np.mean",
+          "np.max",
+          "len"
+        ],
+        "ExplainableReasoning.generate_reasoning_chain": [
+          "self.tokenizer",
+          "self.tokenizer.decode",
+          "self._extract_reasoning_steps",
+          "self._extract_final_answer",
+          "self.explain_config.get",
+          "torch.no_grad",
+          "self.model.generate",
+          "logger.error"
+        ],
+        "ExplainableReasoning._extract_reasoning_steps": [
+          "re.findall",
+          "text.split",
+          "s.strip",
+          "len",
+          "match.strip",
+          "len",
+          "s.strip"
+        ],
+        "ExplainableReasoning.verify_faithfulness": [
+          "join",
+          "self.tokenizer",
+          "lower",
+          "torch.no_grad",
+          "self.model.generate",
+          "logger.error",
+          "self.tokenizer.decode",
+          "enumerate"
+        ],
+        "VerifiableTraining.hash_artifact": [
+          "self.verifiable_config.get",
+          "hexdigest",
+          "artifact.named_parameters",
+          "param_str.encode",
+          "logger.error",
+          "encode",
+          "hashlib.sha256",
+          "encode",
+          "encode",
+          "tobytes",
+          "json.dumps",
+          "json.dumps",
+          "str",
+          "numpy",
+          "param.data.cpu"
+        ],
+        "VerifiableTraining.verify_training": [
+          "self.hash_artifact",
+          "proof.copy",
+          "proof_copy.pop",
+          "json.dumps",
+          "hexdigest",
+          "logger.info",
+          "proof.get",
+          "logger.error",
+          "logger.error",
+          "logger.error",
+          "hashlib.sha256",
+          "composite.encode"
+        ],
+        "AdvancedHighStakesAuditor._conduct_procedural_audit": [
+          "len",
+          "self.procedural_alignment.check_compliance",
+          "append",
+          "float",
+          "float",
+          "np.mean",
+          "np.min",
+          "len"
+        ],
+        "AdvancedHighStakesAuditor._conduct_explainability_audit": [
+          "len",
+          "float",
+          "float",
+          "self.explainable_reasoning.generate_reasoning_chain",
+          "min",
+          "append",
+          "self.explainable_reasoning.verify_faithfulness",
+          "append",
+          "np.mean",
+          "np.mean",
+          "len",
+          "logger.warning",
+          "len"
+        ],
+        "AdvancedHighStakesAuditor._conduct_advanced_metrics_audit": [
+          "np.array",
+          "np.array",
+          "np.array",
+          "np.array",
+          "compute_confidence_metrics",
+          "any",
+          "compute_risk_aware_metrics",
+          "conf_metrics.get",
+          "conf_metrics.get",
+          "np.array",
+          "np.array",
+          "np.array",
+          "compute_abstention_metrics",
+          "risk_metrics.get",
+          "risk_metrics.get",
+          "get",
+          "get",
+          "get",
+          "get",
+          "sum",
+          "logger.error",
+          "str",
+          "enumerate",
+          "len",
+          "len",
+          "float",
+          "float",
+          "float",
+          "self._label_to_index",
+          "self._label_to_index",
+          "abs",
+          "abs_metrics.get",
+          "abs_metrics.get",
+          "abs_metrics.get",
+          "risk_metrics.get",
+          "zip",
+          "compute_ece",
+          "compute_mce",
+          "compute_brier_score",
+          "conf_metrics.get",
+          "self._label_to_index",
+          "self._label_to_index",
+          "abs_metrics.get",
+          "adv_results.get",
+          "adv_results.get",
+          "adv_results.get",
+          "adv_results.get"
+        ]
+      },
+      "external_calls": {},
+      "attribute_access": {
+        "global": [
+          "logging.getLogger"
+        ],
+        "BiasAuditor.compute_bias_mitigation_loss": [
+          "torch.Tensor",
+          "torch.Tensor",
+          "self.detect_bias",
+          "self.mitigation_weight",
+          "torch.tensor",
+          "self.bias_config.get",
+          "torch.tensor",
+          "self.bias_config",
+          "bias_scores.values"
+        ],
+        "BiasAuditor.__init__": [
+          "self.config",
+          "self.bias_config",
+          "self.audit_categories",
+          "self.bias_threshold",
+          "self.mitigation_weight",
+          "self.bias_patterns",
+          "self.audit_log",
+          "get",
+          "self.bias_config.get",
+          "self.bias_config.get",
+          "self.bias_config.get",
+          "self.bias_config",
+          "self.bias_config",
+          "self.bias_config",
+          "config.get"
+        ],
+        "BiasAuditor.generate_audit_report": [
+          "self.audit_categories",
+          "isoformat",
+          "self.audit_log",
+          "logger.info",
+          "self.audit_log",
+          "json.dump",
+          "datetime.now",
+          "np.mean",
+          "np.max",
+          "self.bias_threshold"
+        ],
+        "ExplainableReasoning.__init__": [
+          "self.model",
+          "self.tokenizer",
+          "self.config",
+          "self.explain_config",
+          "self.chain_of_thought",
+          "self.min_steps",
+          "self.faithfulness_check",
+          "get",
+          "self.explain_config.get",
+          "self.explain_config.get",
+          "self.explain_config.get",
+          "self.explain_config",
+          "self.explain_config",
+          "self.explain_config",
+          "config.get"
+        ],
+        "ProceduralAlignment.__init__": [
+          "self.config",
+          "self.procedural_config",
+          "self.domain",
+          "self.compliance_weight",
+          "self.procedures",
+          "get",
+          "self.procedural_config.get",
+          "self.procedural_config.get",
+          "self._load_procedures",
+          "self.procedural_config",
+          "self.procedural_config",
+          "config.get"
+        ],
+        "VerifiableTraining.__init__": [
+          "self.config",
+          "self.verifiable_config",
+          "self.audit_log_path",
+          "get",
+          "self.audit_log_path.parent.mkdir",
+          "self.verifiable_config.get",
+          "self.audit_log_path.parent",
+          "config.get",
+          "self.verifiable_config",
+          "self.audit_log_path"
+        ],
+        "AdvancedHighStakesAuditor.__init__": [
+          "self.config",
+          "self.model",
+          "self.tokenizer",
+          "self.bias_auditor",
+          "self.verifiable_training",
+          "self.procedural_alignment",
+          "self.metrics_aggregator",
+          "self.conformal_predictor",
+          "self.risk_controlled_predictor",
+          "self.explainable_reasoning",
+          "self.explainable_reasoning",
+          "self.metrics_aggregator",
+          "audit_metrics_path.parent.mkdir",
+          "config.get",
+          "get",
+          "self.conformal_predictor",
+          "get",
+          "self.risk_controlled_predictor",
+          "logger.info",
+          "audit_metrics_path.parent",
+          "get",
+          "advanced_config.get",
+          "advanced_config.get"
+        ],
+        "AdvancedHighStakesAuditor.conduct_comprehensive_audit": [
+          "self.explainable_reasoning",
+          "self.metrics_aggregator",
+          "self._conduct_bias_audit",
+          "self._conduct_procedural_audit",
+          "self._conduct_risk_assessment_audit",
+          "self._conduct_coverage_calibration_audit",
+          "self._generate_overall_assessment",
+          "self.verifiable_training.log_training_event",
+          "isoformat",
+          "p.get",
+          "p.get",
+          "p.get",
+          "self._conduct_explainability_audit",
+          "self._conduct_advanced_metrics_audit",
+          "self.verifiable_training",
+          "self.metrics_aggregator.add_metrics",
+          "self.metrics_aggregator",
+          "datetime.now"
+        ],
+        "BiasAuditor.detect_bias": [
+          "torch.Tensor",
+          "self.audit_categories",
+          "text.lower",
+          "bias_scores.items",
+          "self.bias_threshold",
+          "logger.error",
+          "self._detect_gender_bias",
+          "logger.warning",
+          "self.audit_log.append",
+          "self.audit_categories",
+          "self._detect_race_bias",
+          "self.audit_log",
+          "self._detect_age_bias",
+          "isoformat",
+          "self._detect_nationality_bias",
+          "datetime.now"
+        ],
+        "BiasAuditor._detect_gender_bias": [
+          "torch.Tensor",
+          "self.bias_patterns",
+          "item",
+          "predictions.shape",
+          "predictions.std"
+        ],
+        "BiasAuditor._detect_race_bias": [
+          "torch.Tensor",
+          "self.bias_patterns"
+        ],
+        "BiasAuditor._detect_age_bias": [
+          "torch.Tensor",
+          "self.bias_patterns"
+        ],
+        "BiasAuditor._detect_nationality_bias": [
+          "torch.Tensor",
+          "self.bias_patterns"
+        ],
+        "ExplainableReasoning._extract_final_answer": [
+          "text.split",
+          "re.search",
+          "strip",
+          "re.IGNORECASE",
+          "re.DOTALL",
+          "strip",
+          "match.group"
+        ],
+        "ProceduralAlignment._load_procedures": [
+          "self.procedural_config.get",
+          "self.procedural_config",
+          "exists",
+          "yaml.safe_load",
+          "logger.error"
+        ],
+        "ProceduralAlignment.check_compliance": [
+          "self.procedures.get",
+          "self.domain",
+          "text.lower",
+          "self.procedural_config.get",
+          "self.procedures",
+          "self.procedures",
+          "self._extract_key_terms",
+          "logger.warning",
+          "logger.debug",
+          "self.procedural_config",
+          "compliant_procedures.append",
+          "missing_procedures.append"
+        ],
+        "ProceduralAlignment._extract_key_terms": [
+          "split",
+          "procedure.lower"
+        ],
+        "ProceduralAlignment.enhance_with_procedures": [
+          "self.check_compliance",
+          "self.procedures.get",
+          "self.domain",
+          "self.procedural_config.get",
+          "self.procedures",
+          "self.procedures",
+          "self.procedural_config",
+          "self.domain.title",
+          "self.domain"
+        ],
+        "VerifiableTraining.log_training_event": [
+          "self.verifiable_config.get",
+          "self.verifiable_config.get",
+          "isoformat",
+          "self.verifiable_config",
+          "hexdigest",
+          "self.verifiable_config",
+          "self.audit_log_path",
+          "f.write",
+          "logger.error",
+          "datetime.now",
+          "hashlib.sha256",
+          "encode",
+          "json.dumps",
+          "json.dumps"
+        ],
+        "VerifiableTraining.create_training_proof": [
+          "json.dumps",
+          "hexdigest",
+          "self.log_training_event",
+          "self.verifiable_config.get",
+          "isoformat",
+          "self.hash_artifact",
+          "self.hash_artifact",
+          "self.hash_artifact",
+          "self.verifiable_config",
+          "hashlib.sha256",
+          "datetime.now",
+          "composite.encode"
+        ],
+        "AdvancedHighStakesAuditor._calculate_misclassification_risk": [
+          "risk_levels.get",
+          "risk_levels.get"
+        ],
+        "AdvancedHighStakesAuditor._label_to_index": [
+          "label_map.get"
+        ],
+        "AdvancedHighStakesAuditor._generate_overall_assessment": [
+          "audit_results.get",
+          "component_results.items",
+          "results.get",
+          "audit_passes.append",
+          "self._generate_recommendations"
+        ],
+        "AdvancedHighStakesAuditor._generate_recommendations": [
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "bias_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "proc_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "risk_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "cov_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "expl_results.get",
+          "adv_results.get"
+        ],
+        "ExplainableReasoning.generate_reasoning_chain": [
+          "self.tokenizer",
+          "self.tokenizer.decode",
+          "self._extract_reasoning_steps",
+          "self._extract_final_answer",
+          "self.explain_config.get",
+          "torch.no_grad",
+          "self.model.generate",
+          "self.tokenizer",
+          "logger.error",
+          "self.explain_config",
+          "self.model"
+        ],
+        "ExplainableReasoning._extract_reasoning_steps": [
+          "re.findall",
+          "text.split",
+          "self.min_steps",
+          "re.DOTALL",
+          "re.IGNORECASE",
+          "s.strip",
+          "self.min_steps",
+          "match.strip",
+          "s.strip"
+        ],
+        "ExplainableReasoning.verify_faithfulness": [
+          "self.faithfulness_check",
+          "join",
+          "self.tokenizer",
+          "lower",
+          "torch.no_grad",
+          "self.model.generate",
+          "logger.error",
+          "self.model",
+          "self.tokenizer.decode",
+          "self.tokenizer"
+        ],
+        "VerifiableTraining.hash_artifact": [
+          "self.verifiable_config.get",
+          "hexdigest",
+          "self.verifiable_config",
+          "artifact.named_parameters",
+          "param_str.encode",
+          "logger.error",
+          "encode",
+          "hashlib.sha256",
+          "encode",
+          "encode",
+          "tobytes",
+          "json.dumps",
+          "json.dumps",
+          "numpy",
+          "param.data.cpu",
+          "param.data"
+        ],
+        "VerifiableTraining.verify_training": [
+          "self.hash_artifact",
+          "proof.copy",
+          "proof_copy.pop",
+          "json.dumps",
+          "hexdigest",
+          "logger.info",
+          "proof.get",
+          "logger.error",
+          "logger.error",
+          "logger.error",
+          "hashlib.sha256",
+          "composite.encode"
+        ],
+        "AdvancedHighStakesAuditor._conduct_bias_audit": [
+          "self.bias_auditor.detect_bias",
+          "all_bias_scores.append",
+          "self.bias_auditor.bias_threshold",
+          "pred.get",
+          "torch.tensor",
+          "torch.tensor",
+          "self.bias_auditor",
+          "self.bias_auditor",
+          "categories.update",
+          "bias_scores.values",
+          "append",
+          "scores.keys",
+          "scores.get",
+          "values",
+          "pred.get",
+          "np.mean",
+          "np.max",
+          "self.bias_auditor.bias_threshold",
+          "self.bias_auditor"
+        ],
+        "AdvancedHighStakesAuditor._conduct_procedural_audit": [
+          "self.procedural_alignment.check_compliance",
+          "append",
+          "self.procedural_alignment",
+          "np.mean",
+          "np.min"
+        ],
+        "AdvancedHighStakesAuditor._conduct_advanced_metrics_audit": [
+          "np.array",
+          "np.array",
+          "np.array",
+          "np.array",
+          "conf_metrics.get",
+          "conf_metrics.get",
+          "np.array",
+          "np.array",
+          "np.array",
+          "risk_metrics.get",
+          "risk_metrics.get",
+          "get",
+          "get",
+          "get",
+          "get",
+          "logger.error",
+          "self._label_to_index",
+          "self._label_to_index",
+          "abs_metrics.get",
+          "abs_metrics.get",
+          "abs_metrics.get",
+          "risk_metrics.get",
+          "conf_metrics.get",
+          "self._label_to_index",
+          "self._label_to_index",
+          "abs_metrics.get",
+          "adv_results.get",
+          "adv_results.get",
+          "adv_results.get",
+          "adv_results.get"
+        ],
+        "AdvancedHighStakesAuditor._conduct_coverage_calibration_audit": [
+          "np.linspace",
+          "get",
+          "get",
+          "np.mean",
+          "bin_mask.sum",
+          "np.array",
+          "np.array",
+          "np.mean",
+          "bin_accuracies.append",
+          "bin_confidences.append",
+          "bin_counts.append"
+        ],
+        "AdvancedHighStakesAuditor._conduct_explainability_audit": [
+          "self.explainable_reasoning.generate_reasoning_chain",
+          "append",
+          "self.explainable_reasoning.verify_faithfulness",
+          "append",
+          "np.mean",
+          "np.mean",
+          "self.explainable_reasoning",
+          "self.explainable_reasoning",
+          "logger.warning"
+        ],
+        "AdvancedHighStakesAuditor._conduct_risk_assessment_audit": [
+          "pred_labels.count",
+          "ground_truth.count",
+          "self._calculate_misclassification_risk",
+          "append"
+        ]
+      },
+      "inheritance_chain": {},
+      "composition_relationships": {}
+    },
+    "call_graph": {
+      "BiasAuditor.__init__": {
+        "type": "method",
+        "calls": [
+          "get",
+          "self.bias_config.get",
+          "self.bias_config.get",
+          "self.bias_config.get",
+          "config.get"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 27
+      },
+      "BiasAuditor.detect_bias": {
+        "type": "method",
+        "calls": [
+          "text.lower",
+          "bias_scores.items",
+          "logger.error",
+          "self._detect_gender_bias",
+          "logger.warning",
+          "self.audit_log.append",
+          "self._detect_race_bias",
+          "self._detect_age_bias",
+          "isoformat",
+          "self._detect_nationality_bias",
+          "datetime.now"
+        ],
+        "called_by": [],
+        "complexity": 8,
+        "line_count": 44
+      },
+      "BiasAuditor._detect_gender_bias": {
+        "type": "method",
+        "calls": [
+          "sum",
+          "sum",
+          "sum",
+          "item",
+          "min",
+          "abs",
+          "len",
+          "predictions.std"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 26
+      },
+      "BiasAuditor._detect_race_bias": {
+        "type": "method",
+        "calls": [
+          "sum",
+          "min"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 10
+      },
+      "BiasAuditor._detect_age_bias": {
+        "type": "method",
+        "calls": [
+          "sum",
+          "sum",
+          "abs"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 14
+      },
+      "BiasAuditor._detect_nationality_bias": {
+        "type": "method",
+        "calls": [
+          "sum",
+          "min"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 10
+      },
+      "BiasAuditor.compute_bias_mitigation_loss": {
+        "type": "method",
+        "calls": [
+          "self.detect_bias",
+          "torch.tensor",
+          "self.bias_config.get",
+          "torch.tensor",
+          "sum",
+          "len",
+          "bias_scores.values"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 23
+      },
+      "BiasAuditor.generate_audit_report": {
+        "type": "method",
+        "calls": [
+          "isoformat",
+          "len",
+          "logger.info",
+          "open",
+          "json.dump",
+          "datetime.now",
+          "len",
+          "np.mean",
+          "np.max",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 26
+      },
+      "ExplainableReasoning.__init__": {
+        "type": "method",
+        "calls": [
+          "get",
+          "self.explain_config.get",
+          "self.explain_config.get",
+          "self.explain_config.get",
+          "config.get"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 8
+      },
+      "ExplainableReasoning.generate_reasoning_chain": {
+        "type": "method",
+        "calls": [
+          "self.tokenizer",
+          "self.tokenizer.decode",
+          "self._extract_reasoning_steps",
+          "self._extract_final_answer",
+          "self.explain_config.get",
+          "torch.no_grad",
+          "self.model.generate",
+          "logger.error"
+        ],
+        "called_by": [],
+        "complexity": 2,
+        "line_count": 45
+      },
+      "ExplainableReasoning._extract_reasoning_steps": {
+        "type": "method",
+        "calls": [
+          "re.findall",
+          "text.split",
+          "s.strip",
+          "len",
+          "match.strip",
+          "len",
+          "s.strip"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 22
+      },
+      "ExplainableReasoning._extract_final_answer": {
+        "type": "method",
+        "calls": [
+          "text.split",
+          "re.search",
+          "strip",
+          "strip",
+          "match.group"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 22
+      },
+      "ExplainableReasoning.verify_faithfulness": {
+        "type": "method",
+        "calls": [
+          "join",
+          "self.tokenizer",
+          "lower",
+          "torch.no_grad",
+          "self.model.generate",
+          "logger.error",
+          "self.tokenizer.decode",
+          "enumerate"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 53
+      },
+      "ProceduralAlignment.__init__": {
+        "type": "method",
+        "calls": [
+          "get",
+          "self.procedural_config.get",
+          "self.procedural_config.get",
+          "self._load_procedures",
+          "config.get"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 8
+      },
+      "ProceduralAlignment._load_procedures": {
+        "type": "method",
+        "calls": [
+          "self.procedural_config.get",
+          "exists",
+          "Path",
+          "open",
+          "yaml.safe_load",
+          "logger.error"
+        ],
+        "called_by": [],
+        "complexity": 2,
+        "line_count": 45
+      },
+      "ProceduralAlignment.check_compliance": {
+        "type": "method",
+        "calls": [
+          "self.procedures.get",
+          "text.lower",
+          "self.procedural_config.get",
+          "self._extract_key_terms",
+          "any",
+          "logger.warning",
+          "logger.debug",
+          "compliant_procedures.append",
+          "missing_procedures.append",
+          "len",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 36
+      },
+      "ProceduralAlignment._extract_key_terms": {
+        "type": "method",
+        "calls": [
+          "split",
+          "procedure.lower",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 7
+      },
+      "ProceduralAlignment.enhance_with_procedures": {
+        "type": "method",
+        "calls": [
+          "self.check_compliance",
+          "self.procedures.get",
+          "enumerate",
+          "self.procedural_config.get",
+          "self.domain.title"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 30
+      },
+      "VerifiableTraining.__init__": {
+        "type": "method",
+        "calls": [
+          "get",
+          "Path",
+          "self.audit_log_path.parent.mkdir",
+          "self.verifiable_config.get",
+          "config.get"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 5
+      },
+      "VerifiableTraining.hash_artifact": {
+        "type": "method",
+        "calls": [
+          "self.verifiable_config.get",
+          "hexdigest",
+          "artifact.named_parameters",
+          "param_str.encode",
+          "logger.error",
+          "encode",
+          "hashlib.sha256",
+          "encode",
+          "encode",
+          "tobytes",
+          "json.dumps",
+          "json.dumps",
+          "str",
+          "numpy",
+          "param.data.cpu"
+        ],
+        "called_by": [],
+        "complexity": 6,
+        "line_count": 36
+      },
+      "VerifiableTraining.log_training_event": {
+        "type": "method",
+        "calls": [
+          "self.verifiable_config.get",
+          "self.verifiable_config.get",
+          "isoformat",
+          "hexdigest",
+          "open",
+          "f.write",
+          "logger.error",
+          "datetime.now",
+          "hashlib.sha256",
+          "encode",
+          "json.dumps",
+          "json.dumps"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 29
+      },
+      "VerifiableTraining.create_training_proof": {
+        "type": "method",
+        "calls": [
+          "json.dumps",
+          "hexdigest",
+          "self.log_training_event",
+          "self.verifiable_config.get",
+          "isoformat",
+          "self.hash_artifact",
+          "self.hash_artifact",
+          "self.hash_artifact",
+          "hashlib.sha256",
+          "datetime.now",
+          "composite.encode"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 30
+      },
+      "VerifiableTraining.verify_training": {
+        "type": "method",
+        "calls": [
+          "self.hash_artifact",
+          "proof.copy",
+          "proof_copy.pop",
+          "json.dumps",
+          "hexdigest",
+          "logger.info",
+          "proof.get",
+          "logger.error",
+          "logger.error",
+          "logger.error",
+          "hashlib.sha256",
+          "composite.encode"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 35
+      },
+      "AdvancedHighStakesAuditor.__init__": {
+        "type": "method",
+        "calls": [
+          "BiasAuditor",
+          "VerifiableTraining",
+          "ProceduralAlignment",
+          "ExplainableReasoning",
+          "Path",
+          "audit_metrics_path.parent.mkdir",
+          "MetricsAggregator",
+          "config.get",
+          "get",
+          "get",
+          "logger.info",
+          "get",
+          "ConformalPredictor",
+          "RiskControlledPredictor",
+          "advanced_config.get",
+          "advanced_config.get"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 44
+      },
+      "AdvancedHighStakesAuditor.conduct_comprehensive_audit": {
+        "type": "method",
+        "calls": [
+          "self._conduct_bias_audit",
+          "self._conduct_procedural_audit",
+          "self._conduct_risk_assessment_audit",
+          "self._conduct_coverage_calibration_audit",
+          "self._generate_overall_assessment",
+          "self.verifiable_training.log_training_event",
+          "isoformat",
+          "len",
+          "p.get",
+          "p.get",
+          "p.get",
+          "self._conduct_explainability_audit",
+          "self._conduct_advanced_metrics_audit",
+          "self.metrics_aggregator.add_metrics",
+          "len",
+          "datetime.now"
+        ],
+        "called_by": [],
+        "complexity": 3,
+        "line_count": 75
+      },
+      "AdvancedHighStakesAuditor._conduct_bias_audit": {
+        "type": "method",
+        "calls": [
+          "enumerate",
+          "len",
+          "zip",
+          "isinstance",
+          "self.bias_auditor.detect_bias",
+          "all_bias_scores.append",
+          "set",
+          "pred.get",
+          "torch.tensor",
+          "torch.tensor",
+          "max",
+          "categories.update",
+          "len",
+          "list",
+          "bias_scores.values",
+          "len",
+          "append",
+          "scores.keys",
+          "scores.get",
+          "float",
+          "float",
+          "sum",
+          "values",
+          "pred.get",
+          "np.mean",
+          "np.max"
+        ],
+        "called_by": [],
+        "complexity": 7,
+        "line_count": 51
+      },
+      "AdvancedHighStakesAuditor._conduct_procedural_audit": {
+        "type": "method",
+        "calls": [
+          "len",
+          "self.procedural_alignment.check_compliance",
+          "append",
+          "float",
+          "float",
+          "np.mean",
+          "np.min",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 5,
+        "line_count": 33
+      },
+      "AdvancedHighStakesAuditor._conduct_explainability_audit": {
+        "type": "method",
+        "calls": [
+          "len",
+          "float",
+          "float",
+          "self.explainable_reasoning.generate_reasoning_chain",
+          "min",
+          "append",
+          "self.explainable_reasoning.verify_faithfulness",
+          "append",
+          "np.mean",
+          "np.mean",
+          "len",
+          "logger.warning",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 46
+      },
+      "AdvancedHighStakesAuditor._conduct_advanced_metrics_audit": {
+        "type": "method",
+        "calls": [
+          "np.array",
+          "np.array",
+          "np.array",
+          "np.array",
+          "compute_confidence_metrics",
+          "any",
+          "compute_risk_aware_metrics",
+          "conf_metrics.get",
+          "conf_metrics.get",
+          "np.array",
+          "np.array",
+          "np.array",
+          "compute_abstention_metrics",
+          "risk_metrics.get",
+          "risk_metrics.get",
+          "get",
+          "get",
+          "get",
+          "get",
+          "sum",
+          "logger.error",
+          "str",
+          "enumerate",
+          "len",
+          "len",
+          "float",
+          "float",
+          "float",
+          "self._label_to_index",
+          "self._label_to_index",
+          "abs",
+          "abs_metrics.get",
+          "abs_metrics.get",
+          "abs_metrics.get",
+          "risk_metrics.get",
+          "zip",
+          "compute_ece",
+          "compute_mce",
+          "compute_brier_score",
+          "conf_metrics.get",
+          "self._label_to_index",
+          "self._label_to_index",
+          "abs_metrics.get",
+          "adv_results.get",
+          "adv_results.get",
+          "adv_results.get",
+          "adv_results.get"
+        ],
+        "called_by": [],
+        "complexity": 5,
+        "line_count": 87
+      },
+      "AdvancedHighStakesAuditor._conduct_risk_assessment_audit": {
+        "type": "method",
+        "calls": [
+          "set",
+          "enumerate",
+          "len",
+          "zip",
+          "pred_labels.count",
+          "ground_truth.count",
+          "self._calculate_misclassification_risk",
+          "len",
+          "append"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 40
+      },
+      "AdvancedHighStakesAuditor._conduct_coverage_calibration_audit": {
+        "type": "method",
+        "calls": [
+          "sum",
+          "len",
+          "np.linspace",
+          "range",
+          "get",
+          "get",
+          "len",
+          "np.mean",
+          "len",
+          "sum",
+          "len",
+          "len",
+          "set",
+          "len",
+          "bin_mask.sum",
+          "float",
+          "np.array",
+          "np.array",
+          "np.mean",
+          "bin_accuracies.append",
+          "bin_confidences.append",
+          "bin_counts.append",
+          "abs",
+          "range",
+          "range",
+          "range",
+          "sum",
+          "len",
+          "len",
+          "zip",
+          "len",
+          "len",
+          "len",
+          "zip"
+        ],
+        "called_by": [],
+        "complexity": 5,
+        "line_count": 61
+      },
+      "AdvancedHighStakesAuditor._calculate_misclassification_risk": {
+        "type": "method",
+        "calls": [
+          "risk_levels.get",
+          "risk_levels.get",
+          "min"
+        ],
+        "called_by": [],
+        "complexity": 1,
+        "line_count": 23
+      },
+      "AdvancedHighStakesAuditor._label_to_index": {
+        "type": "method",
+        "calls": [
+          "label_map.get"
+        ],
+        "called_by": [],
+        "complexity": 0,
+        "line_count": 10
+      },
+      "AdvancedHighStakesAuditor._generate_overall_assessment": {
+        "type": "method",
+        "calls": [
+          "audit_results.get",
+          "component_results.items",
+          "results.get",
+          "audit_passes.append",
+          "float",
+          "sum",
+          "len",
+          "self._generate_recommendations",
+          "sum",
+          "len"
+        ],
+        "called_by": [],
+        "complexity": 4,
+        "line_count": 40
+      },
+      "AdvancedHighStakesAuditor._generate_recommendations": {
+        "type": "method",
+        "calls": [
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "component_results.get",
+          "bias_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "proc_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "risk_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "cov_results.get",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "recommendations.append",
+          "expl_results.get",
+          "adv_results.get"
+        ],
+        "called_by": [],
+        "complexity": 7,
+        "line_count": 46
+      }
+    },
+    "data_flow": {
+      "global_variables": [
+        "logger"
+      ],
+      "shared_state": {},
+      "parameter_flow": {
+        "BiasAuditor.__init__": {
+          "parameters": [
+            "self",
+            "config"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "BiasAuditor.detect_bias": {
+          "parameters": [
+            "self",
+            "text",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "BiasAuditor._detect_gender_bias": {
+          "parameters": [
+            "self",
+            "text",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "BiasAuditor._detect_race_bias": {
+          "parameters": [
+            "self",
+            "text",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "BiasAuditor._detect_age_bias": {
+          "parameters": [
+            "self",
+            "text",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "BiasAuditor._detect_nationality_bias": {
+          "parameters": [
+            "self",
+            "text",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "BiasAuditor.compute_bias_mitigation_loss": {
+          "parameters": [
+            "self",
+            "text",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "BiasAuditor.generate_audit_report": {
+          "parameters": [
+            "self",
+            "save_path"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ExplainableReasoning.__init__": {
+          "parameters": [
+            "self",
+            "model",
+            "tokenizer",
+            "config"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ExplainableReasoning.generate_reasoning_chain": {
+          "parameters": [
+            "self",
+            "input_text"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ExplainableReasoning._extract_reasoning_steps": {
+          "parameters": [
+            "self",
+            "text"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ExplainableReasoning._extract_final_answer": {
+          "parameters": [
+            "self",
+            "text"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ExplainableReasoning.verify_faithfulness": {
+          "parameters": [
+            "self",
+            "reasoning_steps",
+            "final_answer"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ProceduralAlignment.__init__": {
+          "parameters": [
+            "self",
+            "config"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ProceduralAlignment._load_procedures": {
+          "parameters": [
+            "self"
+          ],
+          "parameter_count": 1,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ProceduralAlignment.check_compliance": {
+          "parameters": [
+            "self",
+            "text"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ProceduralAlignment._extract_key_terms": {
+          "parameters": [
+            "self",
+            "procedure"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "ProceduralAlignment.enhance_with_procedures": {
+          "parameters": [
+            "self",
+            "text"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "VerifiableTraining.__init__": {
+          "parameters": [
+            "self",
+            "config"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "VerifiableTraining.hash_artifact": {
+          "parameters": [
+            "self",
+            "artifact",
+            "artifact_type"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "VerifiableTraining.log_training_event": {
+          "parameters": [
+            "self",
+            "event_type",
+            "details"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "VerifiableTraining.create_training_proof": {
+          "parameters": [
+            "self",
+            "model",
+            "train_data",
+            "config"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "VerifiableTraining.verify_training": {
+          "parameters": [
+            "self",
+            "model",
+            "proof"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor.__init__": {
+          "parameters": [
+            "self",
+            "config",
+            "model",
+            "tokenizer"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor.conduct_comprehensive_audit": {
+          "parameters": [
+            "self",
+            "predictions",
+            "ground_truth",
+            "texts",
+            "metadata"
+          ],
+          "parameter_count": 5,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._conduct_bias_audit": {
+          "parameters": [
+            "self",
+            "texts",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._conduct_procedural_audit": {
+          "parameters": [
+            "self",
+            "texts",
+            "predictions"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._conduct_explainability_audit": {
+          "parameters": [
+            "self",
+            "sample_texts"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._conduct_advanced_metrics_audit": {
+          "parameters": [
+            "self",
+            "pred_labels",
+            "ground_truth",
+            "confidences",
+            "abstentions"
+          ],
+          "parameter_count": 5,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._conduct_risk_assessment_audit": {
+          "parameters": [
+            "self",
+            "pred_labels",
+            "ground_truth",
+            "confidences"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._conduct_coverage_calibration_audit": {
+          "parameters": [
+            "self",
+            "pred_labels",
+            "ground_truth",
+            "confidences",
+            "abstentions"
+          ],
+          "parameter_count": 5,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._calculate_misclassification_risk": {
+          "parameters": [
+            "self",
+            "predicted",
+            "actual",
+            "confidence"
+          ],
+          "parameter_count": 4,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._label_to_index": {
+          "parameters": [
+            "self",
+            "label"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._generate_overall_assessment": {
+          "parameters": [
+            "self",
+            "audit_results"
+          ],
+          "parameter_count": 2,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        },
+        "AdvancedHighStakesAuditor._generate_recommendations": {
+          "parameters": [
+            "self",
+            "component_results",
+            "audit_score"
+          ],
+          "parameter_count": 3,
+          "has_self": true,
+          "has_kwargs": false,
+          "has_args": false
+        }
+      },
+      "return_patterns": {
+        "BiasAuditor.__init__": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "BiasAuditor.detect_bias": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "BiasAuditor._detect_gender_bias": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "BiasAuditor._detect_race_bias": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "BiasAuditor._detect_age_bias": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "BiasAuditor._detect_nationality_bias": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "BiasAuditor.compute_bias_mitigation_loss": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "BiasAuditor.generate_audit_report": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "ExplainableReasoning.__init__": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "ExplainableReasoning.generate_reasoning_chain": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "ExplainableReasoning._extract_reasoning_steps": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "ExplainableReasoning._extract_final_answer": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "ExplainableReasoning.verify_faithfulness": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "ProceduralAlignment.__init__": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "ProceduralAlignment._load_procedures": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "ProceduralAlignment.check_compliance": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "ProceduralAlignment._extract_key_terms": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "ProceduralAlignment.enhance_with_procedures": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "VerifiableTraining.__init__": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "VerifiableTraining.hash_artifact": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "VerifiableTraining.log_training_event": {
+          "return_statements": 1,
+          "returns_none": true,
+          "return_complexity": "single"
+        },
+        "VerifiableTraining.create_training_proof": {
+          "return_statements": 2,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "VerifiableTraining.verify_training": {
+          "return_statements": 4,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "AdvancedHighStakesAuditor.__init__": {
+          "return_statements": 0,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor.conduct_comprehensive_audit": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._conduct_bias_audit": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._conduct_procedural_audit": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._conduct_explainability_audit": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._conduct_advanced_metrics_audit": {
+          "return_statements": 3,
+          "returns_none": false,
+          "return_complexity": "multiple"
+        },
+        "AdvancedHighStakesAuditor._conduct_risk_assessment_audit": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._conduct_coverage_calibration_audit": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._calculate_misclassification_risk": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._label_to_index": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._generate_overall_assessment": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        },
+        "AdvancedHighStakesAuditor._generate_recommendations": {
+          "return_statements": 1,
+          "returns_none": false,
+          "return_complexity": "single"
+        }
+      }
+    },
+    "analysis_metadata": {
+      "timestamp": "2025-08-14T18:24:47.238910Z",
+      "analyzer_version": "1.0.0",
+      "file_analyzed": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+      "analysis_complete": true
+    }
+  },
+  "summary_report": {
+    "file_summary": {
+      "file_path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+      "total_classes": 5,
+      "total_methods": 35,
+      "total_functions": 0,
+      "total_imports": 8,
+      "lines_of_code": 985,
+      "total_complexity": 99
+    },
+    "complexity_analysis": {
+      "average_methods_per_class": 7.0,
+      "most_complex_class": {
+        "name": "AdvancedHighStakesAuditor",
+        "complexity": 49,
+        "method_count": 12,
+        "line_count": 575
+      },
+      "most_connected_method": {
+        "name": "AdvancedHighStakesAuditor._conduct_advanced_metrics_audit",
+        "total_connections": 47,
+        "outgoing_calls": 47,
+        "incoming_calls": 0
+      },
+      "dependency_density": 1.0
+    },
+    "decomposition_candidates": [
+      {
+        "class_name": "AdvancedHighStakesAuditor",
+        "reason": "god_class",
+        "method_count": 12,
+        "complexity": 49,
+        "line_count": 575,
+        "decomposition_suggestions": [
+          "Extract -related methods into separate class",
+          "Extract utility methods into helper class"
+        ]
+      }
+    ],
+    "external_dependencies": {
+      "third_party_imports": [
+        "torch",
+        "torch.nn.functional",
+        "numpy"
+      ],
+      "high_coupling_indicators": [
+        "Highly connected methods: 13"
+      ]
+    }
+  }
+}

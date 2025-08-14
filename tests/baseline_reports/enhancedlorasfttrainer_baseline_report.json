@@ -1,0 +1,299 @@
+{
+  "timestamp": "2025-08-14T18:20:21.612129Z",
+  "class_name": "EnhancedLoRASFTTrainer",
+  "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\sft_lora_backup_20250814_123726.py",
+  "static_analysis": {
+    "file_info": {
+      "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\sft_lora_backup_20250814_123726.py",
+      "size": 35861,
+      "hash": "f0b64a8d580383cdd5d401304f6671ca9a0d94a6f63eb40286aa0c6b7150c463",
+      "lines_of_code": 615
+    },
+    "imports": [
+      {
+        "line": 3,
+        "statement": "import os"
+      },
+      {
+        "line": 4,
+        "statement": "import json"
+      },
+      {
+        "line": 5,
+        "statement": "import yaml"
+      },
+      {
+        "line": 6,
+        "statement": "from pathlib import Path"
+      },
+      {
+        "line": 7,
+        "statement": "from typing import Dict, Any, Optional, Union"
+      },
+      {
+        "line": 8,
+        "statement": "import torch"
+      },
+      {
+        "line": 9,
+        "statement": "from transformers import ("
+      },
+      {
+        "line": 20,
+        "statement": "from peft import ("
+      },
+      {
+        "line": 27,
+        "statement": "from datasets import Dataset, load_from_disk"
+      },
+      {
+        "line": 28,
+        "statement": "import evaluate"
+      },
+      {
+        "line": 29,
+        "statement": "import logging"
+      },
+      {
+        "line": 30,
+        "statement": "from tqdm import tqdm"
+      },
+      {
+        "line": 31,
+        "statement": "import numpy as np"
+      },
+      {
+        "line": 32,
+        "statement": "from sklearn.model_selection import train_test_split"
+      },
+      {
+        "line": 36,
+        "statement": "import wandb"
+      },
+      {
+        "line": 44,
+        "statement": "from .uncertainty import MCDropoutWrapper, compute_uncertainty_aware_loss, should_abstain"
+      },
+      {
+        "line": 45,
+        "statement": "from .fact_check import RELIANCEFactChecker, FactualDataFilter"
+      },
+      {
+        "line": 46,
+        "statement": "from .high_stakes_audit import BiasAuditor, ExplainableReasoning, ProceduralAlignment, VerifiableTraining"
+      },
+      {
+        "line": 47,
+        "statement": "from .metrics import ("
+      },
+      {
+        "line": 52,
+        "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+      },
+      {
+        "line": 53,
+        "statement": "from .utils import MetricsTracker, ErrorHandler"
+      },
+      {
+        "line": 812,
+        "statement": "import argparse"
+      }
+    ],
+    "classes": {
+      "CalibratedTrainer": {
+        "line_start": 61,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 64,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "evaluate",
+            "line": 79,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "_get_predictions_and_labels",
+            "line": 157,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "should_adjust_learning_rate",
+            "line": 202,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "adjust_learning_rate",
+            "line": 211,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "compute_abstention_aware_loss",
+            "line": 219,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "compute_loss",
+            "line": 284,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      },
+      "CalibrationMonitorCallback": {
+        "line_start": 289,
+        "methods": [
+          {
+            "name": "on_evaluate",
+            "line": 292,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      },
+      "EnhancedLoRASFTTrainer": {
+        "line_start": 301,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 304,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "_initialize_high_stakes_components",
+            "line": 348,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "get_quantization_config",
+            "line": 367,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "get_peft_config",
+            "line": 390,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "setup_model_and_tokenizer",
+            "line": 425,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "get_model_specific_prompt",
+            "line": 483,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "prepare_dataset",
+            "line": 498,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "format_example",
+            "line": 501,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "tokenize_function",
+            "line": 516,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "split_dataset",
+            "line": 545,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "compute_metrics",
+            "line": 565,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "get_scheduler",
+            "line": 577,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "init_wandb",
+            "line": 596,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "get_report_to",
+            "line": 630,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "train",
+            "line": 640,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "train_and_eval",
+            "line": 798,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "main",
+            "line": 810,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      }
+    },
+    "functions": [],
+    "constants": []
+  },
+  "metrics": {
+    "total_classes": 3,
+    "total_methods": 25,
+    "total_functions": 0,
+    "total_imports": 22,
+    "lines_of_code": 615,
+    "file_size_bytes": 35861
+  },
+  "complexity_indicators": {
+    "method_count_per_class": {
+      "CalibratedTrainer": 7,
+      "CalibrationMonitorCallback": 1,
+      "EnhancedLoRASFTTrainer": 17
+    },
+    "private_method_ratio": {
+      "CalibratedTrainer": 0.2857142857142857,
+      "CalibrationMonitorCallback": 0.0,
+      "EnhancedLoRASFTTrainer": 0.11764705882352941
+    },
+    "class_depth_estimate": 3
+  }
+}

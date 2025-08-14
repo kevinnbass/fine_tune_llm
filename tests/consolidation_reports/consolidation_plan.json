@@ -1,0 +1,35 @@
+{
+  "summary": {
+    "total_scripts_analyzed": 12,
+    "duplicate_functions_found": 4,
+    "redundant_script_groups": 0,
+    "consolidation_opportunities": 1
+  },
+  "actions": [
+    {
+      "action_type": "create_shared_utilities",
+      "priority": 1,
+      "description": "Extract duplicate functions into shared utility modules",
+      "steps": [
+        "Create src/fine_tune_llm/scripts/utils.py",
+        "Move common functions to utils module",
+        "Update scripts to import from utils",
+        "Remove duplicate function definitions"
+      ],
+      "files_affected": [
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\prepare_data.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\infer_model.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\voters\\llm\\high_stakes_audit_facade.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\run_dashboard.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\merge_lora.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\apps\\ui\\main.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\tune_hyperparams.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\launch_risk_ui.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\scripts\\consolidation_analysis.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\risk_prediction_ui.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\scripts\\train_high_stakes.py",
+        "C:\\Users\\Kevin\\fine_tune_llm\\fine_tune_llm\\apps\\train\\train_lora_sft.py"
+      ]
+    }
+  ]
+}

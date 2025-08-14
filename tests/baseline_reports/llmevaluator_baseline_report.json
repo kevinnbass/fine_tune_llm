@@ -1,0 +1,220 @@
+{
+  "timestamp": "2025-08-14T18:20:21.558681Z",
+  "class_name": "LLMEvaluator",
+  "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\evaluate_backup_20250814_121303.py",
+  "static_analysis": {
+    "file_info": {
+      "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\evaluate_backup_20250814_121303.py",
+      "size": 44687,
+      "hash": "c51e4e560155f6431cf83d25ea3df4fe8c47861dca0e1be1d6f803e6c0107d21",
+      "lines_of_code": 776
+    },
+    "imports": [
+      {
+        "line": 3,
+        "statement": "import json"
+      },
+      {
+        "line": 4,
+        "statement": "import yaml"
+      },
+      {
+        "line": 5,
+        "statement": "from pathlib import Path"
+      },
+      {
+        "line": 6,
+        "statement": "from typing import Dict, List, Tuple, Optional"
+      },
+      {
+        "line": 7,
+        "statement": "import numpy as np"
+      },
+      {
+        "line": 8,
+        "statement": "import pandas as pd"
+      },
+      {
+        "line": 9,
+        "statement": "from sklearn.metrics import ("
+      },
+      {
+        "line": 16,
+        "statement": "import evaluate"
+      },
+      {
+        "line": 17,
+        "statement": "import torch"
+      },
+      {
+        "line": 18,
+        "statement": "from transformers import AutoModelForCausalLM, AutoTokenizer"
+      },
+      {
+        "line": 19,
+        "statement": "from peft import PeftModel"
+      },
+      {
+        "line": 20,
+        "statement": "from datasets import Dataset"
+      },
+      {
+        "line": 21,
+        "statement": "import logging"
+      },
+      {
+        "line": 22,
+        "statement": "from tqdm import tqdm"
+      },
+      {
+        "line": 23,
+        "statement": "import matplotlib.pyplot as plt"
+      },
+      {
+        "line": 24,
+        "statement": "import seaborn as sns"
+      },
+      {
+        "line": 25,
+        "statement": "from datetime import datetime"
+      },
+      {
+        "line": 29,
+        "statement": "from .metrics import ("
+      },
+      {
+        "line": 35,
+        "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+      },
+      {
+        "line": 484,
+        "statement": "from collections import Counter"
+      },
+      {
+        "line": 750,
+        "statement": "import argparse"
+      }
+    ],
+    "classes": {
+      "LLMEvaluator": {
+        "line_start": 43,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 46,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "load_config",
+            "line": 114,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "load_model",
+            "line": 119,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "evaluate_single",
+            "line": 137,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "predict_single",
+            "line": 141,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "evaluate_dataset",
+            "line": 216,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "compute_metrics",
+            "line": 305,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "_label_to_index",
+            "line": 470,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "get_label_distribution",
+            "line": 482,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "create_visualizations",
+            "line": 490,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "create_advanced_visualizations",
+            "line": 560,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "create_text_report",
+            "line": 664,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      }
+    },
+    "functions": [
+      {
+        "name": "main",
+        "line": 748
+      },
+      {
+        "name": "load_test_data",
+        "line": 788
+      },
+      {
+        "name": "compute_metrics",
+        "line": 815
+      },
+      {
+        "name": "create_visualizations",
+        "line": 889
+      },
+      {
+        "name": "generate_report",
+        "line": 991
+      }
+    ],
+    "constants": []
+  },
+  "metrics": {
+    "total_classes": 1,
+    "total_methods": 12,
+    "total_functions": 5,
+    "total_imports": 21,
+    "lines_of_code": 776,
+    "file_size_bytes": 44687
+  },
+  "complexity_indicators": {
+    "method_count_per_class": {
+      "LLMEvaluator": 12
+    },
+    "private_method_ratio": {
+      "LLMEvaluator": 0.16666666666666666
+    },
+    "class_depth_estimate": 1
+  }
+}

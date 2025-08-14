@@ -1,0 +1,1084 @@
+{
+  "timestamp": "2025-08-14T18:20:21.480421Z",
+  "project_root": "C:\\Users\\Kevin\\fine_tune_llm",
+  "backup_directory": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes",
+  "baseline_reports": [
+    {
+      "timestamp": "2025-08-14T18:20:21.538156Z",
+      "class_name": "AdvancedHighStakesAuditor",
+      "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+      "static_analysis": {
+        "file_info": {
+          "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+          "size": 51075,
+          "hash": "788bb38d009391a6c2bd7939eeb194bf642cf4becc06e80452be3016a06a115f",
+          "lines_of_code": 901
+        },
+        "imports": [
+          {
+            "line": 3,
+            "statement": "import torch"
+          },
+          {
+            "line": 4,
+            "statement": "import torch.nn.functional as F"
+          },
+          {
+            "line": 5,
+            "statement": "from typing import Dict, List, Optional, Tuple, Any"
+          },
+          {
+            "line": 6,
+            "statement": "import logging"
+          },
+          {
+            "line": 7,
+            "statement": "import json"
+          },
+          {
+            "line": 8,
+            "statement": "import hashlib"
+          },
+          {
+            "line": 9,
+            "statement": "from pathlib import Path"
+          },
+          {
+            "line": 10,
+            "statement": "from datetime import datetime"
+          },
+          {
+            "line": 11,
+            "statement": "import numpy as np"
+          },
+          {
+            "line": 12,
+            "statement": "import re"
+          },
+          {
+            "line": 16,
+            "statement": "from .metrics import ("
+          },
+          {
+            "line": 21,
+            "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+          },
+          {
+            "line": 429,
+            "statement": "import yaml"
+          }
+        ],
+        "classes": {
+          "BiasAuditor": {
+            "line_start": 29,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 32,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "detect_bias",
+                "line": 60,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "_detect_gender_bias",
+                "line": 105,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_detect_race_bias",
+                "line": 132,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_detect_age_bias",
+                "line": 143,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_detect_nationality_bias",
+                "line": 158,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "compute_bias_mitigation_loss",
+                "line": 169,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "generate_audit_report",
+                "line": 193,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          },
+          "ExplainableReasoning": {
+            "line_start": 221,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 224,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "generate_reasoning_chain",
+                "line": 233,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          },
+          "ProceduralAlignment": {
+            "line_start": 380,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 383,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "_load_procedures",
+                "line": 392,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "check_compliance",
+                "line": 438,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "_extract_key_terms",
+                "line": 475,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "enhance_with_procedures",
+                "line": 483,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          },
+          "VerifiableTraining": {
+            "line_start": 515,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 518,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "hash_artifact",
+                "line": 524,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "log_training_event",
+                "line": 561,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "create_training_proof",
+                "line": 591,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "verify_training",
+                "line": 622,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          },
+          "AdvancedHighStakesAuditor": {
+            "line_start": 659,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 667,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "conduct_comprehensive_audit",
+                "line": 712,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "_conduct_bias_audit",
+                "line": 788,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_conduct_procedural_audit",
+                "line": 840,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_conduct_explainability_audit",
+                "line": 874,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_conduct_advanced_metrics_audit",
+                "line": 921,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_conduct_risk_assessment_audit",
+                "line": 1009,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_conduct_coverage_calibration_audit",
+                "line": 1050,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_calculate_misclassification_risk",
+                "line": 1112,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_label_to_index",
+                "line": 1136,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_generate_overall_assessment",
+                "line": 1147,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_generate_recommendations",
+                "line": 1188,
+                "is_private": true,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          }
+        },
+        "functions": [
+          {
+            "name": "_extract_reasoning_steps",
+            "line": 279
+          },
+          {
+            "name": "_extract_final_answer",
+            "line": 302
+          },
+          {
+            "name": "verify_faithfulness",
+            "line": 325
+          }
+        ],
+        "constants": []
+      },
+      "metrics": {
+        "total_classes": 5,
+        "total_methods": 32,
+        "total_functions": 3,
+        "total_imports": 13,
+        "lines_of_code": 901,
+        "file_size_bytes": 51075
+      },
+      "complexity_indicators": {
+        "method_count_per_class": {
+          "BiasAuditor": 8,
+          "ExplainableReasoning": 2,
+          "ProceduralAlignment": 5,
+          "VerifiableTraining": 5,
+          "AdvancedHighStakesAuditor": 12
+        },
+        "private_method_ratio": {
+          "BiasAuditor": 0.625,
+          "ExplainableReasoning": 0.5,
+          "ProceduralAlignment": 0.6,
+          "VerifiableTraining": 0.2,
+          "AdvancedHighStakesAuditor": 0.9166666666666666
+        },
+        "class_depth_estimate": 5
+      }
+    },
+    {
+      "timestamp": "2025-08-14T18:20:21.558681Z",
+      "class_name": "LLMEvaluator",
+      "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\evaluate_backup_20250814_121303.py",
+      "static_analysis": {
+        "file_info": {
+          "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\evaluate_backup_20250814_121303.py",
+          "size": 44687,
+          "hash": "c51e4e560155f6431cf83d25ea3df4fe8c47861dca0e1be1d6f803e6c0107d21",
+          "lines_of_code": 776
+        },
+        "imports": [
+          {
+            "line": 3,
+            "statement": "import json"
+          },
+          {
+            "line": 4,
+            "statement": "import yaml"
+          },
+          {
+            "line": 5,
+            "statement": "from pathlib import Path"
+          },
+          {
+            "line": 6,
+            "statement": "from typing import Dict, List, Tuple, Optional"
+          },
+          {
+            "line": 7,
+            "statement": "import numpy as np"
+          },
+          {
+            "line": 8,
+            "statement": "import pandas as pd"
+          },
+          {
+            "line": 9,
+            "statement": "from sklearn.metrics import ("
+          },
+          {
+            "line": 16,
+            "statement": "import evaluate"
+          },
+          {
+            "line": 17,
+            "statement": "import torch"
+          },
+          {
+            "line": 18,
+            "statement": "from transformers import AutoModelForCausalLM, AutoTokenizer"
+          },
+          {
+            "line": 19,
+            "statement": "from peft import PeftModel"
+          },
+          {
+            "line": 20,
+            "statement": "from datasets import Dataset"
+          },
+          {
+            "line": 21,
+            "statement": "import logging"
+          },
+          {
+            "line": 22,
+            "statement": "from tqdm import tqdm"
+          },
+          {
+            "line": 23,
+            "statement": "import matplotlib.pyplot as plt"
+          },
+          {
+            "line": 24,
+            "statement": "import seaborn as sns"
+          },
+          {
+            "line": 25,
+            "statement": "from datetime import datetime"
+          },
+          {
+            "line": 29,
+            "statement": "from .metrics import ("
+          },
+          {
+            "line": 35,
+            "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+          },
+          {
+            "line": 484,
+            "statement": "from collections import Counter"
+          },
+          {
+            "line": 750,
+            "statement": "import argparse"
+          }
+        ],
+        "classes": {
+          "LLMEvaluator": {
+            "line_start": 43,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 46,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "load_config",
+                "line": 114,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "load_model",
+                "line": 119,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "evaluate_single",
+                "line": 137,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "predict_single",
+                "line": 141,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "evaluate_dataset",
+                "line": 216,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "compute_metrics",
+                "line": 305,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "_label_to_index",
+                "line": 470,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "get_label_distribution",
+                "line": 482,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "create_visualizations",
+                "line": 490,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "create_advanced_visualizations",
+                "line": 560,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "create_text_report",
+                "line": 664,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "line": 748
+          },
+          {
+            "name": "load_test_data",
+            "line": 788
+          },
+          {
+            "name": "compute_metrics",
+            "line": 815
+          },
+          {
+            "name": "create_visualizations",
+            "line": 889
+          },
+          {
+            "name": "generate_report",
+            "line": 991
+          }
+        ],
+        "constants": []
+      },
+      "metrics": {
+        "total_classes": 1,
+        "total_methods": 12,
+        "total_functions": 5,
+        "total_imports": 21,
+        "lines_of_code": 776,
+        "file_size_bytes": 44687
+      },
+      "complexity_indicators": {
+        "method_count_per_class": {
+          "LLMEvaluator": 12
+        },
+        "private_method_ratio": {
+          "LLMEvaluator": 0.16666666666666666
+        },
+        "class_depth_estimate": 1
+      }
+    },
+    {
+      "timestamp": "2025-08-14T18:20:21.603113Z",
+      "class_name": "TrainingDashboard",
+      "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\dashboard_backup_20250814_123055.py",
+      "static_analysis": {
+        "file_info": {
+          "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\dashboard_backup_20250814_123055.py",
+          "size": 35114,
+          "hash": "cbd59bb8791fcaaf0b045fdc695984fc59c4c681cc2e5d47b864a8db12a94afd",
+          "lines_of_code": 646
+        },
+        "imports": [
+          {
+            "line": 9,
+            "statement": "import json"
+          },
+          {
+            "line": 10,
+            "statement": "import time"
+          },
+          {
+            "line": 11,
+            "statement": "import threading"
+          },
+          {
+            "line": 12,
+            "statement": "from pathlib import Path"
+          },
+          {
+            "line": 13,
+            "statement": "from typing import Dict, List, Optional, Any"
+          },
+          {
+            "line": 14,
+            "statement": "from datetime import datetime, timedelta"
+          },
+          {
+            "line": 15,
+            "statement": "import logging"
+          },
+          {
+            "line": 16,
+            "statement": "from dataclasses import dataclass, asdict"
+          },
+          {
+            "line": 17,
+            "statement": "import numpy as np"
+          },
+          {
+            "line": 21,
+            "statement": "import streamlit as st"
+          },
+          {
+            "line": 22,
+            "statement": "import plotly.graph_objects as go"
+          },
+          {
+            "line": 23,
+            "statement": "import plotly.express as px"
+          },
+          {
+            "line": 24,
+            "statement": "from plotly.subplots import make_subplots"
+          },
+          {
+            "line": 25,
+            "statement": "import pandas as pd"
+          },
+          {
+            "line": 32,
+            "statement": "from .metrics import MetricsAggregator"
+          },
+          {
+            "line": 33,
+            "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+          },
+          {
+            "line": 886,
+            "statement": "import sys"
+          }
+        ],
+        "classes": {
+          "TrainingMetrics": {
+            "line_start": 42,
+            "methods": [],
+            "properties": [],
+            "class_variables": []
+          },
+          "TrainingDashboard": {
+            "line_start": 86,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 89,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "start_monitoring",
+                "line": 126,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "stop_monitoring",
+                "line": 139,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "_monitor_loop",
+                "line": 146,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_update_metrics",
+                "line": 156,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "add_metrics",
+                "line": 226,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "get_metrics_dataframe",
+                "line": 247,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "create_dashboard",
+                "line": 260,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "_render_current_status",
+                "line": 333,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_get_metric_delta",
+                "line": 400,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_render_training_plots",
+                "line": 412,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_render_advanced_plots",
+                "line": 467,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_render_risk_prediction_interface",
+                "line": 590,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_make_risk_controlled_prediction",
+                "line": 700,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "_render_metrics_table",
+                "line": 816,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "run_dashboard",
+                "line": 859,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          }
+        },
+        "functions": [],
+        "constants": []
+      },
+      "metrics": {
+        "total_classes": 2,
+        "total_methods": 16,
+        "total_functions": 0,
+        "total_imports": 17,
+        "lines_of_code": 646,
+        "file_size_bytes": 35114
+      },
+      "complexity_indicators": {
+        "method_count_per_class": {
+          "TrainingMetrics": 0,
+          "TrainingDashboard": 16
+        },
+        "private_method_ratio": {
+          "TrainingMetrics": 0,
+          "TrainingDashboard": 0.625
+        },
+        "class_depth_estimate": 2
+      }
+    },
+    {
+      "timestamp": "2025-08-14T18:20:21.612129Z",
+      "class_name": "EnhancedLoRASFTTrainer",
+      "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\sft_lora_backup_20250814_123726.py",
+      "static_analysis": {
+        "file_info": {
+          "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\sft_lora_backup_20250814_123726.py",
+          "size": 35861,
+          "hash": "f0b64a8d580383cdd5d401304f6671ca9a0d94a6f63eb40286aa0c6b7150c463",
+          "lines_of_code": 615
+        },
+        "imports": [
+          {
+            "line": 3,
+            "statement": "import os"
+          },
+          {
+            "line": 4,
+            "statement": "import json"
+          },
+          {
+            "line": 5,
+            "statement": "import yaml"
+          },
+          {
+            "line": 6,
+            "statement": "from pathlib import Path"
+          },
+          {
+            "line": 7,
+            "statement": "from typing import Dict, Any, Optional, Union"
+          },
+          {
+            "line": 8,
+            "statement": "import torch"
+          },
+          {
+            "line": 9,
+            "statement": "from transformers import ("
+          },
+          {
+            "line": 20,
+            "statement": "from peft import ("
+          },
+          {
+            "line": 27,
+            "statement": "from datasets import Dataset, load_from_disk"
+          },
+          {
+            "line": 28,
+            "statement": "import evaluate"
+          },
+          {
+            "line": 29,
+            "statement": "import logging"
+          },
+          {
+            "line": 30,
+            "statement": "from tqdm import tqdm"
+          },
+          {
+            "line": 31,
+            "statement": "import numpy as np"
+          },
+          {
+            "line": 32,
+            "statement": "from sklearn.model_selection import train_test_split"
+          },
+          {
+            "line": 36,
+            "statement": "import wandb"
+          },
+          {
+            "line": 44,
+            "statement": "from .uncertainty import MCDropoutWrapper, compute_uncertainty_aware_loss, should_abstain"
+          },
+          {
+            "line": 45,
+            "statement": "from .fact_check import RELIANCEFactChecker, FactualDataFilter"
+          },
+          {
+            "line": 46,
+            "statement": "from .high_stakes_audit import BiasAuditor, ExplainableReasoning, ProceduralAlignment, VerifiableTraining"
+          },
+          {
+            "line": 47,
+            "statement": "from .metrics import ("
+          },
+          {
+            "line": 52,
+            "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+          },
+          {
+            "line": 53,
+            "statement": "from .utils import MetricsTracker, ErrorHandler"
+          },
+          {
+            "line": 812,
+            "statement": "import argparse"
+          }
+        ],
+        "classes": {
+          "CalibratedTrainer": {
+            "line_start": 61,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 64,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "evaluate",
+                "line": 79,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "_get_predictions_and_labels",
+                "line": 157,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "should_adjust_learning_rate",
+                "line": 202,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "adjust_learning_rate",
+                "line": 211,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "compute_abstention_aware_loss",
+                "line": 219,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "compute_loss",
+                "line": 284,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          },
+          "CalibrationMonitorCallback": {
+            "line_start": 289,
+            "methods": [
+              {
+                "name": "on_evaluate",
+                "line": 292,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          },
+          "EnhancedLoRASFTTrainer": {
+            "line_start": 301,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 304,
+                "is_private": true,
+                "is_dunder": true
+              },
+              {
+                "name": "_initialize_high_stakes_components",
+                "line": 348,
+                "is_private": true,
+                "is_dunder": false
+              },
+              {
+                "name": "get_quantization_config",
+                "line": 367,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "get_peft_config",
+                "line": 390,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "setup_model_and_tokenizer",
+                "line": 425,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "get_model_specific_prompt",
+                "line": 483,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "prepare_dataset",
+                "line": 498,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "format_example",
+                "line": 501,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "tokenize_function",
+                "line": 516,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "split_dataset",
+                "line": 545,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "compute_metrics",
+                "line": 565,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "get_scheduler",
+                "line": 577,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "init_wandb",
+                "line": 596,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "get_report_to",
+                "line": 630,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "train",
+                "line": 640,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "train_and_eval",
+                "line": 798,
+                "is_private": false,
+                "is_dunder": false
+              },
+              {
+                "name": "main",
+                "line": 810,
+                "is_private": false,
+                "is_dunder": false
+              }
+            ],
+            "properties": [],
+            "class_variables": []
+          }
+        },
+        "functions": [],
+        "constants": []
+      },
+      "metrics": {
+        "total_classes": 3,
+        "total_methods": 25,
+        "total_functions": 0,
+        "total_imports": 22,
+        "lines_of_code": 615,
+        "file_size_bytes": 35861
+      },
+      "complexity_indicators": {
+        "method_count_per_class": {
+          "CalibratedTrainer": 7,
+          "CalibrationMonitorCallback": 1,
+          "EnhancedLoRASFTTrainer": 17
+        },
+        "private_method_ratio": {
+          "CalibratedTrainer": 0.2857142857142857,
+          "CalibrationMonitorCallback": 0.0,
+          "EnhancedLoRASFTTrainer": 0.11764705882352941
+        },
+        "class_depth_estimate": 3
+      }
+    }
+  ],
+  "summary": {
+    "total_classes_analyzed": 11,
+    "total_backup_files": 4,
+    "total_methods_found": 85,
+    "total_lines_of_code": 2938,
+    "total_file_size_bytes": 166737
+  }
+}

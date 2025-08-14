@@ -1,0 +1,336 @@
+{
+  "timestamp": "2025-08-14T18:20:21.538156Z",
+  "class_name": "AdvancedHighStakesAuditor",
+  "backup_file": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+  "static_analysis": {
+    "file_info": {
+      "path": "C:\\Users\\Kevin\\fine_tune_llm\\backups\\god_classes\\high_stakes_audit_backup_20250814_121039.py",
+      "size": 51075,
+      "hash": "788bb38d009391a6c2bd7939eeb194bf642cf4becc06e80452be3016a06a115f",
+      "lines_of_code": 901
+    },
+    "imports": [
+      {
+        "line": 3,
+        "statement": "import torch"
+      },
+      {
+        "line": 4,
+        "statement": "import torch.nn.functional as F"
+      },
+      {
+        "line": 5,
+        "statement": "from typing import Dict, List, Optional, Tuple, Any"
+      },
+      {
+        "line": 6,
+        "statement": "import logging"
+      },
+      {
+        "line": 7,
+        "statement": "import json"
+      },
+      {
+        "line": 8,
+        "statement": "import hashlib"
+      },
+      {
+        "line": 9,
+        "statement": "from pathlib import Path"
+      },
+      {
+        "line": 10,
+        "statement": "from datetime import datetime"
+      },
+      {
+        "line": 11,
+        "statement": "import numpy as np"
+      },
+      {
+        "line": 12,
+        "statement": "import re"
+      },
+      {
+        "line": 16,
+        "statement": "from .metrics import ("
+      },
+      {
+        "line": 21,
+        "statement": "from .conformal import ConformalPredictor, RiskControlledPredictor"
+      },
+      {
+        "line": 429,
+        "statement": "import yaml"
+      }
+    ],
+    "classes": {
+      "BiasAuditor": {
+        "line_start": 29,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 32,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "detect_bias",
+            "line": 60,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "_detect_gender_bias",
+            "line": 105,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_detect_race_bias",
+            "line": 132,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_detect_age_bias",
+            "line": 143,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_detect_nationality_bias",
+            "line": 158,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "compute_bias_mitigation_loss",
+            "line": 169,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "generate_audit_report",
+            "line": 193,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      },
+      "ExplainableReasoning": {
+        "line_start": 221,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 224,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "generate_reasoning_chain",
+            "line": 233,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      },
+      "ProceduralAlignment": {
+        "line_start": 380,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 383,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "_load_procedures",
+            "line": 392,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "check_compliance",
+            "line": 438,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "_extract_key_terms",
+            "line": 475,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "enhance_with_procedures",
+            "line": 483,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      },
+      "VerifiableTraining": {
+        "line_start": 515,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 518,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "hash_artifact",
+            "line": 524,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "log_training_event",
+            "line": 561,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "create_training_proof",
+            "line": 591,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "verify_training",
+            "line": 622,
+            "is_private": false,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      },
+      "AdvancedHighStakesAuditor": {
+        "line_start": 659,
+        "methods": [
+          {
+            "name": "__init__",
+            "line": 667,
+            "is_private": true,
+            "is_dunder": true
+          },
+          {
+            "name": "conduct_comprehensive_audit",
+            "line": 712,
+            "is_private": false,
+            "is_dunder": false
+          },
+          {
+            "name": "_conduct_bias_audit",
+            "line": 788,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_conduct_procedural_audit",
+            "line": 840,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_conduct_explainability_audit",
+            "line": 874,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_conduct_advanced_metrics_audit",
+            "line": 921,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_conduct_risk_assessment_audit",
+            "line": 1009,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_conduct_coverage_calibration_audit",
+            "line": 1050,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_calculate_misclassification_risk",
+            "line": 1112,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_label_to_index",
+            "line": 1136,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_generate_overall_assessment",
+            "line": 1147,
+            "is_private": true,
+            "is_dunder": false
+          },
+          {
+            "name": "_generate_recommendations",
+            "line": 1188,
+            "is_private": true,
+            "is_dunder": false
+          }
+        ],
+        "properties": [],
+        "class_variables": []
+      }
+    },
+    "functions": [
+      {
+        "name": "_extract_reasoning_steps",
+        "line": 279
+      },
+      {
+        "name": "_extract_final_answer",
+        "line": 302
+      },
+      {
+        "name": "verify_faithfulness",
+        "line": 325
+      }
+    ],
+    "constants": []
+  },
+  "metrics": {
+    "total_classes": 5,
+    "total_methods": 32,
+    "total_functions": 3,
+    "total_imports": 13,
+    "lines_of_code": 901,
+    "file_size_bytes": 51075
+  },
+  "complexity_indicators": {
+    "method_count_per_class": {
+      "BiasAuditor": 8,
+      "ExplainableReasoning": 2,
+      "ProceduralAlignment": 5,
+      "VerifiableTraining": 5,
+      "AdvancedHighStakesAuditor": 12
+    },
+    "private_method_ratio": {
+      "BiasAuditor": 0.625,
+      "ExplainableReasoning": 0.5,
+      "ProceduralAlignment": 0.6,
+      "VerifiableTraining": 0.2,
+      "AdvancedHighStakesAuditor": 0.9166666666666666
+    },
+    "class_depth_estimate": 5
+  }
+}
