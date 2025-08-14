@@ -14,6 +14,31 @@ import copy
 logger = logging.getLogger(__name__)
 
 
+def apply_augmentation(examples: List[Dict], augmentation_config: Dict = None) -> List[Dict]:
+    """Apply data augmentation to examples."""
+    if not augmentation_config or not augmentation_config.get('enabled', False):
+        return examples
+    
+    # Simple augmentation - could be enhanced with nlpaug or other libraries
+    augmented = []
+    for example in examples:
+        augmented.append(example)  # Original
+        
+        # Simple paraphrasing augmentation
+        if random.random() < 0.3:  # 30% chance
+            aug_example = copy.deepcopy(example)
+            # Simple word substitutions
+            text = aug_example.get('text', '')
+            if 'bird flu' in text.lower():
+                text = text.replace('bird flu', 'avian influenza')
+            elif 'avian influenza' in text.lower():
+                text = text.replace('avian influenza', 'bird flu')
+            aug_example['text'] = text
+            augmented.append(aug_example)
+    
+    return augmented
+
+
 class SFTDatasetBuilder:
     """Build instruction-following dataset for LLM fine-tuning."""
 
@@ -607,10 +632,21 @@ def create_balanced_dataset(
     if not raw_data:
         return []
     
-    # Group by label
+    # Group by label - handle both raw data and processed examples
     label_groups = {}
     for sample in raw_data:
-        label = sample['label']
+        # Extract label from different formats
+        if 'label' in sample:
+            label = sample['label']
+        elif 'output' in sample:
+            # For processed examples, extract from output JSON
+            try:
+                output_data = json.loads(sample['output'])
+                label = output_data.get('decision', 'unknown')
+            except (json.JSONDecodeError, KeyError):
+                label = 'unknown'
+        else:
+            label = 'unknown'
         if label not in label_groups:
             label_groups[label] = []
         label_groups[label].append(sample)

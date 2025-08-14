@@ -5,7 +5,8 @@ import torch.nn.functional as F
 from typing import Dict, List, Optional, Tuple, Any
 import logging
 import re
-from transformers import AutoModelForCausalLM, AutoTokenizer
+# Lazy import transformers to speed up module loading
+# from transformers import AutoModelForCausalLM, AutoTokenizer
 
 logger = logging.getLogger(__name__)
 

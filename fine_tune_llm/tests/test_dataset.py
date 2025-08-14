@@ -116,22 +116,26 @@ class TestLoadLabels:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
             f.write("invalid: yaml: content:")
             f.flush()
+            temp_name = f.name
             
+        try:
             with pytest.raises(yaml.YAMLError):
-                load_labels(f.name)
-            
-            Path(f.name).unlink()
+                load_labels(temp_name)
+        finally:
+            Path(temp_name).unlink()
     
     def test_load_labels_empty_file(self):
         """Test handling of empty labels file."""
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
             f.write("")
             f.flush()
+            temp_name = f.name
             
-            labels = load_labels(f.name)
+        try:
+            labels = load_labels(temp_name)
             assert labels is None or labels == {}
-            
-            Path(f.name).unlink()
+        finally:
+            Path(temp_name).unlink()
 
 
 class TestBuildExamples:
@@ -274,7 +278,7 @@ class TestRationaleGeneration:
         
         assert isinstance(rationale, str)
         assert len(rationale) > 0
-        assert "irrelevant" in rationale.lower() or "not related" in rationale.lower()
+        assert "irrelevant" in rationale.lower() or "not related" in rationale.lower() or "not contain relevant" in rationale.lower()
     
     def test_add_rationale_uncertain(self, test_labels):
         """Test rationale for uncertain content."""

@@ -325,3 +325,74 @@ class UncertaintyCalibrator:
             logger.warning("Matplotlib not available for calibration plotting")
         except Exception as e:
             logger.error(f"Error plotting calibration: {e}")
+
+
+def compute_uncertainty_aware_loss(outputs, labels, config):
+    """
+    Compute loss with uncertainty awareness and false positive penalties.
+    
+    Args:
+        outputs: Model outputs with uncertainty estimates
+        labels: Target labels  
+        config: Configuration dictionary
+        
+    Returns:
+        Uncertainty-aware loss tensor
+    """
+    uncertainty_config = config.get('high_stakes', {}).get('uncertainty', {})
+    
+    if not uncertainty_config.get('enabled', False):
+        # Standard cross-entropy loss
+        return F.cross_entropy(outputs.logits.view(-1, outputs.logits.size(-1)), 
+                              labels.view(-1))
+    
+    # Standard loss
+    base_loss = F.cross_entropy(outputs.logits.view(-1, outputs.logits.size(-1)), 
+                               labels.view(-1), reduction='none')
+    
+    # Get uncertainty if available
+    if hasattr(outputs, 'uncertainty'):
+        uncertainty = outputs.uncertainty.view(-1)
+        
+        # Apply false positive penalty
+        fp_penalty_weight = uncertainty_config.get('fp_penalty_weight', 2.0)
+        
+        # Identify potential false positives (high confidence on wrong predictions)
+        probs = F.softmax(outputs.logits.view(-1, outputs.logits.size(-1)), dim=-1)
+        predicted_classes = probs.argmax(dim=-1)
+        
+        # Penalty for confident wrong predictions
+        wrong_predictions = (predicted_classes != labels.view(-1)).float()
+        high_confidence = (1.0 - uncertainty) > 0.7
+        fp_penalty = wrong_predictions * high_confidence.float() * fp_penalty_weight
+        
+        # Combine losses
+        total_loss = base_loss + fp_penalty
+    else:
+        total_loss = base_loss
+    
+    return total_loss.mean()
+
+
+def should_abstain(uncertainty_score, config):
+    """
+    Determine if the model should abstain based on uncertainty.
+    
+    Args:
+        uncertainty_score: Uncertainty score (0-1)
+        config: Configuration dictionary
+        
+    Returns:
+        Tuple of (should_abstain: bool, reason: str)
+    """
+    uncertainty_config = config.get('high_stakes', {}).get('uncertainty', {})
+    
+    if not uncertainty_config.get('enabled', False):
+        return False, "Uncertainty-aware training disabled"
+    
+    threshold = uncertainty_config.get('abstention_threshold', 0.7)
+    
+    if uncertainty_score >= threshold:
+        return True, f"High uncertainty ({uncertainty_score:.3f} >= {threshold})"
+    
+    return False, f"Low uncertainty ({uncertainty_score:.3f} < {threshold})"
