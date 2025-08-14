@@ -1,17 +1,23 @@
-# CLAUDE.md
+# Claude Code Instructions
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 🎯 Implementation Roadmap
 
-## Implementation Roadmap
+**CRITICAL: Follow the comprehensive implementation roadmap for all development work**
 
-**ACTIVE ROADMAP**: `fine_tune_llm/IMPLEMENTATION_ROADMAP.md`
+📍 **Roadmap Location**: `C:\Users\Kevin\fine_tune_llm\IMPLEMENTATION_ROADMAP.md`
 
-This comprehensive roadmap addresses five critical optimization areas:
-1. **File and Directory Organization** - Streamline structure and eliminate redundancies
-2. **Code Architecture** - Improve modularity, separation of concerns, and design patterns  
-3. **Consolidation** - Merge duplicate functionality and eliminate code redundancy
-4. **Integration** - Ensure seamless component interaction and data flow
-5. **Test Coverage** - Achieve comprehensive testing of all modules and integration points
+### Roadmap Sections:
+1. **File & Directory Organization** - Optimal project structure
+2. **Code Architecture** - Design patterns and best practices  
+3. **Consolidation** - Removing duplication and redundancy
+4. **Integration** - Module communication and APIs
+5. **Test Coverage** - Unit, integration, E2E, and performance tests
+
+### Before Starting Any Task:
+1. Review the relevant section in IMPLEMENTATION_ROADMAP.md
+2. Check dependencies and prerequisites
+3. Follow the defined patterns and standards
+4. Update progress in the roadmap
 
 **Status**: Active implementation in progress. Refer to roadmap for detailed tasks and timeline.
 
@@ -389,34 +395,86 @@ trainer = EnhancedLoRASFTTrainer(
 )
 ```
 
-## Git Automation
+## Git Workflow
 
-IMPORTANT: After completing ANY task that modifies files in this repository OR after completing ANY phase, you MUST automatically:
+**IMPORTANT: Upon completion of each task OR each phase, you MUST:**
 
-1. **Stage all changes**: `git add .`
-2. **Commit with descriptive message**: `git commit -m "[descriptive message based on what was accomplished]"`
-3. **Push to GitHub**: `git push origin main`
+1. **Add all changes to git staging**
+   ```bash
+   git add -A
+   ```
 
-Generate meaningful commit messages that describe what was implemented, fixed, or changed. This ensures all work is automatically tracked and backed up to GitHub.
+2. **Create a descriptive commit**
+   ```bash
+   git commit -m "feat: [description of completed task/phase]"
+   ```
+   
+   Use conventional commit format:
+   - `feat:` for new features
+   - `fix:` for bug fixes  
+   - `docs:` for documentation changes
+   - `refactor:` for code refactoring
+   - `test:` for test additions/changes
+   - `chore:` for maintenance tasks
+   - `phase:` for completed implementation phases
 
-Examples of good commit messages:
-- "Update GLM-4.5-Air configuration with proper target modules"
-- "Add inference script with JSON response parsing"
-- "Fix LoRA adapter loading for multi-GPU training"
-- "Optimize training hyperparameters for GLM-4 architecture"
-- "Complete Phase 3.2: Unified UI system with theme and behavior management"
-- "Complete Phase 2.6: Hexagonal architecture adapters implementation"
+3. **Push to GitHub** (if remote is configured)
+   ```bash
+   git push origin main
+   ```
+   
+   **Note:** If no remote is configured, inform the user to:
+   1. Create a repository on GitHub
+   2. Add the remote: `git remote add origin https://github.com/username/repo-name.git`
+   3. Push: `git push -u origin main`
 
-This is a REQUIRED workflow - never leave changes uncommitted after completing tasks OR phases.
+## Phase Management
 
-## Implementation Flow
+**CONTINUOUS IMPLEMENTATION: When a phase completes, automatically proceed to the next phase without prompting. Execute the entire implementation roadmap/todo list straight through.**
 
-IMPORTANT: When implementing the roadmap/todo list:
+### Phase Completion Actions:
+1. **Commit and push all phase changes**
+2. **Update phase status in IMPLEMENTATION_ROADMAP.md**  
+3. **Automatically begin next phase immediately**
+4. **Continue until entire roadmap is complete**
 
-1. **Continuous Implementation**: Execute the entire implementation roadmap without prompting between phases
-2. **Phase Transitions**: Automatically move to the next phase upon completing the current phase
-3. **Complete Execution**: Go through the entire todo list straight through until completion
-4. **No Interruption**: Do not stop or ask for confirmation between phases - maintain continuous progress
-5. **Git Commits**: Commit after each task completion AND after each phase completion
+### No Prompting Between Phases:
+- Do NOT ask for permission to continue to next phase
+- Do NOT wait for user confirmation between phases
+- Execute the full roadmap continuously and systematically
+- Only stop if critical errors occur or roadmap is complete
 
-Execute the roadmap systematically from start to finish without interruption.
+### Example Workflow
+
+After completing a task like "implement live metrics streaming":
+
+```bash
+git add -A
+git commit -m "feat: implement live metrics streaming with WebSocket support"
+git push origin main
+```
+
+### Task Completion Checklist
+
+- [ ] Task implementation complete
+- [ ] Code tested and working
+- [ ] Files saved
+- [ ] Changes added to git (`git add -A`)
+- [ ] Descriptive commit created (`git commit -m "..."`)
+- [ ] Changes pushed to GitHub (`git push origin main`)
+
+## Project-Specific Instructions
+
+### LLM Fine-tuning Platform
+
+- Always test code changes before committing
+- Update documentation for new features
+- Document performance improvements in commit messages
+- Include metrics when relevant
+
+### Code Quality
+
+- Ensure no sensitive data (API keys, passwords) in commits
+- Keep commits atomic and focused on single tasks
+- Write clear, descriptive commit messages
+- Push regularly to maintain backup and collaboration
