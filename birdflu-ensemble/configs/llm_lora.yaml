@@ -1,32 +1,55 @@
 # LoRA SFT configuration for LLM fine-tuning
+# Multi-model support
+model_options:
+  glm-4.5-air:
+    model_id: ZHIPU-AI/glm-4-9b-chat
+    tokenizer_id: ZHIPU-AI/glm-4-9b-chat
+    target_modules: ["query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"]
+    chat_template: "glm"
+  qwen2.5-7b:
+    model_id: Qwen/Qwen2.5-7B
+    tokenizer_id: Qwen/Qwen2.5-7B
+    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    chat_template: "qwen"
+  mistral-7b:
+    model_id: mistralai/Mistral-7B-v0.1
+    tokenizer_id: mistralai/Mistral-7B-v0.1
+    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+    chat_template: "mistral"
+  llama-3-8b:
+    model_id: meta-llama/Meta-Llama-3-8B
+    tokenizer_id: meta-llama/Meta-Llama-3-8B
+    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    chat_template: "llama"
+
+selected_model: glm-4.5-air  # Default
+
 lora:
-  # Base model - GLM-4.5-Air as primary, Qwen2.5-7B as alternative
-  model_id: ZHIPU-AI/glm-4-9b-chat  # GLM-4.5-Air (9B version)
-  tokenizer_id: ZHIPU-AI/glm-4-9b-chat
-  # Alternative model (uncomment to use):
-  # model_id: Qwen/Qwen2.5-7B
-  # tokenizer_id: Qwen/Qwen2.5-7B
-  
-  # LoRA parameters
-  r: 16  # Rank
+  # LoRA/DoRA/AdaLoRA parameters
+  method: lora  # Options: lora, dora, adalora
+  r: 16  # Rank (initial rank for AdaLoRA)
   lora_alpha: 32
   lora_dropout: 0.1
-  target_modules:
-    # GLM-4 target modules
-    - query_key_value
-    - dense
-    - dense_h_to_4h
-    - dense_4h_to_h
-    # Alternative for Qwen2.5 (comment out above, uncomment below):
-    # - q_proj
-    # - v_proj  
-    # - k_proj
-    # - o_proj
-    # - gate_proj
-    # - up_proj
-    # - down_proj
+  
+  # AdaLoRA specific parameters
+  adalora:
+    target_r: 8  # Target rank after pruning
+    init_r: 12   # Initial rank (if different from r)
+    tinit: 0     # Warmup steps before pruning
+    tfinal: 0    # Steps after which stop pruning (0 = auto)
+    deltaT: 1    # Update frequency for importance score
+  
+  # QLoRA quantization settings
+  quantization:
+    enabled: false  # Default off for backward compatibility
+    bits: 4  # Options: 4 or 8
+    compute_dtype: bfloat16  # For mixed precision
+    double_quant: true  # Extra memory savings
+    quant_type: nf4  # Normalized float4
     
-  # Training parameters
+# Training configuration
+training:
+  # Basic parameters
   learning_rate: 2e-4
   num_epochs: 3
   batch_size: 4
@@ -34,6 +57,11 @@ lora:
   warmup_ratio: 0.03
   weight_decay: 0.001
   max_grad_norm: 0.3
+  
+  # Learning rate scheduler
+  scheduler:
+    type: cosine  # Options: cosine, linear, none
+    warmup_steps: 100  # 10% of total steps recommended
   
   # Sequence parameters
   max_length: 2048
@@ -63,6 +91,33 @@ lora:
   # Early stopping
   early_stopping: true
   early_stopping_patience: 3
+  
+  # Logging and monitoring
+  logging:
+    wandb: false  # Enable Weights & Biases logging
+    project_name: "llm-finetuning"
+    entity: null  # W&B team/entity name (optional)
+    run_name: null  # Auto-generated if null
+    tags: ["lora", "finetuning"]
+    notes: "LLM fine-tuning experiment"
+
+# Evaluation configuration
+evaluation:
+  enabled: true
+  metrics: ["accuracy", "f1"]
+  val_split: 0.1  # Fraction of data for validation
+
+# Data augmentation
+data:
+  augmentation:
+    enabled: false
+    methods: ["synonym_replacement", "random_insertion"]
+    aug_p: 0.1  # Probability of augmentation
+
+# Output configuration
+output:
+  structured: false  # Enable for enforced JSON
+  schema: '{"decision": "str", "rationale": "str", "abstain": "bool"}'  # JSON schema
   
 # Instruction format
 instruction_format:
