@@ -36,6 +36,16 @@ from .unified_config import (
     UnifiedConfigManager, ComponentConfig, UnifiedConfigData,
     get_unified_config
 )
+from .shared_validation import (
+    SharedValidationEngine, ValidationError, ValidationRule, 
+    ValidationSeverity, ValidationType, get_shared_validator,
+    validate_config, validate_field, register_validation_rule
+)
+from .defaults import (
+    DefaultManager, DefaultValue, DefaultScope, DefaultPriority, DefaultProfile,
+    get_default_manager, get_default, create_config_with_defaults,
+    register_component_defaults
+)
 
 __all__ = [
     # Configuration management
