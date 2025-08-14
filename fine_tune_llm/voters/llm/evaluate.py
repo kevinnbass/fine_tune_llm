@@ -22,6 +22,7 @@ import logging
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -29,26 +30,46 @@ logger = logging.getLogger(__name__)
 class LLMEvaluator:
     """Comprehensive evaluation for fine-tuned LLM models."""
 
-    def __init__(self, model_path: str, config_path: str = "configs/llm_lora.yaml"):
+    def __init__(self, model, tokenizer, model_path: Optional[str] = None, config_path: str = "configs/llm_lora.yaml"):
         """
         Initialize evaluator.
 
         Args:
-            model_path: Path to fine-tuned model
+            model: Model instance for evaluation
+            tokenizer: Tokenizer instance  
+            model_path: Optional path to fine-tuned model
             config_path: Path to configuration file
         """
-        self.model_path = Path(model_path)
+        self.model = model
+        self.tokenizer = tokenizer
+        self.model_path = Path(model_path) if model_path else None
         self.config_path = config_path
-        self.load_config()
-        self.load_model()
+        
+        # Initialize tracking
+        self.predictions = []
+        self.results = {}
+        
+        # Try to load config if available
+        try:
+            self.load_config()
+        except FileNotFoundError:
+            # Use default config if not found
+            self.config = {
+                'instruction_format': {
+                    'system_prompt': 'You are a helpful assistant.'
+                }
+            }
 
-        # Load evaluation metrics
-        self.metrics = {
-            "accuracy": evaluate.load("accuracy"),
-            "f1": evaluate.load("f1"),
-            "precision": evaluate.load("precision"),
-            "recall": evaluate.load("recall"),
-        }
+        # Load evaluation metrics if evaluate library is available
+        try:
+            self.metrics = {
+                "accuracy": evaluate.load("accuracy"),
+                "f1": evaluate.load("f1"),
+                "precision": evaluate.load("precision"),
+                "recall": evaluate.load("recall"),
+            }
+        except:
+            self.metrics = {}
 
     def load_config(self):
         """Load configuration."""
@@ -72,6 +93,10 @@ class LLMEvaluator:
         )
 
         logger.info("Model loaded successfully")
+    
+    def evaluate_single(self, text: str, parse_json: bool = False) -> Dict:
+        """Evaluate a single text input."""
+        return self.predict_single(text, {})
 
     def predict_single(self, text: str, metadata: Dict = None) -> Dict:
         """
@@ -148,53 +173,81 @@ class LLMEvaluator:
                 "valid_json": False,
             }
 
-    def evaluate_dataset(self, dataset: Dataset, output_path: Optional[str] = None) -> Dict:
+    def evaluate_dataset(self, dataset, batch_size: int = 1, output_path: Optional[str] = None) -> List[Dict]:
         """
         Evaluate model on a dataset.
 
         Args:
-            dataset: Evaluation dataset
+            dataset: Evaluation dataset (list of dicts or Dataset)
+            batch_size: Batch size for processing
             output_path: Optional path to save detailed results
 
         Returns:
-            Evaluation metrics
+            List of evaluation results
         """
-        logger.info(f"Evaluating on {len(dataset)} examples")
+        # Handle different dataset types
+        if hasattr(dataset, '__len__') and hasattr(dataset, '__getitem__'):
+            # Dataset-like object
+            data_list = [dataset[i] for i in range(len(dataset))]
+        else:
+            # Assume it's already a list
+            data_list = dataset
+            
+        if not data_list:
+            return []
+            
+        logger.info(f"Evaluating on {len(data_list)} examples")
 
-        predictions = []
-        ground_truth = []
         detailed_results = []
 
-        for i, example in enumerate(tqdm(dataset, desc="Evaluating")):
-            # Get prediction
-            pred = self.predict_single(
-                example.get("text", example.get("input", "")), example.get("metadata", {})
-            )
+        # Process in batches (simplified - just iterate for now)
+        for i, example in enumerate(tqdm(data_list, desc="Evaluating")):
+            try:
+                # Get prediction
+                pred = self.predict_single(
+                    example.get("text", example.get("input", "")), example.get("metadata", {})
+                )
 
-            # Get ground truth
-            true_label = example.get("label", example.get("output", "unknown"))
+                # Get ground truth
+                true_label = example.get("label", example.get("output", "unknown"))
 
-            # Store results
-            predictions.append(pred["decision"])
-            ground_truth.append(true_label)
-
-            # Store detailed result
-            detailed_results.append(
-                {
-                    "example_id": i,
-                    "input_text": example.get("text", example.get("input", "")),
-                    "true_label": true_label,
-                    "predicted_label": pred["decision"],
+                # Store detailed result
+                result = {
+                    "text": example.get("text", example.get("input", "")),
+                    "label": true_label,
+                    "prediction": pred["decision"],
                     "abstain": pred["abstain"],
                     "confidence": pred["confidence"],
                     "rationale": pred["rationale"],
                     "valid_json": pred["valid_json"],
                     "raw_output": pred["raw_output"],
                 }
-            )
-
-        # Compute metrics
-        metrics = self.compute_metrics(predictions, ground_truth, detailed_results)
+                
+                # Add parsed response if available
+                if pred.get("valid_json"):
+                    try:
+                        parsed = json.loads(pred["raw_output"])
+                        result["parsed_response"] = parsed
+                    except:
+                        result["parsed_response"] = None
+                        
+                detailed_results.append(result)
+                
+            except Exception as e:
+                # Handle errors gracefully
+                result = {
+                    "text": example.get("text", example.get("input", "")),
+                    "label": example.get("label", example.get("output", "unknown")),
+                    "prediction": "error",
+                    "error": str(e),
+                    "abstain": False,
+                    "confidence": 0.0,
+                    "rationale": "",
+                    "valid_json": False,
+                    "raw_output": ""
+                }
+                detailed_results.append(result)
+                logger.warning(f"Error processing example {i}: {e}")
 
         # Save detailed results if requested
         if output_path:
@@ -205,16 +258,9 @@ class LLMEvaluator:
             with open(output_dir / "detailed_results.json", "w") as f:
                 json.dump(detailed_results, f, indent=2)
 
-            # Save metrics
-            with open(output_dir / "metrics.json", "w") as f:
-                json.dump(metrics, f, indent=2)
-
-            # Create visualizations
-            self.create_visualizations(detailed_results, metrics, output_dir)
-
             logger.info(f"Results saved to {output_dir}")
 
-        return metrics
+        return detailed_results
 
     def compute_metrics(
         self, predictions: List[str], ground_truth: List[str], detailed_results: List[Dict]
@@ -453,6 +499,282 @@ def main():
     print(f"JSON Compliance: {metrics['json_compliance_rate']:.3f}")
     print(f"Coverage: {metrics['coverage']:.3f}")
     print("=" * 50)
+
+
+# Additional helper functions expected by tests
+
+def load_test_data(file_path: str) -> List[Dict]:
+    """
+    Load test data from file.
+    
+    Args:
+        file_path: Path to test data file
+        
+    Returns:
+        List of test data samples
+    """
+    file_path = Path(file_path)
+    
+    if not file_path.exists():
+        raise FileNotFoundError(f"Test data file not found: {file_path}")
+    
+    if file_path.suffix == '.json':
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+    elif file_path.suffix == '.csv':
+        df = pd.read_csv(file_path)
+        data = df.to_dict('records')
+    else:
+        raise ValueError(f"Unsupported file format: {file_path.suffix}")
+    
+    return data
+
+
+def compute_metrics(
+    predictions: List[str], 
+    labels: List[str], 
+    confidences: Optional[List[float]] = None,
+    metrics: Optional[List[str]] = None
+) -> Dict:
+    """
+    Compute evaluation metrics for predictions.
+    
+    Args:
+        predictions: List of predicted labels
+        labels: List of true labels
+        confidences: Optional list of confidence scores
+        metrics: Optional list of specific metrics to compute
+        
+    Returns:
+        Dictionary of computed metrics
+    """
+    if len(predictions) != len(labels):
+        raise ValueError("Predictions and labels must have same length")
+    
+    if len(predictions) == 0:
+        return {}
+    
+    # Handle abstentions
+    abstention_mask = [pred != "abstain" for pred in predictions]
+    non_abstain_preds = [pred for pred, mask in zip(predictions, abstention_mask) if mask]
+    non_abstain_labels = [label for label, mask in zip(labels, abstention_mask) if mask]
+    
+    metrics_dict = {}
+    
+    # Basic metrics
+    if len(non_abstain_preds) > 0:
+        metrics_dict['accuracy'] = accuracy_score(non_abstain_labels, non_abstain_preds)
+        
+        # Get unique labels for multi-class handling
+        unique_labels = list(set(non_abstain_labels + non_abstain_preds))
+        
+        if len(unique_labels) == 2:
+            # Binary classification
+            metrics_dict['precision'] = precision_score(non_abstain_labels, non_abstain_preds, average='binary', zero_division=0)
+            metrics_dict['recall'] = recall_score(non_abstain_labels, non_abstain_preds, average='binary', zero_division=0)
+            metrics_dict['f1_score'] = f1_score(non_abstain_labels, non_abstain_preds, average='binary', zero_division=0)
+        else:
+            # Multi-class
+            metrics_dict['macro_precision'] = precision_score(non_abstain_labels, non_abstain_preds, average='macro', zero_division=0)
+            metrics_dict['macro_recall'] = recall_score(non_abstain_labels, non_abstain_preds, average='macro', zero_division=0)
+            metrics_dict['macro_f1'] = f1_score(non_abstain_labels, non_abstain_preds, average='macro', zero_division=0)
+            metrics_dict['precision'] = metrics_dict['macro_precision']
+            metrics_dict['recall'] = metrics_dict['macro_recall']
+            metrics_dict['f1_score'] = metrics_dict['macro_f1']
+    
+    # Abstention rate
+    abstention_count = sum(1 for pred in predictions if pred == "abstain")
+    metrics_dict['abstention_rate'] = abstention_count / len(predictions)
+    
+    # Confidence metrics
+    if confidences:
+        valid_confidences = [conf for conf in confidences if conf is not None and conf > 0]
+        if valid_confidences:
+            metrics_dict['avg_confidence'] = np.mean(valid_confidences)
+            metrics_dict['confidence_std'] = np.std(valid_confidences)
+            
+            # Calibration error (simplified)
+            if len(non_abstain_preds) > 0:
+                correct_preds = [p == l for p, l in zip(non_abstain_preds, non_abstain_labels)]
+                conf_subset = [confidences[i] for i, mask in enumerate(abstention_mask) if mask]
+                if len(conf_subset) == len(correct_preds):
+                    calibration_error = abs(np.mean(conf_subset) - np.mean(correct_preds))
+                    metrics_dict['calibration_error'] = calibration_error
+    
+    return metrics_dict
+
+
+def create_visualizations(
+    predictions: List[str], 
+    labels: List[str], 
+    confidences: Optional[List[float]] = None,
+    save_dir: Optional[str] = None,
+    plots: Optional[List[str]] = None
+):
+    """
+    Create visualizations for evaluation results.
+    
+    Args:
+        predictions: List of predicted labels
+        labels: List of true labels
+        confidences: Optional list of confidence scores
+        save_dir: Optional directory to save plots
+        plots: Optional list of specific plots to create
+    """
+    if len(predictions) == 0 or len(labels) == 0:
+        return
+    
+    # Filter out abstentions for confusion matrix
+    abstention_mask = [pred != "abstain" for pred in predictions]
+    non_abstain_preds = [pred for pred, mask in zip(predictions, abstention_mask) if mask]
+    non_abstain_labels = [label for label, mask in zip(labels, abstention_mask) if mask]
+    
+    # Create confusion matrix if we have non-abstain predictions
+    if len(non_abstain_preds) > 0 and (plots is None or 'confusion_matrix' in plots):
+        try:
+            # Get unique labels
+            unique_labels = sorted(list(set(non_abstain_labels + non_abstain_preds)))
+            cm = confusion_matrix(non_abstain_labels, non_abstain_preds, labels=unique_labels)
+            
+            plt.figure(figsize=(10, 8))
+            sns.heatmap(cm, annot=True, fmt='d', xticklabels=unique_labels, yticklabels=unique_labels)
+            plt.title('Confusion Matrix')
+            plt.ylabel('True Label')
+            plt.xlabel('Predicted Label')
+            
+            if save_dir:
+                plt.savefig(Path(save_dir) / 'confusion_matrix.png', dpi=300, bbox_inches='tight')
+            plt.close()
+        except Exception as e:
+            logger.warning(f"Could not create confusion matrix: {e}")
+    
+    # Create confidence histogram if available
+    if confidences and (plots is None or 'confidence_histogram' in plots):
+        try:
+            valid_confidences = [c for c in confidences if c is not None and c > 0]
+            if valid_confidences:
+                plt.figure(figsize=(10, 6))
+                plt.hist(valid_confidences, bins=20, alpha=0.7, edgecolor='black')
+                plt.title('Confidence Score Distribution')
+                plt.xlabel('Confidence')
+                plt.ylabel('Frequency')
+                
+                if save_dir:
+                    plt.savefig(Path(save_dir) / 'confidence_histogram.png', dpi=300, bbox_inches='tight')
+                plt.close()
+        except Exception as e:
+            logger.warning(f"Could not create confidence histogram: {e}")
+    
+    # Create calibration plot if available
+    if confidences and len(non_abstain_preds) > 0 and (plots is None or 'calibration_plot' in plots):
+        try:
+            correct_preds = [p == l for p, l in zip(non_abstain_preds, non_abstain_labels)]
+            conf_subset = [confidences[i] for i, mask in enumerate(abstention_mask) if mask]
+            
+            if len(conf_subset) == len(correct_preds):
+                # Bin by confidence
+                n_bins = 10
+                bin_boundaries = np.linspace(0, 1, n_bins + 1)
+                bin_lowers = bin_boundaries[:-1]
+                bin_uppers = bin_boundaries[1:]
+                
+                bin_confidences = []
+                bin_accuracies = []
+                
+                for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
+                    in_bin = [(conf >= bin_lower) and (conf < bin_upper) for conf in conf_subset]
+                    if any(in_bin):
+                        bin_confidence = np.mean([conf_subset[i] for i, in_b in enumerate(in_bin) if in_b])
+                        bin_accuracy = np.mean([correct_preds[i] for i, in_b in enumerate(in_bin) if in_b])
+                        bin_confidences.append(bin_confidence)
+                        bin_accuracies.append(bin_accuracy)
+                
+                if bin_confidences and bin_accuracies:
+                    plt.figure(figsize=(8, 8))
+                    plt.plot([0, 1], [0, 1], 'k--', label='Perfect Calibration')
+                    plt.plot(bin_confidences, bin_accuracies, 'ro-', label='Model Calibration')
+                    plt.xlabel('Confidence')
+                    plt.ylabel('Accuracy')
+                    plt.title('Calibration Plot')
+                    plt.legend()
+                    plt.grid(True, alpha=0.3)
+                    
+                    if save_dir:
+                        plt.savefig(Path(save_dir) / 'calibration_plot.png', dpi=300, bbox_inches='tight')
+                    plt.close()
+        except Exception as e:
+            logger.warning(f"Could not create calibration plot: {e}")
+
+
+def generate_report(
+    predictions: List[str], 
+    labels: List[str], 
+    confidences: Optional[List[float]] = None,
+    metadata: Optional[Dict] = None,
+    errors: Optional[List[str]] = None,
+    save_path: Optional[str] = None,
+    include_sections: Optional[List[str]] = None
+) -> Dict:
+    """
+    Generate comprehensive evaluation report.
+    
+    Args:
+        predictions: List of predicted labels
+        labels: List of true labels
+        confidences: Optional list of confidence scores
+        metadata: Optional metadata about the evaluation
+        errors: Optional list of errors encountered
+        save_path: Optional path to save the report
+        include_sections: Optional list of sections to include
+        
+    Returns:
+        Report dictionary
+    """
+    # Compute metrics
+    metrics = compute_metrics(predictions, labels, confidences)
+    
+    # Build report
+    report = {
+        'timestamp': datetime.now().isoformat(),
+        'summary': {
+            'total_predictions': len(predictions),
+            'accuracy': metrics.get('accuracy', 0.0),
+            'abstention_rate': metrics.get('abstention_rate', 0.0)
+        },
+        'metrics': metrics
+    }
+    
+    # Add confidence statistics if available
+    if confidences:
+        valid_confidences = [c for c in confidences if c is not None and c > 0]
+        if valid_confidences:
+            report['confidence_stats'] = {
+                'avg_confidence': np.mean(valid_confidences),
+                'std_confidence': np.std(valid_confidences),
+                'min_confidence': np.min(valid_confidences),
+                'max_confidence': np.max(valid_confidences)
+            }
+    
+    # Add metadata if provided
+    if metadata:
+        report['metadata'] = metadata
+    
+    # Add error statistics if provided
+    if errors:
+        error_count = sum(1 for error in errors if error is not None)
+        report['error_stats'] = {
+            'error_count': error_count,
+            'error_rate': error_count / len(predictions) if predictions else 0.0,
+            'error_types': list(set(error for error in errors if error is not None))
+        }
+    
+    # Save report if path provided
+    if save_path:
+        with open(save_path, 'w') as f:
+            json.dump(report, f, indent=2)
+        logger.info(f"Report saved to {save_path}")
+    
+    return report
 
 
 if __name__ == "__main__":

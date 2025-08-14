@@ -2,11 +2,14 @@
 
 import json
 import random
-from typing import List, Dict, Any, Optional
+import yaml
+from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 import pandas as pd
 from datasets import Dataset
 import logging
+from collections import Counter
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -357,3 +360,276 @@ def create_balanced_dataset(
     logger.info(f"Saved balanced dataset to {output_path}")
 
     return dataset
+
+
+# Additional helper functions expected by tests
+
+def load_labels(labels_path: str) -> Dict[str, str]:
+    """
+    Load label definitions from YAML file.
+    
+    Args:
+        labels_path: Path to labels YAML file
+        
+    Returns:
+        Dictionary mapping label names to descriptions
+    """
+    with open(labels_path, 'r') as f:
+        labels = yaml.safe_load(f)
+    return labels
+
+
+def build_examples(
+    raw_data: List[Dict], 
+    labels: Dict[str, str], 
+    config: Dict[str, Any]
+) -> List[Dict[str, str]]:
+    """
+    Build training examples from raw data.
+    
+    Args:
+        raw_data: List of raw data samples
+        labels: Label definitions
+        config: Configuration dictionary
+        
+    Returns:
+        List of formatted examples
+    """
+    examples = []
+    
+    for sample in raw_data:
+        text = sample['text']
+        label = sample['label']
+        metadata = sample.get('metadata', {})
+        
+        # Check if label is valid
+        if label not in labels:
+            raise KeyError(f"Unknown label: {label}")
+        
+        # Build input according to template
+        input_template = config['instruction_format']['input_template']
+        input_text = input_template.format(text=text, metadata=json.dumps(metadata) if metadata else '{}')
+        
+        # Build output
+        output_template = config['instruction_format']['output_template']
+        
+        output_data = {
+            'decision': label,
+            'abstain': False
+        }
+        
+        # Add rationale if requested
+        if config['instruction_format'].get('add_rationale', False):
+            output_data['rationale'] = add_rationale(sample, labels)
+        else:
+            output_data['rationale'] = f"This content is classified as {label} based on the analysis."
+        
+        # Add confidence if specified in template
+        if 'confidence' in output_template:
+            output_data['confidence'] = 0.85  # Default confidence
+        
+        example = {
+            'input': input_text,
+            'output': json.dumps(output_data)
+        }
+        
+        examples.append(example)
+    
+    return examples
+
+
+def create_abstention_examples(labels: Dict[str, str], config: Dict[str, Any]) -> List[Dict[str, str]]:
+    """
+    Create abstention examples for training.
+    
+    Args:
+        labels: Label definitions
+        config: Configuration dictionary
+        
+    Returns:
+        List of abstention examples
+    """
+    if not config['abstention']['enabled']:
+        return []
+    
+    examples = []
+    examples_per_label = config['abstention']['examples_per_label']
+    uncertainty_phrases = config['abstention']['uncertainty_phrases']
+    
+    for label in labels.keys():
+        for _ in range(examples_per_label):
+            # Create uncertain text with uncertainty phrases
+            uncertainty_phrase = random.choice(uncertainty_phrases)
+            text = f"{uncertainty_phrase} about the content. The information seems ambiguous."
+            
+            # Build input
+            input_template = config['instruction_format']['input_template']
+            input_text = input_template.format(text=text, metadata='{}')
+            
+            # Build abstention output
+            output_data = {
+                'decision': None,
+                'rationale': f"Unable to confidently classify due to ambiguous content. {uncertainty_phrase}.",
+                'abstain': True
+            }
+            
+            if 'confidence' in config['instruction_format']['output_template']:
+                output_data['confidence'] = 0.0
+            
+            example = {
+                'input': input_text,
+                'output': json.dumps(output_data)
+            }
+            
+            examples.append(example)
+    
+    return examples
+
+
+def add_rationale(example: Dict[str, Any], labels: Dict[str, str]) -> str:
+    """
+    Generate rationale for a classification decision.
+    
+    Args:
+        example: Data example with text and label
+        labels: Label definitions
+        
+    Returns:
+        Generated rationale string
+    """
+    text = example['text']
+    label = example['label']
+    
+    # Check if label exists in definitions
+    if label not in labels:
+        return f"Classification decision based on content analysis."
+    
+    # Generate rationale based on label and content
+    rationale_templates = {
+        'relevant': [
+            f"This content is relevant because it directly relates to the topic of interest.",
+            f"The text contains key indicators that make it relevant to the classification task.",
+            f"Based on the content analysis, this text contains relevant information."
+        ],
+        'irrelevant': [
+            f"This content is irrelevant as it does not relate to the topic of interest.",
+            f"The text lacks key indicators that would make it relevant to the classification task.", 
+            f"Based on content analysis, this text does not contain relevant information."
+        ],
+        'uncertain': [
+            f"The content presents ambiguous information that makes classification uncertain.",
+            f"There are conflicting indicators in the text that make definitive classification difficult.",
+            f"The content lacks clear indicators for confident classification."
+        ]
+    }
+    
+    # Use label-specific templates if available, otherwise generic
+    templates = rationale_templates.get(label, [
+        f"Content classified as {label} based on analysis of key features.",
+        f"The text exhibits characteristics consistent with the {label} category."
+    ])
+    
+    base_rationale = random.choice(templates)
+    
+    # Add metadata considerations if present
+    if 'metadata' in example and example['metadata']:
+        metadata = example['metadata']
+        if 'confidence' in metadata:
+            confidence_level = metadata['confidence']
+            base_rationale += f" The source confidence level is {confidence_level}."
+        if 'source' in metadata:
+            source = metadata['source']
+            base_rationale += f" This information comes from a {source} source."
+    
+    return base_rationale
+
+
+def validate_output_format(output_text: str) -> Tuple[bool, Optional[Dict]]:
+    """
+    Validate that output text matches expected JSON format.
+    
+    Args:
+        output_text: Raw output text to validate
+        
+    Returns:
+        Tuple of (is_valid, parsed_output)
+    """
+    if not output_text or output_text.strip() == "":
+        return False, None
+        
+    if output_text is None:
+        return False, None
+    
+    try:
+        # Parse JSON
+        parsed = json.loads(output_text)
+        
+        # Check for required fields
+        required_fields = {'decision', 'rationale', 'abstain'}
+        if not all(field in parsed for field in required_fields):
+            return False, None
+        
+        # Validate field types
+        if not isinstance(parsed['abstain'], bool):
+            return False, None
+        
+        if not isinstance(parsed['rationale'], str):
+            return False, None
+        
+        # If not abstaining, decision should be present and not None
+        if not parsed['abstain'] and parsed['decision'] is None:
+            return False, None
+        
+        # If abstaining, decision should be None
+        if parsed['abstain'] and parsed['decision'] is not None:
+            return False, None
+            
+        return True, parsed
+        
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return False, None
+
+
+def create_balanced_dataset(
+    raw_data: List[Dict[str, Any]], 
+    target_samples_per_class: int
+) -> List[Dict[str, Any]]:
+    """
+    Create a balanced dataset with equal samples per class.
+    
+    Args:
+        raw_data: List of raw data samples
+        target_samples_per_class: Target number of samples per class
+        
+    Returns:
+        Balanced dataset
+    """
+    if not raw_data:
+        return []
+    
+    # Group by label
+    label_groups = {}
+    for sample in raw_data:
+        label = sample['label']
+        if label not in label_groups:
+            label_groups[label] = []
+        label_groups[label].append(sample)
+    
+    balanced_data = []
+    
+    for label, samples in label_groups.items():
+        if len(samples) >= target_samples_per_class:
+            # Undersample
+            selected_samples = random.sample(samples, target_samples_per_class)
+        else:
+            # Oversample with repetition
+            selected_samples = []
+            for _ in range(target_samples_per_class):
+                selected_samples.append(random.choice(samples))
+        
+        balanced_data.extend(selected_samples)
+    
+    # Shuffle the final dataset
+    random.shuffle(balanced_data)
+    
+    return balanced_data

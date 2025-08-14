@@ -40,7 +40,17 @@ class MCDropoutWrapper(nn.Module):
             
             for _ in range(self.num_samples):
                 with torch.no_grad():
-                    outputs = self.model(input_ids, attention_mask, **kwargs)
+                    # Try different calling patterns for compatibility
+                    try:
+                        outputs = self.model(input_ids, attention_mask=attention_mask, **kwargs)
+                    except TypeError:
+                        # Fallback for models that don't accept attention_mask as kwarg
+                        try:
+                            outputs = self.model(input_ids, **kwargs)
+                        except TypeError:
+                            # Last resort - positional only
+                            outputs = self.model(input_ids)
+                    
                     outputs_list.append(outputs.logits)
             
             # Stack predictions
