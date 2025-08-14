@@ -44,11 +44,258 @@ try:
     from .uncertainty import MCDropoutWrapper, compute_uncertainty_aware_loss, should_abstain
     from .fact_check import RELIANCEFactChecker, FactualDataFilter
     from .high_stakes_audit import BiasAuditor, ExplainableReasoning, ProceduralAlignment, VerifiableTraining
+    from .metrics import (
+        compute_ece, compute_mce, compute_brier_score,
+        compute_abstention_metrics, compute_risk_aware_metrics,
+        compute_confidence_metrics, MetricsAggregator
+    )
+    from .conformal import ConformalPredictor, RiskControlledPredictor
+    from .utils import MetricsTracker, ErrorHandler
     HIGH_STAKES_AVAILABLE = True
 except ImportError:
     HIGH_STAKES_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+class CalibratedTrainer(Trainer):
+    """Enhanced Trainer with calibration monitoring and advanced metrics."""
+    
+    def __init__(self, metrics_aggregator=None, conformal_predictor=None, 
+                 abstention_loss_config=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metrics_aggregator = metrics_aggregator
+        self.conformal_predictor = conformal_predictor
+        self.calibration_history = []
+        self.best_ece = float('inf')
+        
+        # Abstention-aware loss configuration
+        self.abstention_loss_config = abstention_loss_config or {}
+        self.use_abstention_loss = self.abstention_loss_config.get('enabled', False)
+        self.abstention_threshold = self.abstention_loss_config.get('confidence_threshold', 0.7)
+        self.abstention_penalty = self.abstention_loss_config.get('abstention_penalty', 0.3)
+        self.uncertainty_weight = self.abstention_loss_config.get('uncertainty_weight', 0.1)
+        
+    def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
+        """Enhanced evaluation with calibration and advanced metrics."""
+        # Standard evaluation
+        eval_results = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+        
+        if not HIGH_STAKES_AVAILABLE or eval_dataset is None:
+            return eval_results
+            
+        try:
+            # Get predictions and labels for advanced metrics
+            eval_dataloader = self.get_eval_dataloader(eval_dataset)
+            predictions, labels, probabilities = self._get_predictions_and_labels(eval_dataloader)
+            
+            # Compute calibration metrics
+            if len(probabilities) > 0 and len(labels) > 0:
+                # Convert to binary for ECE if multiclass
+                if probabilities.shape[1] > 2:
+                    # Use max probability and correctness for ECE
+                    max_probs = np.max(probabilities, axis=1)
+                    predicted_classes = np.argmax(probabilities, axis=1)
+                    correct = (predicted_classes == labels).astype(float)
+                    ece = compute_ece(correct, max_probs)
+                    mce = compute_mce(correct, max_probs)
+                else:
+                    # Binary classification
+                    ece = compute_ece(labels, probabilities[:, 1])
+                    mce = compute_mce(labels, probabilities[:, 1])
+                
+                eval_results[f"{metric_key_prefix}_ece"] = ece
+                eval_results[f"{metric_key_prefix}_mce"] = mce
+                
+                # Brier score
+                brier = compute_brier_score(labels, max_probs if probabilities.shape[1] > 2 else probabilities[:, 1])
+                eval_results[f"{metric_key_prefix}_brier_score"] = brier
+                
+                # Confidence metrics
+                confidence_metrics = compute_confidence_metrics(
+                    max_probs if probabilities.shape[1] > 2 else probabilities[:, 1],
+                    labels,
+                    predicted_classes if probabilities.shape[1] > 2 else (probabilities[:, 1] > 0.5).astype(int)
+                )
+                
+                for key, value in confidence_metrics.items():
+                    eval_results[f"{metric_key_prefix}_confidence_{key}"] = value
+                
+                # Abstention metrics (using confidence threshold)
+                confidence_threshold = 0.7
+                abstentions = max_probs < confidence_threshold
+                if abstentions.sum() > 0:
+                    abstention_metrics = compute_abstention_metrics(
+                        labels, predicted_classes, abstentions
+                    )
+                    for key, value in abstention_metrics.items():
+                        eval_results[f"{metric_key_prefix}_abstention_{key}"] = value
+                
+                # Track calibration for learning rate adjustment
+                self.calibration_history.append(ece)
+                if ece < self.best_ece:
+                    self.best_ece = ece
+                
+                # Conformal prediction calibration
+                if self.conformal_predictor is not None:
+                    self.conformal_predictor.calibrate(probabilities, labels)
+                    coverage_metrics = self.conformal_predictor.evaluate_coverage(probabilities, labels)
+                    for key, value in coverage_metrics.items():
+                        eval_results[f"{metric_key_prefix}_conformal_{key}"] = value
+                
+                # Add to metrics aggregator
+                if self.metrics_aggregator is not None:
+                    epoch = int(self.state.epoch) if hasattr(self.state, 'epoch') else 0
+                    metrics_to_add = {k.replace(f"{metric_key_prefix}_", ""): v for k, v in eval_results.items() if k.startswith(metric_key_prefix)}
+                    self.metrics_aggregator.add_metrics(metrics_to_add, epoch=epoch)
+                
+        except Exception as e:
+            logger.warning(f"Advanced metrics computation failed: {e}")
+            
+        return eval_results
+    
+    def _get_predictions_and_labels(self, dataloader):
+        """Extract predictions, labels, and probabilities from dataloader."""
+        predictions = []
+        labels = []
+        probabilities = []
+        
+        self.model.eval()
+        with torch.no_grad():
+            for batch in dataloader:
+                # Move to device
+                batch = {k: v.to(self.args.device) if isinstance(v, torch.Tensor) else v 
+                        for k, v in batch.items()}
+                
+                # Get model outputs
+                outputs = self.model(**batch)
+                logits = outputs.logits
+                
+                # Get probabilities
+                probs = torch.softmax(logits, dim=-1)
+                probabilities.append(probs.cpu().numpy())
+                
+                # Get predictions
+                preds = torch.argmax(logits, dim=-1)
+                predictions.append(preds.cpu().numpy())
+                
+                # Get labels (assuming they're in the batch)
+                if 'labels' in batch:
+                    labels.append(batch['labels'].cpu().numpy())
+        
+        # Concatenate all batches
+        if predictions and labels and probabilities:
+            predictions = np.concatenate(predictions)
+            labels = np.concatenate(labels)
+            probabilities = np.concatenate(probabilities)
+            
+            # Handle sequence-to-sequence case (take last token)
+            if len(predictions.shape) > 1:
+                predictions = predictions[:, -1]
+                labels = labels[:, -1]
+                probabilities = probabilities[:, -1, :]
+            
+            return predictions, labels, probabilities
+        else:
+            return np.array([]), np.array([]), np.array([]).reshape(0, 2)
+    
+    def should_adjust_learning_rate(self):
+        """Check if learning rate should be adjusted based on calibration."""
+        if len(self.calibration_history) < 3:
+            return False
+            
+        # Check if ECE is consistently increasing
+        recent_ece = self.calibration_history[-3:]
+        return all(recent_ece[i] > recent_ece[i-1] for i in range(1, len(recent_ece)))
+    
+    def adjust_learning_rate(self, factor=0.9):
+        """Adjust learning rate based on calibration drift."""
+        if self.optimizer is not None:
+            for param_group in self.optimizer.param_groups:
+                old_lr = param_group['lr']
+                param_group['lr'] *= factor
+                logger.info(f"Adjusted learning rate from {old_lr:.2e} to {param_group['lr']:.2e} due to calibration drift")
+    
+    def compute_abstention_aware_loss(self, model, inputs, return_outputs=False):
+        """
+        Compute abstention-aware loss that encourages confident predictions
+        and penalizes uncertain predictions appropriately.
+        """
+        if not self.use_abstention_loss:
+            # Fall back to standard loss computation
+            return model(**inputs) if return_outputs else model(**inputs).loss
+            
+        # Get model outputs
+        outputs = model(**inputs)
+        logits = outputs.logits
+        labels = inputs.get('labels')
+        
+        if labels is None:
+            return outputs if return_outputs else outputs.loss
+            
+        # Standard cross-entropy loss
+        loss_fct = torch.nn.CrossEntropyLoss(reduction='none')
+        
+        # Reshape for sequence modeling if needed
+        if logits.dim() > 2:
+            # Causal LM case - take last token
+            shift_logits = logits[..., :-1, :].contiguous()
+            shift_labels = labels[..., 1:].contiguous()
+            shift_logits = shift_logits.view(-1, shift_logits.size(-1))
+            shift_labels = shift_labels.view(-1)
+            # Filter out -100 labels (padding)
+            active_mask = shift_labels != -100
+            active_logits = shift_logits[active_mask]
+            active_labels = shift_labels[active_mask]
+        else:
+            active_logits = logits
+            active_labels = labels
+            
+        if len(active_logits) == 0:
+            return outputs if return_outputs else torch.tensor(0.0, device=logits.device)
+            
+        # Compute base loss
+        base_losses = loss_fct(active_logits, active_labels)
+        
+        # Compute confidence (max probability)
+        probs = torch.softmax(active_logits, dim=-1)
+        confidences = torch.max(probs, dim=-1)[0]
+        
+        # Abstention-aware loss components
+        # 1. Standard loss weighted by confidence
+        confidence_weighted_loss = base_losses * confidences
+        
+        # 2. Uncertainty penalty - penalize low-confidence predictions
+        uncertainty_penalty = torch.relu(self.abstention_threshold - confidences) * self.abstention_penalty
+        
+        # 3. Entropy regularization to encourage confident predictions
+        entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=-1)
+        entropy_penalty = entropy * self.uncertainty_weight
+        
+        # Combine loss components
+        total_loss = confidence_weighted_loss + uncertainty_penalty + entropy_penalty
+        final_loss = total_loss.mean()
+        
+        if return_outputs:
+            outputs.loss = final_loss
+            return outputs
+        return final_loss
+    
+    def compute_loss(self, model, inputs, return_outputs=False):
+        """Override compute_loss to use abstention-aware loss."""
+        return self.compute_abstention_aware_loss(model, inputs, return_outputs)
+
+
+class CalibrationMonitorCallback:
+    """Callback to monitor calibration and adjust learning rate."""
+    
+    def on_evaluate(self, args, state, control, trainer=None, **kwargs):
+        """Called after evaluation."""
+        if isinstance(trainer, CalibratedTrainer):
+            # Check if learning rate should be adjusted
+            if trainer.should_adjust_learning_rate():
+                trainer.adjust_learning_rate()
+                logger.info("Learning rate adjusted due to calibration drift")
 
 
 class EnhancedLoRASFTTrainer:
@@ -72,6 +319,26 @@ class EnhancedLoRASFTTrainer:
         if self.config["evaluation"]["enabled"]:
             for metric_name in self.config["evaluation"]["metrics"]:
                 self.metrics[metric_name] = evaluate.load(metric_name)
+        
+        # Initialize advanced metrics tracking
+        self.metrics_aggregator = None
+        self.conformal_predictor = None
+        self.risk_controlled_predictor = None
+        
+        if HIGH_STAKES_AVAILABLE:
+            metrics_path = self.output_dir / "training_metrics.json"
+            self.metrics_aggregator = MetricsAggregator(save_path=metrics_path)
+            
+            # Initialize conformal prediction components
+            advanced_config = self.config.get('advanced_metrics', {})
+            if advanced_config.get('conformal_prediction', {}).get('enabled', False):
+                alpha = advanced_config['conformal_prediction'].get('alpha', 0.1)
+                self.conformal_predictor = ConformalPredictor(alpha=alpha)
+                logger.info(f"Initialized conformal predictor with alpha={alpha}")
+                
+            if advanced_config.get('risk_control', {}).get('enabled', False):
+                self.risk_controlled_predictor = RiskControlledPredictor(alpha=alpha)
+                logger.info("Initialized risk-controlled predictor")
         
         # Initialize high-stakes components if available
         self.high_stakes_components = {}
@@ -451,17 +718,39 @@ class EnhancedLoRASFTTrainer:
                     early_stopping_patience=self.config["training"]["early_stopping_patience"]
                 )
             )
+        
+        # Add calibration monitoring callback
+        if HIGH_STAKES_AVAILABLE and self.metrics_aggregator is not None:
+            callbacks.append(CalibrationMonitorCallback())
 
-        # Initialize trainer
-        trainer = Trainer(
-            model=self.model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            data_collator=data_collator,
-            callbacks=callbacks,
-            compute_metrics=self.compute_metrics if eval_dataset else None,
-        )
+        # Initialize enhanced trainer with calibration monitoring
+        if HIGH_STAKES_AVAILABLE and self.metrics_aggregator is not None:
+            # Get abstention loss configuration
+            abstention_loss_config = self.config.get('advanced_metrics', {}).get('abstention_loss', {})
+            
+            trainer = CalibratedTrainer(
+                metrics_aggregator=self.metrics_aggregator,
+                conformal_predictor=self.conformal_predictor,
+                abstention_loss_config=abstention_loss_config,
+                model=self.model,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=eval_dataset,
+                data_collator=data_collator,
+                callbacks=callbacks,
+                compute_metrics=self.compute_metrics if eval_dataset else None,
+            )
+        else:
+            # Fallback to standard trainer
+            trainer = Trainer(
+                model=self.model,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=eval_dataset,
+                data_collator=data_collator,
+                callbacks=callbacks,
+                compute_metrics=self.compute_metrics if eval_dataset else None,
+            )
 
         # Setup custom scheduler if specified
         if self.config["training"]["scheduler"]["type"] != "none":

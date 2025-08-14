@@ -114,8 +114,15 @@ class ConformalPredictor:
         
         # Compute quantile threshold
         n = len(self.calibration_scores)
-        q_level = np.ceil((n + 1) * (1 - self.alpha)) / n
-        self.quantile = np.quantile(self.calibration_scores, q_level)
+        if n == 0:
+            # Default threshold if no calibration data
+            self.quantile = 0.5
+            logger.warning("No calibration scores available, using default quantile=0.5")
+        else:
+            q_level = np.ceil((n + 1) * (1 - self.alpha)) / n
+            # Ensure q_level is in valid range [0, 1]
+            q_level = np.clip(q_level, 0.0, 1.0)
+            self.quantile = np.quantile(self.calibration_scores, q_level)
         
         self.is_calibrated = True
         

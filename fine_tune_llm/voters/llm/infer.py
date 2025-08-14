@@ -4,11 +4,20 @@ import json
 import torch
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 import logging
+
+# Import advanced metrics and conformal prediction if available
+try:
+    from .metrics import compute_ece, compute_confidence_metrics, MetricsAggregator
+    from .conformal import ConformalPredictor, RiskControlledPredictor
+    from .utils import PromptFormatter, ErrorHandler
+    ADVANCED_METRICS_AVAILABLE = True
+except ImportError:
+    ADVANCED_METRICS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +60,21 @@ class LLMVoterInference:
                     base_model_id = self.config.get("model_id")
 
         self.base_model_id = base_model_id or "Qwen/Qwen2.5-7B"
+
+        # Initialize advanced inference components
+        self.conformal_predictor = None
+        self.risk_controlled_predictor = None
+        self.metrics_tracker = None
+        
+        if ADVANCED_METRICS_AVAILABLE:
+            # Initialize conformal prediction (will be calibrated externally)
+            self.conformal_predictor = ConformalPredictor(alpha=0.1)
+            self.risk_controlled_predictor = RiskControlledPredictor(alpha=0.1)
+            
+            # Initialize metrics tracking for inference
+            metrics_path = self.model_path.parent / "inference_metrics.json"
+            self.metrics_tracker = MetricsAggregator(save_path=metrics_path)
+            logger.info("Initialized advanced inference components")
 
         # Load model and tokenizer
         self._load_model()
@@ -315,7 +339,8 @@ Valid labels: HIGH_RISK, MEDIUM_RISK, LOW_RISK, NO_RISK"""
                 "raw_output": parsed_output,
             }
 
-        return {
+        # Enhanced prediction with conformal prediction
+        result = {
             "probs": probs,
             "abstain": False,
             "decision": parsed_output["decision"],
@@ -326,6 +351,109 @@ Valid labels: HIGH_RISK, MEDIUM_RISK, LOW_RISK, NO_RISK"""
             "max_prob": max_prob,
             "raw_output": parsed_output,
         }
+        
+        # Add conformal prediction if available
+        if ADVANCED_METRICS_AVAILABLE and self.conformal_predictor is not None:
+            try:
+                # Convert probs to numpy array for conformal prediction
+                prob_array = np.array([[probs.get(label, 0) for label in ["HIGH_RISK", "MEDIUM_RISK", "LOW_RISK", "NO_RISK"]]])
+                
+                if self.conformal_predictor.is_calibrated:
+                    # Get prediction sets
+                    prediction_sets, set_sizes = self.conformal_predictor.predict_sets(prob_array, return_sizes=True)
+                    
+                    # Convert to interpretable format
+                    label_names = ["HIGH_RISK", "MEDIUM_RISK", "LOW_RISK", "NO_RISK"]
+                    prediction_set = [label_names[i] for i in range(len(label_names)) if prediction_sets[0, i]]
+                    
+                    result["conformal_prediction_set"] = prediction_set
+                    result["conformal_set_size"] = int(set_sizes[0])
+                    result["conformal_coverage_level"] = 1.0 - self.conformal_predictor.alpha
+                    
+                    # Check if we should abstain based on set size
+                    conformal_abstain = set_sizes[0] > 2  # Abstain if uncertain between >2 classes
+                    result["conformal_abstain"] = bool(conformal_abstain)
+                
+                # Risk-controlled prediction if available
+                if self.risk_controlled_predictor is not None and hasattr(self.risk_controlled_predictor, 'risk_threshold'):
+                    risk_result = self.risk_controlled_predictor.predict_with_risk_control(prob_array)
+                    result["risk_score"] = float(risk_result["risk_scores"][0])
+                    result["risk_abstain"] = bool(risk_result["abstentions"][0])
+                    result["risk_threshold"] = self.risk_controlled_predictor.risk_threshold
+                
+                # Track inference metrics
+                if self.metrics_tracker is not None:
+                    inference_metrics = {
+                        "confidence": max_prob,
+                        "latency_ms": result["latency_ms"],
+                        "abstained": result["abstain"]
+                    }
+                    
+                    if "conformal_set_size" in result:
+                        inference_metrics["conformal_set_size"] = result["conformal_set_size"]
+                    if "risk_score" in result:
+                        inference_metrics["risk_score"] = result["risk_score"]
+                    
+                    self.metrics_tracker.add_metrics(inference_metrics)
+                    
+            except Exception as e:
+                logger.warning(f"Advanced inference features failed: {e}")
+        
+        return result
+    
+    def calibrate_conformal_predictor(self, validation_texts: List[str], validation_labels: List[str], 
+                                      validation_metadata: Optional[List[Dict]] = None):
+        """
+        Calibrate conformal predictor using validation data.
+        
+        Args:
+            validation_texts: List of validation texts
+            validation_labels: List of true labels
+            validation_metadata: Optional metadata for each text
+        """
+        if not ADVANCED_METRICS_AVAILABLE or self.conformal_predictor is None:
+            logger.warning("Advanced metrics not available for conformal calibration")
+            return
+        
+        logger.info(f"Calibrating conformal predictor with {len(validation_texts)} samples...")
+        
+        # Get predictions for validation set
+        predictions = []
+        probabilities = []
+        
+        for i, text in enumerate(validation_texts):
+            metadata = validation_metadata[i] if validation_metadata else None
+            pred_result = self.predict(text, metadata)
+            
+            if not pred_result["abstain"]:
+                predictions.append(pred_result["decision"])
+                probs = pred_result["probs"]
+                prob_array = [probs.get(label, 0) for label in ["HIGH_RISK", "MEDIUM_RISK", "LOW_RISK", "NO_RISK"]]
+                probabilities.append(prob_array)
+        
+        if len(probabilities) > 0:
+            probabilities = np.array(probabilities)
+            
+            # Convert string labels to indices
+            label_to_idx = {"HIGH_RISK": 0, "MEDIUM_RISK": 1, "LOW_RISK": 2, "NO_RISK": 3}
+            label_indices = np.array([label_to_idx.get(label, 3) for label in validation_labels[:len(probabilities)]])
+            
+            # Calibrate conformal predictor
+            self.conformal_predictor.calibrate(probabilities, label_indices)
+            
+            # Calibrate risk-controlled predictor
+            if self.risk_controlled_predictor is not None:
+                self.risk_controlled_predictor.calibrate(probabilities, label_indices)
+            
+            logger.info("Conformal predictor calibration completed")
+        else:
+            logger.warning("No valid predictions for calibration")
+    
+    def get_inference_metrics_summary(self) -> Dict[str, Any]:
+        """Get summary of inference metrics."""
+        if self.metrics_tracker is not None:
+            return self.metrics_tracker.get_summary()
+        return {}
 
     def batch_predict(self, texts: list, metadata_list: Optional[list] = None) -> list:
         """

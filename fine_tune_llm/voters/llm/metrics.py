@@ -332,10 +332,15 @@ def compute_confidence_metrics(
         
         # Confidence-accuracy correlation
         if len(np.unique(correct)) > 1:
-            from scipy.stats import pearsonr
-            corr, p_value = pearsonr(confidences, correct.astype(float))
-            metrics['confidence_accuracy_correlation'] = float(corr)
-            metrics['confidence_accuracy_p_value'] = float(p_value)
+            try:
+                from scipy.stats import pearsonr
+                corr, p_value = pearsonr(confidences, correct.astype(float))
+                metrics['confidence_accuracy_correlation'] = float(corr)
+                metrics['confidence_accuracy_p_value'] = float(p_value)
+            except (ImportError, Exception):
+                # Fallback to simple correlation if scipy fails
+                corr = np.corrcoef(confidences, correct.astype(float))[0, 1]
+                metrics['confidence_accuracy_correlation'] = float(corr) if not np.isnan(corr) else 0.0
     
     return metrics
 

@@ -202,3 +202,33 @@ high_stakes:
     cryptographic_proof: true  # Generate cryptographic proofs
     audit_log: "artifacts/audit_trail.jsonl"  # Audit trail file
     checkpoint_hashing: true  # Hash each checkpoint
+
+# Advanced metrics and conformal prediction
+advanced_metrics:
+  # Conformal prediction for uncertainty quantification
+  conformal_prediction:
+    enabled: false  # Enable for advanced uncertainty handling
+    alpha: 0.1  # Miscoverage level (90% coverage)
+    method: "lac"  # Options: lac (Least Ambiguous Set), aps (Adaptive Prediction Sets)
+    calibration_ratio: 0.2  # Fraction of data for calibration
+    
+  # Risk-controlled prediction
+  risk_control:
+    enabled: false  # Enable for high-stakes applications
+    alpha: 0.1  # Risk level
+    cost_matrix: "default"  # Options: default, custom
+    class_names: ["HIGH_RISK", "MEDIUM_RISK", "LOW_RISK", "NO_RISK"]
+    
+  # Abstention-aware loss function
+  abstention_loss:
+    enabled: false  # Enable abstention-aware training
+    confidence_threshold: 0.7  # Threshold for high confidence
+    abstention_penalty: 0.3  # Penalty for low-confidence predictions
+    uncertainty_weight: 0.1  # Weight for entropy regularization
+    
+  # Calibration metrics tracking
+  calibration_tracking:
+    enabled: false  # Enable ECE/MCE tracking during training
+    learning_rate_adjustment: false  # Adjust LR based on calibration drift
+    adjustment_factor: 0.9  # LR reduction factor
+    adjustment_patience: 3  # Epochs to wait before adjustment
