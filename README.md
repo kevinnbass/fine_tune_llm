@@ -1,30 +1,32 @@
-# Bird Flu Classification Fine-Tuning Pipeline
+# LLM Fine-Tuning with LoRA
 
-A comprehensive fine-tuning pipeline for bird flu content classification using ensemble methods and LoRA adapters.
+Fine-tuning GLM-4.5-Air (and Qwen2.5-7B) for bird flu classification using LoRA adapters.
 
 ## 🎯 Overview
 
-This repository implements a multi-model fine-tuning approach for bird flu classification:
+This repository implements LoRA (Low-Rank Adaptation) fine-tuning for large language models:
 
-- **Classical Models**: TF-IDF + Logistic Regression/SVM with calibration
-- **Weak Supervision**: Snorkel-like label model training
-- **LLM Fine-tuning**: LoRA adapters on Qwen2.5-7B
-- **Ensemble Training**: Stacker model combining all voter outputs
+- **Primary Model**: GLM-4.5-Air (ZHIPU-AI/glm-4-9b-chat)
+- **Alternative**: Qwen2.5-7B (easy to switch)
+- **Method**: Parameter-Efficient Fine-Tuning (PEFT) with LoRA
+- **Task**: Bird flu content classification with JSON output
 
 ## 📁 Project Structure
 
 ```
 birdflu-ensemble/
-├── configs/           # Training configurations
-├── data/             # Training and evaluation data
-├── voters/           # Model implementations
-│   ├── classical/    # TF-IDF + LR/SVM models
-│   ├── llm/         # LoRA fine-tuning pipeline
-│   └── ws_label_model/ # Weak supervision training
-├── arbiter/         # Ensemble stacking logic
-├── eval/            # Evaluation metrics
-├── scripts/         # Training scripts
-└── tests/           # Unit tests
+├── configs/
+│   ├── labels.yaml          # Classification labels
+│   └── llm_lora.yaml       # LoRA training config
+├── data/                   # Training data
+├── voters/llm/            # Core training code
+│   ├── dataset.py         # Data preparation
+│   ├── sft_lora.py        # LoRA training
+│   └── infer.py           # Model inference
+├── scripts/
+│   ├── train_lora_sft.py  # Training script
+│   └── infer_model.py     # Inference script
+└── artifacts/models/      # Saved models
 ```
 
 ## 🚀 Quick Start
@@ -43,154 +45,143 @@ make install-dev
 make test
 ```
 
-### Training Pipeline
+### Training
 
 ```bash
-# Prepare training data
+# Prepare your training data
 make prepare-data
 
-# Train all models
-make train-all
+# Start LoRA fine-tuning
+make train
 
-# Or train individual components:
-make train-classical     # TF-IDF models
-make train-lora         # LoRA fine-tuning
-make train-weak-supervision  # Label model
-make train-stacker      # Ensemble training
-
-# Evaluate trained models
-make eval
+# Monitor training in artifacts/runs/
 ```
 
-## 🧠 Model Components
+### Inference
 
-### Classical Models (`voters/classical/`)
+```bash
+# Run inference with trained model
+make infer
 
-**TF-IDF + Logistic Regression**
-- Feature extraction with TF-IDF vectorization
-- Logistic regression with regularization
-- Platt scaling for probability calibration
-
-**TF-IDF + SVM**
-- Same feature extraction pipeline
-- Support Vector Machine classifier
-- Isotonic regression for calibration
-
-Both models target Expected Calibration Error (ECE) ≤ 0.03.
-
-### LLM Fine-tuning (`voters/llm/`)
-
-**LoRA Fine-tuning on Qwen2.5-7B**
-- Parameter-Efficient Fine-Tuning (PEFT) with LoRA
-- Structured JSON output with schema validation
-- Explicit abstention support for uncertain cases
-- Configurable LoRA parameters (rank, alpha, learning rates)
-
-**Key Features:**
-- Rank 16, Alpha 32 LoRA configuration
-- JSON schema enforcement for consistent outputs
-- Logprob extraction for uncertainty quantification
-- Graceful fallback to abstention on invalid JSON
-
-### Weak Supervision (`voters/ws_label_model/`)
-
-**Snorkel-like Label Model**
-- Combines multiple labeling function outputs
-- Probabilistic consensus via generative model
-- Handles conflicting labeling function votes
-- Minimum evidence thresholds for quality control
-
-### Ensemble Training (`arbiter/`)
-
-**Stacker Model**
-- Logistic regression or XGBoost stacker
-- Out-of-fold training to prevent overfitting
-- Feature engineering from voter outputs
-- Entropy, margin, and disagreement signals
-
-**Conformal Prediction**
-- Split conformal prediction for coverage guarantees
-- Per-slice threshold adjustments
-- Risk-controlled abstention
+# Or directly:
+python scripts/infer_model.py \
+  --text "Your text to classify here" \
+  --model-path "artifacts/models/your-model" \
+  --metadata '{"source": "example"}'
+```
 
 ## ⚙️ Configuration
 
-### Training Parameters (`configs/llm_lora.yaml`)
+### Model Selection
+
+Edit `configs/llm_lora.yaml` to switch models:
+
+```yaml
+# GLM-4.5-Air (default)
+model_id: ZHIPU-AI/glm-4-9b-chat
+tokenizer_id: ZHIPU-AI/glm-4-9b-chat
+
+# Or use Qwen2.5-7B (uncomment):
+# model_id: Qwen/Qwen2.5-7B
+# tokenizer_id: Qwen/Qwen2.5-7B
+```
+
+### LoRA Parameters
 
 ```yaml
 lora:
-  r: 16
-  alpha: 32
-  dropout: 0.1
-  target_modules: ["q_proj", "v_proj", "k_proj", "o_proj"]
-
-training:
-  learning_rate: 5e-5
-  batch_size: 8
-  gradient_accumulation_steps: 4
-  num_epochs: 3
-  warmup_ratio: 0.1
+  r: 16                    # LoRA rank
+  lora_alpha: 32          # LoRA alpha (scaling)
+  lora_dropout: 0.1       # Dropout rate
+  target_modules:         # Modules to adapt
+    - query_key_value     # GLM-4 modules
+    - dense
+    - dense_h_to_4h
+    - dense_4h_to_h
 ```
 
-### Model Selection (`configs/voters.yaml`)
+### Training Hyperparameters
 
 ```yaml
-voters:
-  classical_lr:
-    enabled: true
-    cost: 0.001
-  classical_svm:
-    enabled: true
-    cost: 0.001
-  llm_lora:
-    enabled: true
-    cost: 0.05
-    model_name: "Qwen/Qwen2.5-7B"
+training:
+  learning_rate: 2e-4
+  num_epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 4
+  max_length: 2048
+  bf16: true              # Use bfloat16
 ```
 
-## 📊 Evaluation Metrics
+## 🧠 Model Architecture
 
-The pipeline tracks multiple evaluation metrics:
+### GLM-4.5-Air Features
+- **Size**: 9B parameters
+- **Architecture**: GLM (General Language Model)
+- **Strengths**: Multilingual, instruction following, chat format
+- **LoRA Targets**: query_key_value, dense layers
 
-- **F1 Score**: Overall and per-class performance
-- **Calibration**: Expected Calibration Error (ECE), Brier Score
-- **Coverage**: Abstention rates and coverage guarantees
-- **Efficiency**: Training time, inference speed, model size
+### Qwen2.5-7B Alternative
+- **Size**: 7B parameters  
+- **Architecture**: Transformer with GQA
+- **Strengths**: Strong performance, efficient training
+- **LoRA Targets**: q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj
 
-## 🔬 Training Scripts
+## 📊 Training Process
 
-### Data Preparation
-```bash
-python scripts/prepare_data.py
-# - Splits data into train/dev/test sets
-# - Creates weak supervision training data
-# - Preprocesses text for different model types
-```
+### 1. Data Preparation
+- Convert training data to instruction format
+- Add system prompts for classification task
+- Include JSON schema examples
+- Handle abstention cases
 
-### Model Training
-```bash
-python scripts/train_lora_sft.py
-# - Fine-tunes Qwen2.5-7B with LoRA adapters
-# - Saves checkpoints and training metrics
-# - Validates on development set
+### 2. LoRA Fine-tuning
+- Initialize LoRA adapters on target modules
+- Freeze base model parameters
+- Train only LoRA weights (efficient!)
+- Use gradient accumulation for larger effective batch size
 
-python scripts/train_classical.py
-# - Trains TF-IDF + LR/SVM models
-# - Applies calibration methods
-# - Saves trained models and vectorizers
-```
+### 3. Model Output
+- Structured JSON responses
+- Explicit abstention support
+- Confidence and rationale included
 
-### Ensemble Training
-```bash
-python scripts/predict_all_voters.py
-# - Generates out-of-fold predictions from all voters
-# - Ensures no data leakage for stacker training
+## 🔧 Development
 
-python scripts/train_stacker.py
-# - Trains ensemble stacker on voter outputs
-# - Feature engineering and model selection
-# - Cross-validation for hyperparameter tuning
-```
+### Adding Training Data
+
+1. Place data files in `data/raw/`
+2. Update `scripts/prepare_data.py` 
+3. Modify label definitions in `configs/labels.yaml`
+
+### Hyperparameter Tuning
+
+Key parameters to experiment with:
+- **Learning rate**: 1e-4 to 5e-4
+- **LoRA rank**: 8, 16, 32, 64
+- **Batch size**: Adjust based on GPU memory
+- **Epochs**: Monitor validation loss
+
+### Multi-GPU Training
+
+The training script supports multi-GPU:
+- Uses `accelerate` for distributed training
+- Automatic gradient accumulation
+- Mixed precision (bfloat16)
+
+## 📋 Requirements
+
+- **Python**: ≥3.9
+- **GPU**: 8GB+ VRAM for GLM-4 (24GB+ recommended)
+- **Memory**: 16GB+ RAM
+- **Storage**: 20GB+ for models and checkpoints
+
+### Key Dependencies
+
+- `torch>=2.0.0` - PyTorch framework
+- `transformers>=4.35.0` - Hugging Face transformers
+- `peft>=0.7.0` - Parameter-Efficient Fine-Tuning
+- `trl>=0.7.0` - Transformer Reinforcement Learning
+- `accelerate>=0.25.0` - Multi-GPU training
 
 ## 🧪 Testing
 
@@ -198,7 +189,7 @@ python scripts/train_stacker.py
 # Full test suite
 make test
 
-# Code formatting and linting
+# Code formatting
 make format
 make lint
 
@@ -206,48 +197,36 @@ make lint
 make clean
 ```
 
-## 📋 Requirements
+## 📚 Usage Examples
 
-- **Python**: ≥3.9
-- **GPU**: Recommended for LLM fine-tuning (8GB+ VRAM)
-- **Memory**: 16GB+ RAM for full pipeline
-- **Storage**: 20GB+ for models and data
+### Basic Classification
 
-### Key Dependencies
+```python
+from scripts.infer_model import load_model, format_prompt, generate_response
 
-- `torch>=2.0.0` - PyTorch framework
-- `transformers>=4.35.0` - Hugging Face transformers
-- `peft>=0.7.0` - Parameter-Efficient Fine-Tuning
-- `scikit-learn>=1.3.0` - Classical ML models
-- `datasets>=2.14.0` - Data loading and processing
+# Load trained model
+model, tokenizer = load_model(config, "artifacts/models/checkpoint-1000")
 
-## 🔧 Development
+# Classify text
+text = "This research paper discusses H5N1 transmission patterns..."
+response = generate_response(model, tokenizer, format_prompt(text, {}, config))
+```
 
-### Adding New Models
+### Batch Processing
 
-1. Create new voter in `voters/` directory
-2. Implement training and inference methods
-3. Add configuration to `configs/voters.yaml`
-4. Update training pipeline in `scripts/`
-
-### Custom Datasets
-
-1. Place data files in `data/raw/`
-2. Update `scripts/prepare_data.py` for preprocessing
-3. Modify label definitions in `configs/labels.yaml`
-
-## 📚 Documentation
-
-- **CLAUDE.md**: Detailed technical guidance for development
-- **configs/**: Inline documentation in YAML configuration files
-- **Code Comments**: Implementation details in Python modules
+```bash
+# Process multiple texts
+for text in texts:
+    python scripts/infer_model.py --text "$text" --model-path artifacts/models/best
+done
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature-name`
-3. Follow code quality standards: `make lint && make test`
-4. Submit pull request with clear description
+3. Follow code quality: `make lint && make test`
+4. Submit pull request
 
 ## 📄 License
 
@@ -255,5 +234,5 @@ make clean
 
 ---
 
-**Focus**: Model fine-tuning and ensemble training for bird flu classification
-**Built with**: PyTorch, Transformers, PEFT, scikit-learn, Snorkel
+**Focus**: LoRA fine-tuning for GLM-4.5-Air and Qwen2.5-7B
+**Built with**: PyTorch, Transformers, PEFT, Accelerate

@@ -1,21 +1,30 @@
-# LoRA SFT configuration for LLM voter
+# LoRA SFT configuration for LLM fine-tuning
 lora:
-  # Base model
-  model_id: Qwen/Qwen2.5-7B
-  tokenizer_id: Qwen/Qwen2.5-7B
+  # Base model - GLM-4.5-Air as primary, Qwen2.5-7B as alternative
+  model_id: ZHIPU-AI/glm-4-9b-chat  # GLM-4.5-Air (9B version)
+  tokenizer_id: ZHIPU-AI/glm-4-9b-chat
+  # Alternative model (uncomment to use):
+  # model_id: Qwen/Qwen2.5-7B
+  # tokenizer_id: Qwen/Qwen2.5-7B
   
   # LoRA parameters
   r: 16  # Rank
   lora_alpha: 32
   lora_dropout: 0.1
   target_modules:
-    - q_proj
-    - v_proj
-    - k_proj
-    - o_proj
-    - gate_proj
-    - up_proj
-    - down_proj
+    # GLM-4 target modules
+    - query_key_value
+    - dense
+    - dense_h_to_4h
+    - dense_4h_to_h
+    # Alternative for Qwen2.5 (comment out above, uncomment below):
+    # - q_proj
+    # - v_proj  
+    # - k_proj
+    # - o_proj
+    # - gate_proj
+    # - up_proj
+    # - down_proj
     
   # Training parameters
   learning_rate: 2e-4

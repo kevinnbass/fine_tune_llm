@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **model fine-tuning pipeline** for bird flu classification using ensemble methods. The system focuses on training and evaluating multiple model types, NOT production deployment.
+This is a **pure LLM fine-tuning repository** focused on LoRA (Low-Rank Adaptation) fine-tuning for large language models. The primary target is GLM-4.5-Air with Qwen2.5-7B as an alternative.
 
 ## Architecture Overview
 
-The pipeline implements a multi-model fine-tuning approach:
+The repository implements LoRA fine-tuning for classification tasks:
 
-1. **Classical Models** (`voters/classical/`) - TF-IDF + Logistic Regression/SVM with calibration
-2. **Weak Supervision** (`voters/ws_label_model/`) - Snorkel-like label model training  
-3. **LLM Fine-tuning** (`voters/llm/`) - LoRA adapters on Qwen2.5-7B
-4. **Ensemble Training** (`arbiter/`) - Stacker model combining voter outputs
+1. **Primary Model**: GLM-4.5-Air (ZHIPU-AI/glm-4-9b-chat)
+2. **Alternative Model**: Qwen2.5-7B (Qwen/Qwen2.5-7B)
+3. **Method**: Parameter-Efficient Fine-Tuning (PEFT) with LoRA adapters
+4. **Output Format**: Structured JSON with classification, rationale, and abstention
 
 ## Development Commands
 
@@ -38,55 +38,84 @@ make lint
 make test
 ```
 
-### Training Pipeline
+### Training and Inference
 ```bash
-# Complete training pipeline
-make train-all
+# Prepare training data
+make prepare-data
 
-# Individual training steps:
-make prepare-data        # Data preparation and splitting
-make train-classical     # TF-IDF + LR/SVM with calibration
-make train-lora         # LoRA fine-tuning on Qwen2.5-7B
-make train-weak-supervision  # Label model training
-make train-stacker      # Ensemble stacker training
+# Start LoRA fine-tuning
+make train
 
-# Evaluation
-make eval
+# Run inference with trained model
+make infer
+
+# Clean training artifacts
+make clean
 ```
 
 ## Key Configuration Files
 
-All configurations are in `configs/` directory:
+The repository uses minimal configuration:
 
-- **`labels.yaml`**: Class definitions for classification
-- **`voters.yaml`**: Model enable/disable flags and parameters
-- **`conformal.yaml`**: Evaluation thresholds and coverage targets
-- **`llm_lora.yaml`**: LoRA training hyperparameters (r=16, alpha=32)
-- **`slices.yaml`**: Evaluation slice definitions
+- **`configs/labels.yaml`**: Classification label definitions
+- **`configs/llm_lora.yaml`**: LoRA training hyperparameters and model selection
 
-## Critical Implementation Details
+## Core Implementation
 
-### LoRA Fine-tuning (`voters/llm/sft_lora.py`)
-- Uses PEFT with LoRA adapters for efficient fine-tuning
-- Target modules: q_proj, v_proj, k_proj, o_proj
-- Rank 16, Alpha 32 configuration
-- JSON schema validation with explicit abstention support
-- Gradient accumulation for effective batch size scaling
+### LoRA Configuration (`configs/llm_lora.yaml`)
 
-### Classical Model Training (`voters/classical/`)
-- TF-IDF feature extraction with configurable parameters
-- Logistic Regression and SVM classifiers
-- Post-training calibration using Platt scaling or isotonic regression
-- Target Expected Calibration Error (ECE) ≤ 0.03
+**Model Selection:**
+- GLM-4.5-Air: `ZHIPU-AI/glm-4-9b-chat` (primary)
+- Qwen2.5-7B: `Qwen/Qwen2.5-7B` (alternative)
 
-### Out-of-Fold Training (`arbiter/stacker_lr.py`)
-The stacker uses out-of-fold predictions to prevent overfitting. **Critical**: Never train the stacker on the same data used to train the individual voters.
+**LoRA Parameters:**
+- Rank: 16 (adjustable: 8, 32, 64)
+- Alpha: 32 (typically 2x rank)
+- Dropout: 0.1
+- Target modules differ by model architecture
 
-### Weak Supervision (`voters/ws_label_model/`)
-- Snorkel-like probabilistic label model
-- Combines multiple labeling function outputs
-- Handles conflicting votes through generative modeling
-- Minimum evidence thresholds for quality control
+**GLM-4 Target Modules:**
+- query_key_value
+- dense
+- dense_h_to_4h
+- dense_4h_to_h
+
+**Qwen2.5 Target Modules:**
+- q_proj, v_proj, k_proj, o_proj
+- gate_proj, up_proj, down_proj
+
+### Training Implementation (`voters/llm/sft_lora.py`)
+
+**Key Features:**
+- PEFT integration with LoRA adapters
+- Mixed precision training (bfloat16)
+- Gradient accumulation for effective batch size
+- Multi-GPU support via accelerate
+- Early stopping and model checkpointing
+
+**Training Hyperparameters:**
+- Learning rate: 2e-4 (tunable: 1e-4 to 5e-4)
+- Batch size: 4 with gradient accumulation
+- Epochs: 3 (monitor validation loss)
+- Max length: 2048 tokens
+- Warmup ratio: 0.03
+
+### Data Preparation (`voters/llm/dataset.py`)
+
+**Instruction Format:**
+- System prompt for classification task
+- Input template with text and metadata
+- JSON output template with decision, rationale, abstain fields
+- Explicit abstention examples for uncertain cases
+
+### Inference (`scripts/infer_model.py`)
+
+**Features:**
+- Load base model + LoRA adapter
+- Format prompts according to training template
+- Generate structured JSON responses
+- Handle invalid JSON with graceful degradation
+- Support for batch processing
 
 ## Training Workflow
 
@@ -94,109 +123,98 @@ The stacker uses out-of-fold predictions to prevent overfitting. **Critical**: N
 ```bash
 python scripts/prepare_data.py
 ```
-- Splits data into train/dev/test sets
-- Creates weak supervision training data
-- Preprocesses text for different model requirements
+- Convert raw data to instruction format
+- Add system prompts and response templates
+- Include abstention examples
+- Split into train/validation sets
 
-### 2. Individual Model Training
+### 2. LoRA Fine-tuning
 ```bash
-# Classical models with calibration
-python scripts/train_classical.py
-
-# LoRA fine-tuning (requires GPU)
 python scripts/train_lora_sft.py
-
-# Weak supervision label model
-python scripts/train_weak_supervision.py
 ```
+- Initialize LoRA adapters on target modules
+- Freeze base model parameters (memory efficient)
+- Train only LoRA weights (~1% of parameters)
+- Save checkpoints and training logs
 
-### 3. Ensemble Training
+### 3. Model Inference
 ```bash
-# Generate out-of-fold predictions
-python scripts/predict_all_voters.py
-
-# Train ensemble stacker
-python scripts/train_stacker.py
+python scripts/infer_model.py --text "..." --model-path "..."
 ```
+- Load trained LoRA adapter
+- Generate JSON classification responses
+- Parse and validate output format
 
-### 4. Evaluation
-```bash
-python scripts/eval_full_system.py
-```
+## Model-Specific Considerations
 
-## Model Training Focus Areas
+### GLM-4.5-Air
+- **Architecture**: GLM (General Language Model)
+- **Size**: 9B parameters
+- **Strengths**: Multilingual, instruction following, chat format
+- **Memory**: ~18GB VRAM for training, ~24GB recommended
+- **Target Modules**: GLM-specific attention and MLP layers
 
-### LoRA Hyperparameter Tuning
-Key parameters in `configs/llm_lora.yaml`:
-- **Learning rate**: 5e-5 (start here, can adjust 1e-5 to 1e-4)
-- **Batch size**: 8 with gradient accumulation
-- **LoRA rank**: 16 (can try 8, 32 for comparison)
-- **LoRA alpha**: 32 (typically 2x rank)
-- **Dropout**: 0.1 for regularization
+### Qwen2.5-7B
+- **Architecture**: Transformer with Grouped Query Attention
+- **Size**: 7B parameters
+- **Strengths**: Strong performance, efficient training
+- **Memory**: ~14GB VRAM for training, ~20GB recommended
+- **Target Modules**: Standard transformer projections
 
-### Classical Model Optimization
-- **TF-IDF parameters**: max_features, ngram_range, min_df
-- **Regularization**: C parameter for LR and SVM
-- **Calibration method**: Platt vs Isotonic based on validation performance
+## Performance Optimization
 
-### Ensemble Stacking
-- **Feature engineering**: voter probabilities, entropy, margin, disagreement
-- **Stacker choice**: Logistic Regression vs XGBoost
-- **Cross-validation**: For hyperparameter selection
+### Memory Optimization
+- Use bfloat16 mixed precision
+- Gradient checkpointing for lower memory
+- Gradient accumulation for larger effective batch size
+- LoRA reduces trainable parameters by ~99%
 
-## Performance Monitoring
-
-Track these metrics during training:
-- **F1 Score**: Overall and per-class performance
-- **Calibration**: Expected Calibration Error (ECE), Brier Score  
-- **Training metrics**: Loss, validation performance, convergence
-- **Efficiency**: Training time, memory usage, model size
-
-## Testing Strategy
-
-The test suite (`tests/`) focuses on:
-- **Unit tests**: Individual component functionality
-- **Integration tests**: End-to-end training pipeline
-- **Model validation**: Saved model loading and inference
-- **Configuration validation**: YAML file parsing and validation
-
-Use `conftest.py` fixtures for consistent test data and mock objects.
+### Training Efficiency
+- Multi-GPU support with accelerate
+- Efficient data loading with num_proc
+- Early stopping to prevent overfitting
+- Checkpoint saving for resuming training
 
 ## File Organization
 
-### Core Training Components
-- `voters/`: All model implementations and training logic
-- `arbiter/`: Ensemble stacking and combination methods
+### Core Components
+- `voters/llm/`: All LLM-related code (training, inference, data prep)
 - `configs/`: Training configurations and hyperparameters
-- `scripts/`: Training orchestration and evaluation scripts
-- `eval/`: Evaluation metrics and reporting
+- `scripts/`: Training and inference orchestration
+- `artifacts/models/`: Saved LoRA adapters and checkpoints
 
 ### Data Structure
-- `data/raw/`: Original datasets
-- `data/processed/`: Preprocessed training data
-- `data/splits/`: Train/dev/test splits
-- `artifacts/models/`: Saved trained models
-- `artifacts/runs/`: Training logs and checkpoints
+- `data/raw/`: Original training datasets
+- `data/processed/`: Preprocessed instruction-formatted data
+- `data/splits/`: Train/validation splits
+- `artifacts/runs/`: Training logs and metrics
 
-## Common Training Tasks
+## Common Development Tasks
 
-### Adding New Models
-1. Create implementation in appropriate `voters/` subdirectory
-2. Add configuration entries to `configs/voters.yaml`
-3. Update training script in `scripts/`
-4. Add evaluation logic to ensemble pipeline
+### Switching Models
+1. Edit `configs/llm_lora.yaml`
+2. Change `model_id` and `tokenizer_id`
+3. Update `target_modules` for the new architecture
+4. Adjust training parameters if needed
 
 ### Hyperparameter Tuning
-1. Modify configurations in `configs/` directory
-2. Use cross-validation for systematic search
-3. Track results in training logs
-4. Update best configurations based on validation performance
+Key parameters to experiment with:
+- **Learning rate**: 1e-4, 2e-4, 5e-4
+- **LoRA rank**: 8, 16, 32, 64
+- **Batch size**: Based on GPU memory
+- **Gradient accumulation**: To achieve target effective batch size
 
-### Debugging Training Issues
-1. Check data loading and preprocessing
-2. Validate model configurations
-3. Monitor training metrics and convergence
-4. Test individual components before ensemble training
+### Adding New Data
+1. Place files in `data/raw/`
+2. Update `scripts/prepare_data.py` for preprocessing
+3. Modify label definitions in `configs/labels.yaml`
+4. Ensure instruction format compatibility
+
+### Debugging Training
+1. Check GPU memory usage and adjust batch size
+2. Monitor training loss convergence
+3. Validate data loading and formatting
+4. Test model loading and LoRA adapter compatibility
 
 ## Git Automation
 
@@ -209,9 +227,9 @@ IMPORTANT: After completing ANY task that modifies files in this repository, you
 Generate meaningful commit messages that describe what was implemented, fixed, or changed. This ensures all work is automatically tracked and backed up to GitHub.
 
 Examples of good commit messages:
-- "Add LoRA training pipeline for Qwen2.5-7B with PEFT integration"
-- "Fix conformal prediction thresholds for evaluation"
-- "Update classical model calibration with improved ECE"
-- "Implement ensemble stacker with out-of-fold predictions"
+- "Update GLM-4.5-Air configuration with proper target modules"
+- "Add inference script with JSON response parsing"
+- "Fix LoRA adapter loading for multi-GPU training"
+- "Optimize training hyperparameters for GLM-4 architecture"
 
 This is a REQUIRED workflow - never leave changes uncommitted after completing tasks.
