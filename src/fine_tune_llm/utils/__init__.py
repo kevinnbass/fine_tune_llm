@@ -11,6 +11,18 @@ from .decorators import retry, timeout, cache, validate_types
 from .validators import validate_config, validate_data_schema
 from .helpers import ensure_dir, get_timestamp, format_duration
 
+# Resilience utilities
+from .resilience import (
+    CircuitBreaker, circuit_breaker, retry as resilience_retry,
+    get_circuit_breaker, get_all_circuit_breaker_stats
+)
+
+# Error analytics
+from .error_analytics import (
+    ErrorTracker, track_error, get_error_tracker,
+    ErrorSeverity, ErrorCategory
+)
+
 __all__ = [
     # Logging
     'LoggerManager',
@@ -36,6 +48,20 @@ __all__ = [
     'ensure_dir',
     'get_timestamp',
     'format_duration',
+    
+    # Resilience patterns
+    'CircuitBreaker',
+    'circuit_breaker',
+    'resilience_retry',
+    'get_circuit_breaker',
+    'get_all_circuit_breaker_stats',
+    
+    # Error analytics
+    'ErrorTracker',
+    'track_error',
+    'get_error_tracker',
+    'ErrorSeverity',
+    'ErrorCategory'
 ]
 
 # Version information

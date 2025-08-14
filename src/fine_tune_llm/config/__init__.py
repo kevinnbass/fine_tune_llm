@@ -27,6 +27,15 @@ from .secrets import (
 from .versioning import (
     ConfigVersionManager, ConfigVersion, ChangeType
 )
+# Unified configuration system
+from .parser import (
+    ConfigurationParser, ParseResult, ParserConfig, ConfigFormat,
+    parse_config_file, parse_config_directory, create_parser
+)
+from .unified_config import (
+    UnifiedConfigManager, ComponentConfig, UnifiedConfigData,
+    get_unified_config
+)
 
 __all__ = [
     # Configuration management
@@ -82,5 +91,18 @@ __all__ = [
     # Configuration versioning
     "ConfigVersionManager",
     "ConfigVersion",
-    "ChangeType"
+    "ChangeType",
+    
+    # Unified configuration system
+    "ConfigurationParser",
+    "ParseResult", 
+    "ParserConfig",
+    "ConfigFormat",
+    "parse_config_file",
+    "parse_config_directory",
+    "create_parser",
+    "UnifiedConfigManager",
+    "ComponentConfig",
+    "UnifiedConfigData",
+    "get_unified_config"
 ]

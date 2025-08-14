@@ -391,7 +391,7 @@ trainer = EnhancedLoRASFTTrainer(
 
 ## Git Automation
 
-IMPORTANT: After completing ANY task that modifies files in this repository, you MUST automatically:
+IMPORTANT: After completing ANY task that modifies files in this repository OR after completing ANY phase, you MUST automatically:
 
 1. **Stage all changes**: `git add .`
 2. **Commit with descriptive message**: `git commit -m "[descriptive message based on what was accomplished]"`
@@ -404,5 +404,19 @@ Examples of good commit messages:
 - "Add inference script with JSON response parsing"
 - "Fix LoRA adapter loading for multi-GPU training"
 - "Optimize training hyperparameters for GLM-4 architecture"
+- "Complete Phase 3.2: Unified UI system with theme and behavior management"
+- "Complete Phase 2.6: Hexagonal architecture adapters implementation"
 
-This is a REQUIRED workflow - never leave changes uncommitted after completing tasks.
+This is a REQUIRED workflow - never leave changes uncommitted after completing tasks OR phases.
+
+## Implementation Flow
+
+IMPORTANT: When implementing the roadmap/todo list:
+
+1. **Continuous Implementation**: Execute the entire implementation roadmap without prompting between phases
+2. **Phase Transitions**: Automatically move to the next phase upon completing the current phase
+3. **Complete Execution**: Go through the entire todo list straight through until completion
+4. **No Interruption**: Do not stop or ask for confirmation between phases - maintain continuous progress
+5. **Git Commits**: Commit after each task completion AND after each phase completion
+
+Execute the roadmap systematically from start to finish without interruption.

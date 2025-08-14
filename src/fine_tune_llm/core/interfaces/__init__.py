@@ -255,6 +255,90 @@ class BaseValidator(BaseComponent):
         """Get detailed validation errors."""
         pass
 
+# Hexagonal architecture ports
+
+class FileSystemPort(ABC):
+    """Port for file system operations."""
+    
+    @abstractmethod
+    def read_file(self, file_path: Union[str, Path], mode: str = 'r') -> Union[str, bytes]:
+        """Read file content."""
+        pass
+    
+    @abstractmethod
+    def write_file(self, file_path: Union[str, Path], content: Union[str, bytes], mode: str = 'w') -> bool:
+        """Write content to file."""
+        pass
+    
+    @abstractmethod
+    def exists(self, path: Union[str, Path]) -> bool:
+        """Check if path exists."""
+        pass
+    
+    @abstractmethod
+    def delete_file(self, file_path: Union[str, Path]) -> bool:
+        """Delete file."""
+        pass
+
+class DatabasePort(ABC):
+    """Port for database operations."""
+    
+    @abstractmethod
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+        """Execute SELECT query."""
+        pass
+    
+    @abstractmethod
+    def execute_command(self, command: str, params: Optional[tuple] = None) -> int:
+        """Execute INSERT/UPDATE/DELETE command."""
+        pass
+    
+    @abstractmethod
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get database statistics."""
+        pass
+
+class APIPort(ABC):
+    """Port for API operations."""
+    
+    @abstractmethod
+    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        """Make GET request."""
+        pass
+    
+    @abstractmethod
+    def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None, json_data: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        """Make POST request."""
+        pass
+    
+    @abstractmethod
+    def health_check(self, endpoint: str = '/health') -> Dict[str, Any]:
+        """Perform health check."""
+        pass
+
+class CachePort(ABC):
+    """Port for caching operations."""
+    
+    @abstractmethod
+    def get(self, key: Union[str, tuple, dict]) -> Optional[Any]:
+        """Get value from cache."""
+        pass
+    
+    @abstractmethod
+    def set(self, key: Union[str, tuple, dict], value: Any, ttl: Optional[float] = None) -> bool:
+        """Set value in cache."""
+        pass
+    
+    @abstractmethod
+    def delete(self, key: Union[str, tuple, dict]) -> bool:
+        """Delete key from cache."""
+        pass
+    
+    @abstractmethod
+    def exists(self, key: Union[str, tuple, dict]) -> bool:
+        """Check if key exists."""
+        pass
+
 # Export all interfaces
 __all__ = [
     "BaseComponent",
@@ -269,5 +353,10 @@ __all__ = [
     "BaseMetric",
     "BaseLoader",
     "BaseProcessor", 
-    "BaseValidator"
+    "BaseValidator",
+    # Hexagonal architecture ports
+    "FileSystemPort",
+    "DatabasePort", 
+    "APIPort",
+    "CachePort"
 ]
