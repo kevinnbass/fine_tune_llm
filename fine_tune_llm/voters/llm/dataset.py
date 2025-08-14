@@ -3,7 +3,7 @@
 import json
 import random
 import yaml
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Union
 from pathlib import Path
 import pandas as pd
 from datasets import Dataset
@@ -333,43 +333,95 @@ Valid labels: HIGH_RISK, MEDIUM_RISK, LOW_RISK, NO_RISK"""
 
 
 def create_balanced_dataset(
-    data_sources: List[str], output_path: str, samples_per_class: int = 1000
-) -> Dataset:
+    data_sources: Union[List[str], List[Dict[str, Any]]], 
+    output_path: str = None, 
+    samples_per_class: int = 1000,
+    target_samples_per_class: int = None  # For backward compatibility
+) -> Union[Dataset, List[Dict[str, Any]]]:
     """
-    Create a balanced dataset from multiple sources.
+    Create a balanced dataset from multiple sources or raw data.
 
     Args:
-        data_sources: List of data file paths
-        output_path: Where to save the dataset
-        samples_per_class: Number of samples per class
+        data_sources: Either list of file paths OR list of raw data dicts
+        output_path: Where to save the dataset (optional for raw data)
+        samples_per_class: Number of samples per class (for file sources)
+        target_samples_per_class: Alternative parameter name (backward compat)
 
     Returns:
-        Balanced dataset
+        Balanced dataset or list of balanced samples
     """
-    builder = SFTDatasetBuilder()
-    all_examples = []
-
-    class_examples = {"HIGH_RISK": [], "MEDIUM_RISK": [], "LOW_RISK": [], "NO_RISK": []}
-
-    # Collect examples by class
-    for source in data_sources:
-        df = pd.read_csv(source)
-
-        for _, row in df.iterrows():
-            label = row.get("label")
-            if label in class_examples:
-                example = builder.build_example(
-                    text=row["text"], label=label, metadata=row.get("metadata")
-                )
-                class_examples[label].append(example)
-
-    # Balance classes
-    min_samples = min(len(examples) for examples in class_examples.values())
-    n_samples = min(min_samples, samples_per_class)
-
-    for label, examples in class_examples.items():
-        sampled = random.sample(examples, min(len(examples), n_samples))
-        all_examples.extend(sampled)
+    # Handle backward compatibility
+    if target_samples_per_class is not None:
+        samples_per_class = target_samples_per_class
+    
+    # Check if input is raw data (list of dicts) or file paths
+    if data_sources and isinstance(data_sources[0], dict):
+        # Raw data path - handle both raw and processed examples
+        if not data_sources:
+            return []
+        
+        label_groups = {}
+        for sample in data_sources:
+            # Extract label from different formats
+            if 'label' in sample:
+                label = sample['label']
+            elif 'output' in sample:
+                # For processed examples, extract from output JSON
+                try:
+                    output_data = json.loads(sample['output'])
+                    label = output_data.get('decision', 'unknown')
+                except (json.JSONDecodeError, KeyError):
+                    label = 'unknown'
+            else:
+                label = 'unknown'
+            
+            if label not in label_groups:
+                label_groups[label] = []
+            label_groups[label].append(sample)
+        
+        balanced_data = []
+        for label, samples in label_groups.items():
+            if len(samples) >= samples_per_class:
+                # Undersample
+                selected_samples = random.sample(samples, samples_per_class)
+            else:
+                # Oversample with repetition
+                selected_samples = []
+                for _ in range(samples_per_class):
+                    selected_samples.append(random.choice(samples))
+            
+            balanced_data.extend(selected_samples)
+        
+        # Shuffle the final dataset
+        random.shuffle(balanced_data)
+        return balanced_data
+    
+    else:
+        # File path sources - original implementation
+        builder = SFTDatasetBuilder()
+        all_examples = []
+        
+        class_examples = {"HIGH_RISK": [], "MEDIUM_RISK": [], "LOW_RISK": [], "NO_RISK": []}
+        
+        # Collect examples by class
+        for source in data_sources:
+            df = pd.read_csv(source)
+            
+            for _, row in df.iterrows():
+                label = row.get("label")
+                if label in class_examples:
+                    example = builder.build_example(
+                        text=row["text"], label=label, metadata=row.get("metadata")
+                    )
+                    class_examples[label].append(example)
+        
+        # Balance classes
+        min_samples = min(len(examples) for examples in class_examples.values())
+        n_samples = min(min_samples, samples_per_class)
+        
+        for label, examples in class_examples.items():
+            sampled = random.sample(examples, min(len(examples), n_samples))
+            all_examples.extend(sampled)
 
     # Add abstention examples
     n_abstain = int(len(all_examples) * 0.1)
@@ -615,57 +667,4 @@ def validate_output_format(output_text: str) -> Tuple[bool, Optional[Dict]]:
         return False, None
 
 
-def create_balanced_dataset(
-    raw_data: List[Dict[str, Any]], 
-    target_samples_per_class: int
-) -> List[Dict[str, Any]]:
-    """
-    Create a balanced dataset with equal samples per class.
-    
-    Args:
-        raw_data: List of raw data samples
-        target_samples_per_class: Target number of samples per class
-        
-    Returns:
-        Balanced dataset
-    """
-    if not raw_data:
-        return []
-    
-    # Group by label - handle both raw data and processed examples
-    label_groups = {}
-    for sample in raw_data:
-        # Extract label from different formats
-        if 'label' in sample:
-            label = sample['label']
-        elif 'output' in sample:
-            # For processed examples, extract from output JSON
-            try:
-                output_data = json.loads(sample['output'])
-                label = output_data.get('decision', 'unknown')
-            except (json.JSONDecodeError, KeyError):
-                label = 'unknown'
-        else:
-            label = 'unknown'
-        if label not in label_groups:
-            label_groups[label] = []
-        label_groups[label].append(sample)
-    
-    balanced_data = []
-    
-    for label, samples in label_groups.items():
-        if len(samples) >= target_samples_per_class:
-            # Undersample
-            selected_samples = random.sample(samples, target_samples_per_class)
-        else:
-            # Oversample with repetition
-            selected_samples = []
-            for _ in range(target_samples_per_class):
-                selected_samples.append(random.choice(samples))
-        
-        balanced_data.extend(selected_samples)
-    
-    # Shuffle the final dataset
-    random.shuffle(balanced_data)
-    
-    return balanced_data
+# Note: Moved to unified function above (line 335) to avoid duplication
